@@ -1,0 +1,35 @@
+{
+  "name": "bastion-tower-defense",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bastion — tower defense 100% front-end (Vue 3 + Vite), jouable sur mobile, FR/EN, mode sombre.",
+  "author": "adamrodwebdev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adamrodwebdev/bastion.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node scripts/simulate.mjs",
+    "build:standalone": "node scripts/build-standalone.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  },
+  "browserslist": [
+    "defaults",
+    "not dead",
+    "iOS >= 14",
+    "Safari >= 14"
+  ]
+}
