@@ -7,6 +7,9 @@ standalone/
 
 # Local tools and logs
 .harness/
+*.bundle
+build.cmd
+build-log.txt
 *.log
 .DS_Store
 Thumbs.db

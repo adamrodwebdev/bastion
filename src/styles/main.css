@@ -1521,6 +1521,91 @@ kbd {
   }
 }
 
+/* Phones in portrait: compact shop (one row of 4) so board, shop and wave button fit on one screen */
+@media (max-width: 599px) and (orientation: portrait) {
+  .shop .panel-title,
+  .shop-key {
+    display: none;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .shop-item {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'icon' 'name' 'cost';
+    justify-items: center;
+    row-gap: 2px;
+    min-height: 0;
+    padding: 8px 4px;
+    text-align: center;
+  }
+
+  .shop-item .tower-swatch {
+    width: 26px;
+    height: 26px;
+  }
+
+  .shop-name {
+    font-size: 0.78rem;
+  }
+
+  .shop-cost {
+    font-size: 0.78rem;
+  }
+
+  .shop-hint {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  .panel {
+    padding: 10px;
+  }
+
+  .wave-bar {
+    gap: 6px;
+  }
+
+  .next-wave {
+    justify-content: center;
+  }
+
+  /* Counters and controls on a single line */
+  .hud {
+    flex-wrap: nowrap;
+  }
+
+  .hud-stats {
+    flex-wrap: nowrap;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .hud-stats .stat {
+    height: 36px;
+    padding: 0 8px;
+    gap: 4px;
+  }
+
+  .stat-label,
+  .stat--score {
+    display: none;
+  }
+
+  .hud-controls {
+    gap: 4px;
+  }
+
+  .hud-controls .icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 /* Small phones */
 @media (max-width: 420px) {
   .stat-label {

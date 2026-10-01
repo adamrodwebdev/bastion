@@ -360,7 +360,7 @@ export default {
       const portrait = window.innerHeight > window.innerWidth;
       const top = wrap.getBoundingClientRect().top + window.scrollY;
       const reserve = 76; // room for the wave bar under the board
-      const maxHeight = portrait ? window.innerHeight * 0.58 : Math.max(220, window.innerHeight - top - reserve);
+      const maxHeight = portrait ? window.innerHeight * 0.52 : Math.max(220, window.innerHeight - top - reserve);
       const key = `${width}x${Math.round(maxHeight)}`;
       if (key === this.engine.size) return;
       this.engine.size = key;
