@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Bastion — Tower defense gratuit sur navigateur et mobile</title>
+    <meta
+      name="description"
+      content="Bastion est un tower defense gratuit jouable dans le navigateur, sur mobile et tablette : 6 niveaux, 4 tours, pouvoirs spéciaux, 3 difficultés, sauvegarde automatique et mode sombre."
+    />
+    <meta name="keywords" content="tower defense, jeu gratuit, jeu navigateur, jeu mobile, stratégie, Vue.js" />
+    <meta name="author" content="Bastion" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://bastion-td.example/" />
+    <link rel="alternate" hreflang="fr" href="https://bastion-td.example/?lang=fr" />
+    <link rel="alternate" hreflang="en" href="https://bastion-td.example/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://bastion-td.example/" />
+
+    <meta name="theme-color" content="#f6f4ef" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1117" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Bastion" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph / Twitter -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Bastion" />
+    <meta property="og:title" content="Bastion — Tower defense gratuit" />
+    <meta property="og:description" content="6 niveaux, 4 tours, des pouvoirs spéciaux et 3 difficultés. Jouable sur ordinateur, tablette et téléphone." />
+    <meta property="og:url" content="https://bastion-td.example/" />
+    <meta property="og:image" content="https://bastion-td.example/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bastion — Tower defense gratuit" />
+    <meta name="twitter:description" content="Défendez le bastion vague après vague, sur mobile comme sur ordinateur." />
+    <meta name="twitter:image" content="https://bastion-td.example/og-image.png" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Bastion",
+        "url": "https://bastion-td.example/",
+        "description": "Tower defense gratuit jouable dans le navigateur : 6 niveaux, 4 tours, pouvoirs spéciaux, 3 difficultés.",
+        "genre": ["Tower defense", "Strategy"],
+        "gamePlatform": ["Web browser", "Mobile", "Tablet"],
+        "applicationCategory": "Game",
+        "operatingSystem": "Any",
+        "inLanguage": ["fr", "en"],
+        "playMode": "SinglePlayer",
+        "numberOfPlayers": { "@type": "QuantitativeValue", "value": 1 },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+      }
+    </script>
+
+    <!-- Applies the saved theme before first paint (no flash). -->
+    <script>
+      (function () {
+        try {
+          var s = JSON.parse(localStorage.getItem('bastion-td:settings') || '{}');
+          var m = s.theme || 'system';
+          if (m === 'system') m = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', m);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Pre-rendered shell: visible instantly and to crawlers, replaced when Vue mounts. -->
+      <main class="app-main">
+        <section class="menu">
+          <div class="hero">
+            <h1 class="hero-title">Bastion</h1>
+            <p class="hero-tagline">Défendez le bastion. Une vague après l’autre.</p>
+          </div>
+          <noscript>
+            <p class="notice notice--warn">JavaScript est nécessaire pour jouer à Bastion. / JavaScript is required to play Bastion.</p>
+          </noscript>
+        </section>
+      </main>
+    </div>
+
+    <section class="seo-about" aria-labelledby="about-title">
+      <h2 id="about-title">Bastion, un tower defense gratuit dans votre navigateur</h2>
+      <p>
+        Placez des tours le long de la route, améliorez-les et repoussez des vagues d’ennemis de plus en plus
+        puissantes. Bastion se joue sans installation sur ordinateur, tablette et téléphone, en français ou en anglais.
+      </p>
+      <ul>
+        <li>6 niveaux à la difficulté croissante, de la Prairie à l’Abysse.</li>
+        <li>4 tours : Archer, Canon, Givre et Laser, chacune améliorable trois fois.</li>
+        <li>4 pouvoirs spéciaux à débloquer (Gel, Météores, Ruée vers l’or, Surcharge), limités par un chronomètre.</li>
+        <li>3 niveaux de difficulté : Facile, Normal, Difficile.</li>
+        <li>Sauvegarde automatique dans le navigateur, mode sombre et commandes au clavier.</li>
+      </ul>
+      <h2 lang="en">Bastion, a free browser tower defense game</h2>
+      <p lang="en">
+        Build and upgrade towers, unlock timed special powers and survive increasingly difficult waves across six
+        levels. Playable on desktop, tablet and mobile, in English or French.
+      </p>
+    </section>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
