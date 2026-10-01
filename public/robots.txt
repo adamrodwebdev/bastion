@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://bastion-td.example/sitemap.xml
+Sitemap: https://bastion-tower-defense.netlify.app/sitemap.xml

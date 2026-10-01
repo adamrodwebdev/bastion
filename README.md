@@ -36,9 +36,11 @@ Autres commandes utiles :
 
 ## Mettre le site en ligne
 
-1. Lancez `npm run build`.
-2. Envoyez le dossier `dist/` sur votre hébergeur (Netlify, GitHub Pages, etc.).
-3. Remplacez l'adresse `https://bastion-td.example/` par la vraie adresse du site dans ces trois fichiers : `index.html`, `public/robots.txt` et `public/sitemap.xml`. Cela aide Google à bien référencer le jeu.
+Le jeu est en ligne sur **https://bastion-tower-defense.netlify.app**.
+
+Netlify est relié au dépôt GitHub : chaque fois qu'on pousse sur la branche `main`, le site est reconstruit et mis à jour tout seul, en une à deux minutes. La configuration est dans le fichier `netlify.toml`.
+
+Si l'adresse du site change un jour, mettez-la aussi à jour dans `index.html`, `public/robots.txt` et `public/sitemap.xml`. Cela aide Google à bien référencer le jeu.
 
 ## Comment le code est organisé
 

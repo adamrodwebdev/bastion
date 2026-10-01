@@ -10,6 +10,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 ## [Non publié]
 
+### Ajouté
+
+- Mise en ligne sur Netlify (https://bastion-tower-defense.netlify.app), avec déploiement automatique à chaque push sur `main`.
+- En-têtes de cache et de sécurité (`netlify.toml`).
+
 ### Amélioré
 
 - Sur téléphone en mode portrait, la boutique de tours tient sur une seule ligne : le plateau, la boutique et le bouton de vague sont visibles sans faire défiler l'écran.

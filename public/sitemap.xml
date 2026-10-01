@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://bastion-td.example/</loc>
-    <xhtml:link rel="alternate" hreflang="fr" href="https://bastion-td.example/?lang=fr" />
-    <xhtml:link rel="alternate" hreflang="en" href="https://bastion-td.example/?lang=en" />
+    <loc>https://bastion-tower-defense.netlify.app/</loc>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://bastion-tower-defense.netlify.app/?lang=fr" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://bastion-tower-defense.netlify.app/?lang=en" />
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
