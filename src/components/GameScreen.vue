@@ -1,46 +1,43 @@
 <template>
-  <section class="game" :class="{ 'is-paused': paused }" aria-labelledby="game-title">
-    <h1 id="game-title" class="sr-only">
-      Bastion — {{ $t('levels.level', { n: levelNumber }) }} : {{ $t('levels.names.' + levelId) }}
-    </h1>
+  <section class="game" :class="{ 'is-paused': paused, 'is-coop': coop }" aria-labelledby="game-title">
+    <h1 id="game-title" class="sr-only">Bastion — {{ $t('briefing.level', { n: levelNumber }) }}</h1>
 
     <!-- HUD ------------------------------------------------------------ -->
     <div class="hud">
       <div class="hud-stats">
         <div class="stat" :class="{ 'is-hit': livesHit }">
-          <span class="stat-icon stat-icon--lives" aria-hidden="true">♥</span>
+          <AppIcon name="heart" class="stat-icon stat-icon--lives" />
           <span class="stat-label">{{ $t('hud.lives') }}</span>
           <span class="stat-value">{{ hud.lives }}</span>
         </div>
-        <div class="stat">
-          <span class="coin" aria-hidden="true"></span>
-          <span class="stat-label">{{ $t('hud.gold') }}</span>
-          <span class="stat-value">{{ hud.gold }}</span>
+        <div v-for="p in hud.players" :key="p.id" class="stat" :class="coop ? 'stat--p' + p.id : ''">
+          <AppIcon name="coin" class="coin-icon" />
+          <span class="stat-label">{{ coop ? playerName(p.id) : $t('hud.gold') }}</span>
+          <span class="stat-value">{{ p.gold }}</span>
         </div>
         <div class="stat">
-          <span class="stat-icon" aria-hidden="true">≋</span>
+          <AppIcon name="wave" class="stat-icon" />
           <span class="stat-label">{{ $t('hud.wave') }}</span>
           <span class="stat-value">{{ hud.wave }}/{{ hud.total }}</span>
         </div>
-        <div class="stat stat--score">
-          <span class="stat-icon" aria-hidden="true">✦</span>
-          <span class="stat-label">{{ $t('hud.score') }}</span>
-          <span class="stat-value">{{ hud.score }}</span>
-        </div>
       </div>
       <div class="hud-controls">
-        <button type="button" class="icon-btn" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :title="paused ? $t('hud.resume') : $t('hud.pause')" :aria-pressed="paused ? 'true' : 'false'" :disabled="!!end" @click="togglePause">
-          <svg v-if="paused" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" /></svg>
-          <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor" /></svg>
+        <button type="button" class="icon-btn" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :title="paused ? $t('hud.resume') : $t('hud.pause')" :disabled="!!end" @click="togglePause">
+          <AppIcon :name="paused ? 'play' : 'pause'" />
         </button>
-        <button type="button" class="icon-btn icon-btn--text" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">
-          ×{{ speed }}
-        </button>
+        <button type="button" class="icon-btn icon-btn--text" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">×{{ speed }}</button>
         <button type="button" class="icon-btn" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5Zm5 8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" fill="currentColor" /></svg>
+          <AppIcon name="save" />
         </button>
       </div>
     </div>
+
+    <div v-if="boss" class="boss-bar" role="status">
+      <span class="boss-name"><AppIcon name="skull" /> {{ $t('chapters.c' + level.chapter + '.boss') }}</span>
+      <span class="boss-track"><span class="boss-fill" :style="{ width: boss.ratio * 100 + '%' }"></span></span>
+    </div>
+
+    <CoachBubble v-if="coachText && !end" :text="coachText" @dismiss="dismissCoach" />
 
     <div class="game-layout">
       <!-- Board ------------------------------------------------------- -->
@@ -49,65 +46,66 @@
           <canvas
             ref="canvas"
             class="board"
+            :class="{ 'is-aiming': !!aiming }"
             tabindex="0"
             role="application"
             :aria-label="$t('hud.board')"
             aria-describedby="board-help"
             @pointerdown="onPointerDown"
             @pointermove="onPointerMove"
-            @pointerleave="hoverCell = null"
+            @pointerleave="hover = null"
             @keydown="onKeyDown"
-            @focus="keyboard = true"
-            @blur="keyboard = false"
           ></canvas>
-          <p id="board-help" class="sr-only">1-4 / Enter / U / S / Space / P / Esc</p>
+          <p id="board-help" class="sr-only">{{ $t('hud.keys') }}</p>
+          <p class="sr-only" aria-live="polite">{{ announce }}</p>
 
           <div v-if="paused && !end" class="board-overlay board-overlay--soft">
-            <button type="button" class="btn btn-primary btn-lg" @click="togglePause">{{ $t('hud.resume') }}</button>
-          </div>
-
-          <div v-if="end" class="board-overlay" role="dialog" aria-modal="true" aria-labelledby="end-title">
-            <div class="end-card card">
-              <h2 id="end-title" class="end-title" :class="end.won ? 'is-won' : 'is-lost'">{{ end.won ? $t('end.won') : $t('end.lost') }}</h2>
-              <p class="end-text">{{ end.won ? $t('end.wonText') : $t('end.lostText') }}</p>
-              <p v-if="end.won" class="end-stars" :aria-label="$t('menu.stars', { count: end.stars })">
-                <span v-for="s in 3" :key="s" :class="s <= end.stars ? 'star-on' : 'star-off'" :style="{ animationDelay: s * 0.15 + 's' }" aria-hidden="true">★</span>
-              </p>
-              <p class="end-score">{{ $t('end.score', { score: end.score }) }}</p>
-              <p v-for="id in end.unlocked" :key="id" class="notice notice--success">
-                {{ $t('end.unlocked', { power: $t('powers.' + id + '.name') }) }}
-              </p>
-              <p v-if="end.won && !hasNextLevel" class="notice">{{ $t('end.allDone') }}</p>
-              <div class="end-actions">
-                <button v-if="end.won && hasNextLevel" ref="endPrimary" type="button" class="btn btn-primary" @click="nextLevel">{{ $t('end.next') }}</button>
-                <button ref="endRetry" type="button" class="btn" :class="end.won && hasNextLevel ? 'btn-secondary' : 'btn-primary'" @click="restart">{{ $t('end.retry') }}</button>
-                <button type="button" class="btn btn-ghost" @click="$actions.go('levels')">{{ $t('end.levels') }}</button>
-              </div>
+            <div class="pause-card card">
+              <h2 class="pause-title">{{ $t('hud.paused') }}</h2>
+              <button type="button" class="btn btn-primary btn-lg" @click="togglePause">{{ $t('hud.resume') }}</button>
+              <button type="button" class="btn btn-secondary" @click="restart">{{ $t('end.retry') }}</button>
+              <button type="button" class="btn btn-ghost" @click="saveAndQuit">{{ $t('hud.save') }}</button>
             </div>
           </div>
+
+          <EndPanel v-if="end" :result="end" @next="nextLevel" @retry="restart" @levels="toLevels" @revive="revive" @double="doubleCrowns" />
         </div>
 
         <div class="wave-bar">
-          <button type="button" class="btn btn-primary btn-wave" :class="{ 'is-pulsing': hud.canStart }" :disabled="!hud.canStart" @click="startWave">
-            <span v-if="hud.canStart">{{ hud.wave === 0 ? $t('hud.startFirst') : $t('hud.startWave') }}</span>
-            <span v-else>{{ $t('hud.waveRunning') }}</span>
-            <kbd v-if="hud.canStart" aria-hidden="true">␣</kbd>
+          <button type="button" class="btn btn-primary btn-wave" :class="{ 'is-pulsing': hud.canStart && hud.state === 'prepare' }" :disabled="!hud.canStart" data-tutorial="wave" @click="startWave">
+            <span v-if="hud.state === 'prepare'">{{ $t('hud.startFirst') }}</span>
+            <span v-else-if="hud.canStart" class="btn-stack">
+              <span>{{ $t('hud.callNext', { s: hud.countdown }) }}</span>
+              <small v-if="hud.bonus">{{ $t('hud.earlyBonus', { n: hud.bonus }) }}</small>
+            </span>
+            <span v-else>{{ hud.done ? $t('hud.lastWave') : $t('hud.waveRunning') }}</span>
+            <kbd aria-hidden="true">␣</kbd>
           </button>
           <div v-if="nextWave.length && hud.canStart" class="next-wave">
             <span class="next-wave-label">{{ $t('hud.nextWave') }}</span>
             <ul class="next-wave-list" role="list">
               <li v-for="g in nextWave" :key="g.type" class="chip">
-                <span class="dot" :style="{ background: g.color }" aria-hidden="true"></span>
-                {{ g.count }} × {{ $t('enemies.' + g.type) }}
+                <span class="enemy-swatch enemy-swatch--sm" :data-type="g.type" :style="{ '--c': g.color }" aria-hidden="true"></span>
+                {{ g.count }} × {{ $t('enemies.' + g.type + '.name') }}
               </li>
             </ul>
           </div>
         </div>
+
+        <p v-if="coop && p2Card" class="p2-card">
+          <span class="player-dot player-dot--2" aria-hidden="true"></span>
+          {{ p2Card }}
+        </p>
       </div>
 
       <!-- Sidebar ------------------------------------------------------ -->
       <aside class="sidebar">
-        <PowerBar :powers="powerList" :wave-running="hud.state === 'wave' && !paused" @activate="activatePower" />
+        <div v-if="coop" class="player-switch segmented-track" role="group" :aria-label="$t('coop.whoPlays')">
+          <button v-for="p in [1, 2]" :key="p" type="button" class="segmented-option" :class="['player-tab--' + p, { 'is-active': activePlayer === p }]" :aria-pressed="activePlayer === p ? 'true' : 'false'" @click="setActivePlayer(p)">
+            <span class="player-dot" :class="'player-dot--' + p" aria-hidden="true"></span>{{ playerName(p) }}
+          </button>
+        </div>
+        <PowerBar :powers="powerList" :enabled="hud.state === 'running' && !paused" :aiming="aiming" @activate="onPower" />
         <TowerPanel
           v-if="towerInfo"
           :info="towerInfo"
@@ -118,9 +116,7 @@
           @preview="upgradePreview = $event"
         />
         <TowerShop v-else :items="shopItems" :armed-type="armedType" :cell-state="cellState" :disabled="!!end" @pick="pickTower" />
-        <button type="button" class="btn btn-ghost btn-menu" @click="quit">
-          <span aria-hidden="true">←</span> {{ $t('hud.menu') }}
-        </button>
+        <button type="button" class="btn btn-ghost btn-menu" @click="quit"><AppIcon name="back" /> {{ $t('hud.menu') }}</button>
       </aside>
     </div>
   </section>
@@ -128,46 +124,61 @@
 
 <script>
 /**
- * @file Game screen controller: connects the engine (Game, Renderer, GameLoop) to the UI and handles input.
+ * @file Game screen controller (solo and cooperation): connects the engine
+ * (Game, Renderer, GameLoop) to the UI and handles mouse, touch and keyboard.
+ *
+ * Cooperation: both players share the board and the lives, each has his own
+ * gold and towers. Player 1 plays with the mouse or by touch; player 2 with
+ * the keyboard (his own cursor) or by touch after picking his name in the
+ * sidebar.
  */
 import { markRaw } from 'vue';
-import { Game, GameLoop, Renderer, LevelCatalog, Difficulty, TowerFactory, EnemyFactory } from '../core/index.js';
+import { Game, GameLoop, Renderer, LevelCatalog, Difficulty, TowerFactory, EnemyFactory, COOP_HP } from '../core/index.js';
+import { achievementsFor, evaluateAchievements, runOf } from '../core/progression/Achievements.js';
+import { Tutorial } from '../core/tutorial/Tutorial.js';
+import { StoryRepository } from '../core/story/StoryRepository.js';
+import { RewardTicket } from '../services/ads/RewardTicket.js';
 import { services } from '../services/index.js';
+import AppIcon from './AppIcon.vue';
 import TowerShop from './TowerShop.vue';
 import TowerPanel from './TowerPanel.vue';
 import PowerBar from './PowerBar.vue';
+import EndPanel from './EndPanel.vue';
+import CoachBubble from './CoachBubble.vue';
 
 const SPEEDS = [1, 2, 3];
+const TOWER_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+const POWER_KEYS = ['q', 'w', 'e', 'r', 't'];
 
-/**
- * Controller component: wires the engine (Game, Renderer, GameLoop)
- * to the DOM. Engine objects are kept out of Vue reactivity for speed;
- * the HUD is refreshed ~10 times per second through `tick`.
- */
 export default {
   name: 'GameScreen',
-  components: { TowerShop, TowerPanel, PowerBar },
+  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble },
   data() {
     return {
       tick: 0,
-      hud: { lives: 0, gold: 0, wave: 0, total: 0, score: 0, state: 'building', canStart: true },
-      levelId: '',
+      hud: { lives: 0, players: [], wave: 0, total: 0, state: 'prepare', canStart: true, countdown: 0, bonus: 0, done: false },
       levelNumber: 1,
+      coop: false,
+      activePlayer: 1,
       selectedCell: null,
       selectedTowerId: null,
       armedType: null,
-      hoverCell: null,
+      hover: null,
+      p2: { col: 8, row: 4 },
       upgradePreview: false,
-      keyboard: false,
+      aiming: null,
+      aimPoint: null,
       speed: 1,
       paused: false,
       livesHit: false,
       end: null,
+      coachText: '',
+      announce: '',
     };
   },
   computed: {
-    hasNextLevel() {
-      return !!LevelCatalog.get(this.levelIndex + 1);
+    level() {
+      return LevelCatalog.byNumber(this.levelNumber);
     },
     selectedTower() {
       // eslint-disable-next-line no-unused-expressions
@@ -178,25 +189,42 @@ export default {
     towerInfo() {
       const t = this.selectedTower;
       if (!t) return null;
+      const s = t.stats;
+      const stats = [];
+      if (t.type === 'barracks') stats.push({ key: 'soldiers', value: s.soldiers }, { key: 'hp', value: Math.round(s.hp * this.engine.game.modifier('soldierHp')) }, { key: 'dps', value: t.dps });
+      else if (t.type === 'watch') stats.push({ key: 'range', value: t.range.toFixed(1) }, { key: 'buff', value: `+${Math.round(s.rangeBuff * 100)}%` });
+      else if (t.type === 'treasury') stats.push({ key: 'income', value: Math.round(s.income * this.engine.game.modifier('income')) });
+      else stats.push({ key: 'damage', value: Math.round(s.damage) }, { key: 'range', value: t.range.toFixed(1) }, { key: 'dps', value: t.dps });
+      stats.push({ key: 'kills', value: t.kills });
+      const owner = this.coop ? this.activePlayer : 1;
       return {
         id: t.id,
         type: t.type,
         color: t.constructor.color,
         level: t.level,
-        maxLevel: t.maxLevel,
-        damage: t.stats.damage,
-        range: t.range.toFixed(1),
-        rate: t.stats.fireRate.toFixed(1),
-        kills: t.kills,
+        maxLevel: t.baseLevels + (t.constructor.elite ? 1 : 0),
+        elite: t.isElite,
+        nextElite: t.canUpgrade && t.level >= t.baseLevels,
+        eliteLocked: !t.canUpgrade && t.constructor.elite && !t.eliteUnlocked,
+        stats,
+        canTarget: t.constructor.targets !== 'none',
         canUpgrade: t.canUpgrade,
         upgradePrice: t.upgradePrice,
-        affordable: this.hud.gold >= t.upgradePrice,
-        sellValue: t.sellValue,
+        affordable: this.engine.game.player(t.owner).gold >= t.upgradePrice,
+        sellValue: this.engine.game.sellValue(t),
         targeting: t.targeting.constructor.id,
+        mine: !this.coop || t.owner === owner,
       };
     },
     shopItems() {
-      return TowerFactory.catalogue().map((item) => ({ ...item, affordable: this.hud.gold >= item.cost }));
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const g = this.engine.game;
+      if (!g) return [];
+      const gold = g.player(this.coop ? this.activePlayer : 1).gold;
+      return TowerFactory.catalogue()
+        .filter((c) => g.isTowerAllowed(c.type))
+        .map((c, i) => ({ ...c, cost: g.priceOf(c.type), affordable: gold >= g.priceOf(c.type), key: this.coop ? null : TOWER_KEYS[i] }));
     },
     cellState() {
       // eslint-disable-next-line no-unused-expressions
@@ -222,7 +250,24 @@ export default {
       // eslint-disable-next-line no-unused-expressions
       this.tick;
       if (!this.engine.game) return [];
-      return this.engine.game.waves.preview().map((g) => ({ ...g, color: EnemyFactory.registry.get(g.type).stats.color }));
+      return this.engine.game.waves.preview().map((g) => ({ ...g, color: EnemyFactory.get(g.type).stats.color }));
+    },
+    boss() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const g = this.engine.game;
+      const b = g && g.enemies.find((e) => e.boss && e.alive);
+      return b ? { ratio: b.hpRatio } : null;
+    },
+    p2Card() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const g = this.engine.game;
+      if (!g || !this.coop) return '';
+      const t = g.map.towerAt(this.p2.col, this.p2.row);
+      if (!t) return this.$t('coop.p2Help');
+      const up = t.canUpgrade ? this.$t('coop.p2Upgrade', { n: t.upgradePrice }) : this.$t('tower.max');
+      return `${this.$t('towers.' + t.type + '.name')} · ${this.$t('tower.level', { n: t.level })} · ${up}`;
     },
   },
   watch: {
@@ -231,20 +276,29 @@ export default {
     },
   },
   created() {
-    // Non-reactive holder for engine objects.
-    this.engine = markRaw({ game: null, renderer: null, loop: null, observer: null, lastSync: 0, size: '' });
-    this.levelIndex = this.$store.game.levelIndex;
+    // Non-reactive holder for engine objects (kept out of Vue for speed).
+    this.engine = markRaw({ game: null, renderer: null, loop: null, observer: null, lastSync: 0, size: '', tutorial: null });
+    this.levelNumber = this.$store.game.levelNumber;
+    this.coop = this.$store.game.track === 'coop';
+    this.rewards = { revive: false, double: false };
   },
   mounted() {
     this.setupGame();
     this._onPageHide = () => this.autosave();
     this._onVisibility = () => {
-      if (document.hidden) this.autosave();
+      if (document.hidden) {
+        this.autosave();
+        if (!this.paused && !this.end) this.togglePause();
+      }
     };
     this._onResize = () => this.resize();
+    this._onKey = (e) => this.onGlobalKey(e);
     window.addEventListener('pagehide', this._onPageHide);
     document.addEventListener('visibilitychange', this._onVisibility);
     window.addEventListener('resize', this._onResize, { passive: true });
+    window.addEventListener('keydown', this._onKey);
+    services.ads?.gameplayStart();
+    services.audio?.music('battle', { chapter: this.level.chapter });
   },
   beforeUnmount() {
     this.autosave();
@@ -253,27 +307,29 @@ export default {
     window.removeEventListener('pagehide', this._onPageHide);
     document.removeEventListener('visibilitychange', this._onVisibility);
     window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('keydown', this._onKey);
+    services.ads?.gameplayStop();
+    services.audio?.music('menu');
   },
   methods: {
     // ------------------------------------------------------------- setup
-    /**
-     * Creates (or restores from the save) the Game, then the Renderer and the GameLoop,
-     * and starts the loop. Called once when the screen is mounted.
-     */
     setupGame() {
-      const { resume, levelIndex } = this.$store.game;
+      const { resume, levelNumber, loadout } = this.$store.game;
+      const track = this.coop ? 'coop' : 'solo';
       let game = null;
       if (resume) game = Game.restore(services.saves.loadGame());
       if (!game) {
-        const level = LevelCatalog.get(levelIndex) || LevelCatalog.get(0);
+        const level = LevelCatalog.byNumber(levelNumber) || LevelCatalog.byNumber(1);
         game = new Game({
           level,
           difficulty: Difficulty.get(this.$store.difficulty),
-          unlockedPowers: services.saves.unlockedPowers,
+          loadout: loadout && loadout.length ? loadout : services.saves.loadout(track),
+          mods: services.saves.mods(),
+          players: this.coop ? 2 : 1,
+          hpMult: this.coop ? COOP_HP : 1,
         });
       }
-      this.levelIndex = game.level.index;
-      this.levelId = game.level.id;
+      this.coop = game.playerCount === 2;
       this.levelNumber = game.level.number;
 
       const renderer = new Renderer(this.$refs.canvas, game.level);
@@ -290,6 +346,12 @@ export default {
       this.engine.loop = markRaw(loop);
       this.bindGameEvents(game);
 
+      if (services.saves.settings.tutorials && !this.coop) {
+        const seenPowers = (id) => services.saves.hasSeen('tutorials', id);
+        const newPowers = game.powers.powers.map((p) => p.id).filter((id) => !seenPowers(`power-${id}`));
+        this.engine.tutorial = markRaw(new Tutorial({ level: game.level, newPowers, seen: seenPowers }));
+      }
+
       if (typeof ResizeObserver === 'function') {
         this.engine.observer = new ResizeObserver(() => this.resize());
         this.engine.observer.observe(this.$refs.boardWrap);
@@ -297,47 +359,78 @@ export default {
       this.resize();
       this.sync();
       loop.start();
-      if (game.state === 'wave' && resume) {
-        // Resumed mid-wave: start paused so the player can get ready.
+      if (game.state === 'running' && resume) {
+        // Resumed mid-level: start paused so the player can get ready.
         this.paused = true;
         game.paused = true;
       }
+      this.$nextTick(() => this.$refs.canvas && this.$refs.canvas.focus({ preventScroll: true }));
     },
 
-    /** Turns engine events into toasts, autosaves and the end-of-level dialog. */
     bindGameEvents(game) {
       const t = (k, p) => this.$t(k, p);
-      game.on('waveStart', ({ wave }) => this.$actions.toast(t('toast.waveStart', { n: wave })));
-      game.on('waveEnd', ({ wave, bonus }) => {
-        this.$actions.toast(t('toast.waveEnd', { n: wave, bonus }), 'success');
+      const audio = services.audio;
+      game.on('waveStart', ({ wave, total, early, bonus }) => {
+        this.$actions.toast(early ? t('toast.early', { n: wave, bonus }) : t('toast.waveStart', { n: wave, total }));
+        this.announce = t('toast.waveStart', { n: wave, total });
+        audio?.sfx('horn');
         this.autosave();
       });
       game.on('leak', () => {
+        if (game.lives <= game.maxLives * 0.3) audio?.surge(3, 3);
         this.livesHit = false;
         requestAnimationFrame(() => (this.livesHit = true));
         clearTimeout(this._hitTimer);
         this._hitTimer = setTimeout(() => (this.livesHit = false), 500);
+        audio?.sfx('leak');
       });
-      game.on('power', (id) => this.$actions.toast(t('toast.power', { power: t('powers.' + id + '.name') }), 'power'));
-      game.on('won', ({ stars, score }) => {
-        const unlocked = services.saves.completeLevel(game.level, game.difficulty.id, stars, score);
-        services.saves.clearGame();
-        this.finish({ won: true, stars, score, unlocked });
+      game.on('kill', (e) => audio?.sfx(e.boss ? 'bossDown' : 'kill'));
+      game.on('hit', ({ kind }) => audio?.sfx('hit-' + kind));
+      game.on('build', () => audio?.sfx('build'));
+      game.on('upgrade', () => audio?.sfx('upgrade'));
+      game.on('sell', () => audio?.sfx('sell'));
+      game.on('heal', () => audio?.sfx('heal'));
+      game.on('power', ({ id }) => {
+        this.$actions.toast(t('toast.power', { power: t('powers.' + id + '.name') }), 'power');
+        audio?.sfx('power-' + id);
       });
-      game.on('lost', ({ score }) => {
-        services.saves.clearGame();
-        this.finish({ won: false, stars: 0, score, unlocked: [] });
-      });
+      game.on('won', ({ stars, score }) => this.finish(true, stars, score));
+      game.on('lost', ({ score }) => this.finish(false, 0, score));
     },
 
-    finish(result) {
-      this.end = result;
+    finish(won, stars, score) {
+      const game = this.engine.game;
+      const level = game.level;
+      const track = this.coop ? 'coop' : 'solo';
+      services.saves.clearGame();
+      // Wave messages would cover the result panel.
+      this.$store.toasts.splice(0);
+      services.audio?.sfx(won ? 'victory' : 'defeat');
+      services.audio?.music(won ? 'victory' : 'menu');
+      services.ads?.gameplayStop();
+      const mask = won ? evaluateAchievements(level, runOf(game)) : 0;
+      const before = services.saves.achievementsFor(level.number, track);
+      const res = services.saves.completeLevel({ level, difficulty: game.difficulty.id, won, stars, score, mask, track });
+      const ids = achievementsFor(level);
+      this.end = {
+        won,
+        stars,
+        score,
+        crowns: res.crowns,
+        challenges: ids.map((id, i) => ({ id, passed: Boolean(mask & (1 << i)), newly: Boolean(mask & (1 << i)) && !(before & (1 << i)) })),
+        newPowers: res.newPowers,
+        last: won && level.number === LevelCatalog.count,
+        canRevive: !won && !game.revived && services.ads?.rewardedAvailable,
+        canDouble: won && res.crowns.total > 0 && services.ads?.rewardedAvailable,
+      };
+      if (won) services.ads?.happytime();
+      services.ads?.reportProgress((services.saves.campaign('solo').completed / LevelCatalog.count) * 100);
       this.clearSelection();
       this.sync();
-      this.$nextTick(() => {
-        const btn = this.$refs.endPrimary || this.$refs.endRetry;
-        if (btn) btn.focus();
-      });
+      for (const id of this.engine.tutorial?.finished || []) services.saves.markSeen('tutorials', id);
+      if (won && StoryRepository.beatAfter(level.number) && services.saves.settings.story) {
+        this.$actions.showStory(StoryRepository.beatAfter(level.number).id);
+      }
     },
 
     teardown() {
@@ -348,10 +441,6 @@ export default {
       clearTimeout(this._hitTimer);
     },
 
-    /**
-     * Fits the board to the available space. In portrait the board may be rotated
-     * by the Renderer to get bigger tiles. Skipped when the size did not change.
-     */
     resize() {
       const wrap = this.$refs.boardWrap;
       const r = this.engine.renderer;
@@ -359,8 +448,8 @@ export default {
       const width = wrap.clientWidth;
       const portrait = window.innerHeight > window.innerWidth;
       const top = wrap.getBoundingClientRect().top + window.scrollY;
-      const reserve = 76; // room for the wave bar under the board
-      const maxHeight = portrait ? window.innerHeight * 0.52 : Math.max(220, window.innerHeight - top - reserve);
+      const reserve = 70;
+      const maxHeight = portrait ? window.innerHeight * 0.52 : Math.max(200, window.innerHeight - top - reserve);
       const key = `${width}x${Math.round(maxHeight)}`;
       if (key === this.engine.size) return;
       this.engine.size = key;
@@ -368,70 +457,111 @@ export default {
     },
 
     // ------------------------------------------------------------- frame
-    /** Called by the GameLoop once per displayed frame: draws, and refreshes the HUD every 100 ms. */
     frame() {
       const { game, renderer } = this.engine;
+      const cursors = this.coop ? [{ ...this.p2, player: 2 }] : [];
+      const power = this.aiming ? game.powers.get(this.aiming) : null;
       renderer.render(game, {
         selectedCell: this.selectedCell,
         selectedTower: this.selectedTower,
-        hoverCell: this.hoverCell,
+        hoverCell: this.hover,
         previewType: this.armedType ? TowerFactory.get(this.armedType) : null,
         upgradePreview: this.upgradePreview,
+        aim: power && this.aimPoint ? { ...this.aimPoint, radius: power.constructor.radius } : null,
+        cursors,
+        coop: this.coop,
       });
       const now = performance.now();
       if (now - this.engine.lastSync > 100) this.sync(now);
     },
 
-    /**
-     * Copies the engine values the template needs into reactive data.
-     * Throttled by frame() so Vue does not re-render 60 times per second.
-     */
+    /** Copies what the template needs (throttled: Vue does not re-render 60 times per second). */
     sync(now = performance.now()) {
       const g = this.engine.game;
       if (!g) return;
       this.engine.lastSync = now;
       const h = this.hud;
       h.lives = g.lives;
-      h.gold = g.gold;
+      h.players = g.players.map((p) => ({ id: p.id, gold: p.gold }));
       h.wave = g.waves.current;
       h.total = g.waves.total;
-      h.score = g.score;
       h.state = g.state;
       h.canStart = g.canStartWave;
+      h.countdown = g.countdown === null ? 0 : Math.ceil(g.countdown);
+      h.bonus = g.earlyBonus;
+      h.done = !g.waves.hasMoreWaves;
       this.tick++;
+      if (!g.isOver) services.audio?.intensity(g.enemies.some((e) => e.boss) ? 3 : g.state === 'running' ? 2 : 1);
+      const tut = this.engine.tutorial;
+      if (tut && !this.end) {
+        const step = tut.current({ game: g, cellSelected: Boolean(this.selectedCell), armedType: this.armedType });
+        this.coachText = step ? this.coachMessage(step) : '';
+        for (const id of tut.finished.splice(0)) services.saves.markSeen('tutorials', id);
+      }
     },
 
-    /** Saves the game in progress to localStorage (between waves, on quit, when the tab is hidden). */
+    coachMessage(step) {
+      const p = { ...step.params };
+      if (p.type) p.tower = this.$t('towers.' + p.type + '.name');
+      if (p.type) p.desc = this.$t('towers.' + p.type + '.desc');
+      if (p.power) {
+        p.desc = this.$t('powers.' + p.power + '.desc');
+        p.power = this.$t('powers.' + p.power + '.name');
+      }
+      return this.$t('tutorial.' + step.key, p);
+    },
+
+    dismissCoach() {
+      this.engine.tutorial?.dismiss();
+      this.sync();
+    },
+
     autosave() {
       const g = this.engine.game;
       if (!g || g.isOver) return;
-      // Never save an untouched game over an existing save.
-      if (g.waves.current === 0 && g.towers.length === 0) return;
-      services.saves.saveGame(g.serialize());
+      if (g.state === 'prepare' && g.towers.length === 0) return;
+      services.saves.saveGame({ ...g.serialize(), track: this.coop ? 'coop' : 'solo' });
+    },
+
+    playerName(id) {
+      const n = services.saves.settings.names[id - 1];
+      return n || this.$t('coop.player', { n: id });
     },
 
     // ------------------------------------------------------------- input
+    owner() {
+      return this.coop ? this.activePlayer : 1;
+    },
+
+    setActivePlayer(p) {
+      this.activePlayer = p;
+      this.armedType = null;
+      this.selectedTowerId = null;
+    },
+
     onPointerDown(evt) {
-      if (this.end) return;
-      const cell = this.engine.renderer.cellFromEvent(evt);
-      this.handleCell(cell);
+      if (this.end || this.paused) return;
+      const r = this.engine.renderer;
+      if (this.aiming) {
+        this.castAimed(r.worldFromEvent(evt), this.owner());
+        return;
+      }
+      this.handleCell(r.cellFromEvent(evt), this.owner());
     },
 
     onPointerMove(evt) {
+      const r = this.engine.renderer;
+      if (this.aiming) this.aimPoint = r.worldFromEvent(evt);
       if (evt.pointerType !== 'mouse') return;
-      this.hoverCell = this.engine.renderer.cellFromEvent(evt);
+      this.hover = r.cellFromEvent(evt);
     },
 
-    /**
-     * Tap / click / Enter on a cell: selects a tower, or selects an empty cell
-     * and builds the "armed" tower type on it if there is one.
-     * @param {{col:number,row:number}} cell
-     */
-    handleCell({ col, row }) {
+    handleCell({ col, row }, owner) {
       const game = this.engine.game;
       if (!game.map.inBounds(col, row)) return;
       const tower = game.map.towerAt(col, row);
       if (tower) {
+        if (this.coop && tower.owner !== owner) this.setActivePlayer(tower.owner);
         this.selectedTowerId = tower.id;
         this.selectedCell = { col, row };
         this.armedType = null;
@@ -440,51 +570,111 @@ export default {
       }
       this.selectedTowerId = null;
       this.selectedCell = { col, row };
-      if (this.armedType && game.map.isBuildable(col, row)) this.build(this.armedType);
+      if (this.armedType && game.map.isBuildable(col, row)) this.build(this.armedType, owner);
       this.sync();
     },
 
-    /** Keyboard controls of the board (see the README for the list of keys). */
+    /** Keys on the focused board (solo, and player 2 in cooperation). */
     onKeyDown(evt) {
+      if (this.coop) return; // cooperation keys are global (see onGlobalKey)
       const game = this.engine.game;
       if (!game || this.end) return;
       const cell = this.selectedCell || { col: Math.floor(game.map.cols / 2), row: Math.floor(game.map.rows / 2) };
-      // Arrow keys follow what is on screen, even when the board is rotated (portrait phones).
-      const moves = this.engine.renderer.rotated
-        ? { ArrowLeft: [0, 1], ArrowRight: [0, -1], ArrowUp: [-1, 0], ArrowDown: [1, 0] }
-        : { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-      if (moves[evt.key]) {
+      const dir = this.arrow(evt.key);
+      if (dir) {
         evt.preventDefault();
-        const [dc, dr] = moves[evt.key];
-        const col = Math.min(game.map.cols - 1, Math.max(0, cell.col + dc));
-        const row = Math.min(game.map.rows - 1, Math.max(0, cell.row + dr));
+        const col = Math.min(game.map.cols - 1, Math.max(0, cell.col + dir[0]));
+        const row = Math.min(game.map.rows - 1, Math.max(0, cell.row + dir[1]));
         const tower = game.map.towerAt(col, row);
         this.selectedCell = { col, row };
         this.selectedTowerId = tower ? tower.id : null;
+        if (this.aiming) this.aimPoint = { x: col + 0.5, y: row + 0.5 };
         this.sync();
         return;
       }
-      const types = TowerFactory.catalogue().map((c) => c.type);
       const key = evt.key.toLowerCase();
-      if (/^[1-9]$/.test(evt.key) && types[Number(evt.key) - 1]) {
+      const ti = TOWER_KEYS.indexOf(evt.key);
+      if (ti >= 0 && this.shopItems[ti]) {
         evt.preventDefault();
         this.selectedCell = cell;
-        this.pickTower(types[Number(evt.key) - 1]);
+        this.pickTower(this.shopItems[ti].type);
       } else if (evt.key === 'Enter') {
         evt.preventDefault();
-        this.handleCell(cell);
-      } else if (evt.key === ' ') {
-        evt.preventDefault();
-        this.startWave();
-      } else if (key === 'p') {
-        this.togglePause();
+        if (this.aiming) this.castAimed({ x: cell.col + 0.5, y: cell.row + 0.5 }, 1);
+        else this.handleCell(cell, 1);
       } else if (key === 'u' && this.selectedTower) {
         this.upgrade();
       } else if (key === 's' && this.selectedTower) {
         this.sell();
-      } else if (evt.key === 'Escape') {
-        this.clearSelection();
       }
+    },
+
+    /** Keys anywhere: wave, pause, powers (and player 2 in cooperation). */
+    onGlobalKey(evt) {
+      const game = this.engine.game;
+      if (!game || this.$store.story || evt.target?.tagName === 'INPUT' || evt.target?.tagName === 'SELECT') return;
+      const key = evt.key.toLowerCase();
+      if (evt.key === 'Escape') {
+        if (this.aiming) this.aiming = null;
+        else if (this.selectedCell || this.armedType) this.clearSelection();
+        else if (!this.end) this.togglePause();
+        return;
+      }
+      if (this.end) return;
+      if (key === 'p') {
+        this.togglePause();
+        return;
+      }
+      if (evt.key === ' ' && (document.activeElement === this.$refs.canvas || document.activeElement === document.body || this.coop)) {
+        evt.preventDefault();
+        this.startWave();
+        return;
+      }
+      const pi = POWER_KEYS.indexOf(key);
+      if (pi >= 0 && game.powers.powers[pi]) {
+        evt.preventDefault();
+        const owner = this.coop ? 2 : 1;
+        const id = game.powers.powers[pi].id;
+        if (this.coop && game.powers.powers[pi].targeted) this.castAt(id, { x: this.p2.col + 0.5, y: this.p2.row + 0.5 }, 2);
+        else this.onPower(id, owner);
+        return;
+      }
+      if (!this.coop) return;
+      // Player 2: keyboard cursor.
+      const dir = this.arrow(evt.key);
+      if (dir) {
+        evt.preventDefault();
+        this.p2 = {
+          col: Math.min(game.map.cols - 1, Math.max(0, this.p2.col + dir[0])),
+          row: Math.min(game.map.rows - 1, Math.max(0, this.p2.row + dir[1])),
+        };
+        this.sync();
+        return;
+      }
+      const ti = TOWER_KEYS.indexOf(evt.key);
+      const allowed = TowerFactory.catalogue().filter((c) => game.isTowerAllowed(c.type));
+      if (ti >= 0 && allowed[ti]) {
+        evt.preventDefault();
+        const type = allowed[ti].type;
+        if (!game.canAfford(type, 2)) this.$actions.toast(this.$t('toast.noGoldP', { name: this.playerName(2) }), 'warn');
+        else game.buildTower(type, this.p2.col, this.p2.row, 2);
+        this.sync();
+        return;
+      }
+      const t = game.map.towerAt(this.p2.col, this.p2.row);
+      if (t && t.owner === 2 && key === 'u') game.upgradeTower(t, 2);
+      else if (t && t.owner === 2 && (evt.key === 'Backspace' || evt.key === 'Delete')) game.sellTower(t, 2);
+      this.sync();
+    },
+
+    /** Grid direction of an arrow key, or null. */
+    arrow(key) {
+      const map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+      const d = map[key];
+      if (!d) return null;
+      // Arrow keys follow what is on screen, even when the board is rotated.
+      if (this.engine.renderer?.rotated) return [d[1], -d[0]];
+      return d;
     },
 
     clearSelection() {
@@ -492,46 +682,42 @@ export default {
       this.selectedTowerId = null;
       this.armedType = null;
       this.upgradePreview = false;
+      this.aiming = null;
     },
 
     // ------------------------------------------------------------- actions
-    /**
-     * Shop click: builds immediately on the selected free cell,
-     * otherwise "arms" the type so the next tap on a free cell builds it.
-     * @param {string} type
-     */
     pickTower(type) {
       const game = this.engine.game;
+      const owner = this.owner();
       const c = this.selectedCell;
-      if (!game.canAfford(type)) {
+      if (!game.canAfford(type, owner)) {
         this.$actions.toast(this.$t('toast.noGold'), 'warn');
+        services.audio?.sfx('error');
         return;
       }
-      if (c && game.map.isBuildable(c.col, c.row)) {
-        this.build(type);
-      } else {
-        // Arm the tower: the next tap on a free tile builds it.
-        this.armedType = this.armedType === type ? null : type;
-      }
+      if (c && game.map.isBuildable(c.col, c.row)) this.build(type, owner);
+      else this.armedType = this.armedType === type ? null : type;
     },
 
-    build(type) {
+    build(type, owner) {
       const game = this.engine.game;
       const c = this.selectedCell;
-      const tower = game.buildTower(type, c.col, c.row);
+      const tower = game.buildTower(type, c.col, c.row, owner);
       if (!tower) return;
       // Keep the tower armed while the player can afford another one (fast building).
-      if (!game.canAfford(type)) this.armedType = null;
+      if (!game.canAfford(type, owner)) this.armedType = null;
       this.selectedCell = null;
       this.sync();
     },
 
     upgrade() {
-      if (this.selectedTower && this.engine.game.upgradeTower(this.selectedTower)) this.sync();
+      const t = this.selectedTower;
+      if (t && this.engine.game.upgradeTower(t, t.owner)) this.sync();
     },
 
     sell() {
-      if (this.selectedTower && this.engine.game.sellTower(this.selectedTower)) {
+      const t = this.selectedTower;
+      if (t && this.engine.game.sellTower(t, t.owner)) {
         this.clearSelection();
         this.sync();
       }
@@ -547,11 +733,40 @@ export default {
       if (this.engine.game.startWave()) this.sync();
     },
 
+    onPower(id, owner = this.owner()) {
+      const game = this.engine.game;
+      const p = game.powers.get(id);
+      if (!p || !p.isReady || game.state !== 'running') return;
+      if (p.targeted) {
+        this.aiming = this.aiming === id ? null : id;
+        this.armedType = null;
+        this.selectedTowerId = null;
+        this.aimPoint = this.selectedCell ? { x: this.selectedCell.col + 0.5, y: this.selectedCell.row + 0.5 } : null;
+        if (this.aiming) this.$actions.toast(this.$t('powers.aimHelp'));
+        return;
+      }
+      if (game.activatePower(id, null, owner)) this.sync();
+    },
+
+    castAimed(point, owner) {
+      const id = this.aiming;
+      this.aiming = null;
+      this.castAt(id, point, owner);
+    },
+
+    castAt(id, point, owner) {
+      if (this.engine.game.activatePower(id, point, owner)) this.sync();
+    },
+
     togglePause() {
       if (this.end) return;
       this.paused = !this.paused;
       this.engine.game.paused = this.paused;
-      if (!this.paused) this.$refs.canvas.focus({ preventScroll: true });
+      if (this.paused) services.ads?.gameplayStop();
+      else {
+        services.ads?.gameplayStart();
+        this.$refs.canvas?.focus({ preventScroll: true });
+      }
     },
 
     cycleSpeed() {
@@ -559,27 +774,50 @@ export default {
       this.engine.loop.timeScale = this.speed;
     },
 
-    activatePower(id) {
-      if (this.engine.game.activatePower(id)) this.sync();
+    async revive() {
+      const ticket = await services.ads?.rewarded('revive');
+      if (!RewardTicket.redeem(ticket, 'revive')) return;
+      if (this.engine.game.revive(5)) {
+        this.end = null;
+        services.ads?.gameplayStart();
+        services.audio?.music('battle', { chapter: this.level.chapter });
+      }
+    },
+
+    async doubleCrowns() {
+      const ticket = await services.ads?.rewarded('double-crowns');
+      if (!RewardTicket.redeem(ticket, 'double-crowns') || !this.end) return;
+      services.saves.addBonusCrowns(this.end.crowns.total);
+      this.end = { ...this.end, crowns: { ...this.end.crowns, total: this.end.crowns.total * 2 }, canDouble: false };
     },
 
     saveAndQuit() {
       const g = this.engine.game;
-      services.saves.saveGame(g.serialize());
+      services.saves.saveGame({ ...g.serialize(), track: this.coop ? 'coop' : 'solo' });
       this.$actions.toast(this.$t('toast.saved'), 'success');
-      this.$actions.go('menu');
+      this.$actions.openCampaign(this.coop ? 'coop' : 'solo');
     },
 
     quit() {
-      this.$actions.go('menu');
+      this.$actions.openCampaign(this.coop ? 'coop' : 'solo');
     },
 
-    restart() {
-      this.$actions.startLevel(this.levelIndex);
+    async restart() {
+      await this.$actions.betweenLevels();
+      this.$actions.startLevel(this.levelNumber, { track: this.coop ? 'coop' : 'solo' });
     },
 
-    nextLevel() {
-      this.$actions.startLevel(this.levelIndex + 1);
+    async nextLevel() {
+      await this.$actions.betweenLevels();
+      const track = this.coop ? 'coop' : 'solo';
+      this.$actions.openCampaign(track);
+      this.$store.chapter = Math.min(10, Math.floor(this.levelNumber / 10) + 1);
+      this.$actions.openBriefing(Math.min(LevelCatalog.count, this.levelNumber + 1));
+    },
+
+    async toLevels() {
+      await this.$actions.betweenLevels();
+      this.$actions.openCampaign(this.coop ? 'coop' : 'solo');
     },
   },
 };
