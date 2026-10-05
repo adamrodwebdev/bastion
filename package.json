@@ -1,8 +1,8 @@
 {
   "name": "bastion-tower-defense",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Bastion — tower defense 100% front-end (Vue 3 + Vite), jouable sur mobile, FR/EN, mode sombre.",
+  "description": "Bastion — tower defense 100% front-end (Vue 3 + Vite) : campagne de 100 niveaux, histoire, succès, améliorations, coopération et duel à deux sur le même écran. FR/EN, mobile, mode sombre.",
   "author": "adamrodwebdev",
   "repository": {
     "type": "git",
@@ -15,8 +15,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:crazygames": "vite build --mode crazygames",
+    "build:poki": "vite build --mode poki",
     "preview": "vite preview",
     "test": "node scripts/simulate.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "build:standalone": "node scripts/build-standalone.mjs"
   },
   "dependencies": {
