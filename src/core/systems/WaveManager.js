@@ -1,29 +1,31 @@
 /**
- * @file Turns wave definitions into a spawn schedule and spawns enemies on time.
+ * @file Turns wave definitions into a spawn schedule and tells the game when to spawn.
  */
 
-import { EnemyFactory } from '../entities/enemies/EnemyFactory.js';
-
 /**
- * Turns the level's wave definitions into a timed spawn schedule
- * and spawns enemies when their time comes.
+ * Keeps a single clock and a queue of spawn orders. Waves may overlap: when
+ * the player calls the next wave early, its orders join the queue while the
+ * previous ones are still coming.
+ *
+ * In endless mode (duel), waves past the end of the list are produced by
+ * `extraWave(index)`.
  */
 export class WaveManager {
   /**
    * @param {import('../config/Level.js').Level} level
-   * @param {import('../config/Difficulty.js').Difficulty} difficulty
+   * @param {{endless?:boolean, extraWave?:(index:number)=>Array<object>}} [opts]
    */
-  constructor(level, difficulty) {
+  constructor(level, { endless = false, extraWave = null } = {}) {
     this.level = level;
-    this.difficulty = difficulty;
-    this.waveIndex = -1; // index of the wave currently running / last run
-    this.queue = []; // [{ time, type }]
-    this.elapsed = 0;
-    this.spawning = false;
+    this.endless = endless;
+    this.extraWave = extraWave;
+    this.waveIndex = -1; // index of the last wave started
+    this.queue = []; // [{ time, type, path, air, wave }]
+    this.clock = 0;
   }
 
   get total() {
-    return this.level.waveCount;
+    return this.endless ? Infinity : this.level.waveCount;
   }
 
   /** Number of waves already started (1-based for display). */
@@ -32,66 +34,66 @@ export class WaveManager {
   }
 
   get hasMoreWaves() {
-    return this.waveIndex < this.total - 1;
+    return this.endless || this.waveIndex < this.level.waveCount - 1;
+  }
+
+  /** Are spawn orders still pending? */
+  get spawning() {
+    return this.queue.length > 0;
+  }
+
+  /** Is the latest wave still spawning? */
+  get currentWaveSpawning() {
+    return this.queue.some((q) => q.wave === this.waveIndex);
+  }
+
+  /** Groups of a wave (from the level, or generated in endless mode). */
+  wave(index) {
+    if (index < this.level.waveCount) return this.level.waves[index];
+    return this.extraWave ? this.extraWave(index) : [];
   }
 
   /** Composition of the upcoming wave, for the "next wave" preview. */
   preview() {
-    const next = this.level.waves[this.waveIndex + 1];
-    if (!next) return [];
+    if (!this.hasMoreWaves) return [];
+    const next = this.wave(this.waveIndex + 1);
     const totals = {};
     for (const g of next) totals[g.type] = (totals[g.type] || 0) + g.count;
     return Object.entries(totals).map(([type, count]) => ({ type, count }));
   }
 
+  /** Queues the next wave. @returns {boolean} */
   startNext() {
     if (!this.hasMoreWaves) return false;
     this.waveIndex += 1;
-    this.queue = WaveManager.buildSchedule(this.level.waves[this.waveIndex]);
-    this.elapsed = 0;
-    this.spawning = true;
+    const w = this.waveIndex;
+    for (const g of this.wave(w)) {
+      for (let i = 0; i < g.count; i++) {
+        this.queue.push({ time: this.clock + g.delay + i * g.interval, type: g.type, path: g.path, air: g.air, wave: w });
+      }
+    }
+    this.queue.sort((a, b) => a.time - b.time);
     return true;
   }
 
-  static buildSchedule(groups) {
-    const q = [];
-    for (const g of groups) {
-      for (let i = 0; i < g.count; i++) q.push({ time: g.delay + i * g.interval, type: g.type });
-    }
-    return q.sort((a, b) => a.time - b.time);
-  }
-
-  scaling() {
-    const d = this.difficulty;
-    return {
-      hpMult: this.level.waveHpScale(Math.max(0, this.waveIndex)) * d.hpMult,
-      speedMult: d.speedMult,
-      rewardMult: d.rewardMult,
-    };
-  }
-
-  /** @returns {import('../entities/enemies/Enemy.js').Enemy[]} newly spawned enemies */
-  update(dt, path) {
-    if (!this.spawning) return [];
-    this.elapsed += dt;
-    const spawned = [];
-    const scaling = this.scaling();
-    while (this.queue.length && this.queue[0].time <= this.elapsed) {
-      const { type } = this.queue.shift();
-      spawned.push(EnemyFactory.create(type, path, scaling));
-    }
-    if (!this.queue.length) this.spawning = false;
-    return spawned;
+  /**
+   * Advances the clock.
+   * @returns {Array<{type:string, path:number, air:boolean, wave:number}>} orders due now
+   */
+  update(dt) {
+    this.clock += dt;
+    const due = [];
+    while (this.queue.length && this.queue[0].time <= this.clock) due.push(this.queue.shift());
+    return due;
   }
 
   serialize() {
-    return { waveIndex: this.waveIndex, queue: this.queue, elapsed: this.elapsed, spawning: this.spawning };
+    return { waveIndex: this.waveIndex, queue: this.queue, clock: this.clock };
   }
 
   restore(data) {
     this.waveIndex = data.waveIndex;
     this.queue = data.queue || [];
-    this.elapsed = data.elapsed || 0;
-    this.spawning = !!data.spawning;
+    this.clock = data.clock || 0;
   }
 }

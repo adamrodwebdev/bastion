@@ -10,7 +10,37 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 ## [Non publié]
 
+## [2.0.0] - 2026-10-05
+
+Bastion change de dimension : le jeu rejoint le royaume de Catapulte Mania et devient une vraie campagne.
+
 ### Ajouté
+
+- **Campagne de 100 niveaux** en 10 chapitres, chacun avec son décor, ses routes et son boss. Certains niveaux ont plusieurs routes ou des rivières.
+- **Histoire** : un prologue, un épisode par chapitre et un épilogue, avec la reine Ysolde, le vieux roi Aubert, Maître Gontran et le duc Mordrac. Une réplique de briefing pour chacun des 100 niveaux. Écran « Chronique » pour relire les épisodes.
+- **10 tours** (7 nouvelles : Caserne, Baliste, Tour de guet, Trésorerie, Catapulte, Brasero et Tour d'orage ; le Laser disparaît) avec 4 types de dégâts (physique, feu, magie, pur) et une **version d'élite** par tour.
+- **18 ennemis** (13 nouveaux) : volants, invisibles, soigneurs, sapeurs, golems, béliers, nécromanciens, tours de siège, champions et le duc Mordrac.
+- **10 pouvoirs** à chronomètre (7 nouveaux ; la Surcharge disparaît). Avant chaque niveau, on choisit ceux que l'on emporte.
+- **300 succès** : 3 défis par niveau, dans 19 familles différentes.
+- **Atelier** : améliorations permanentes achetées avec des couronnes gagnées en jouant (victoires, étoiles, défis).
+- **Deux joueurs sur le même écran** : campagne en **coopération** (100 niveaux, sa propre progression) et **duel** en écran partagé sur 8 arènes.
+- **Aide pas à pas** dans les premiers niveaux et à chaque nouvelle tour ou nouveau pouvoir.
+- Appel anticipé des vagues, avec de l'or en bonus.
+- **Musique et bruitages** générés par le navigateur, avec réglage du volume.
+- Versions pour **CrazyGames** et **Poki** (`npm run build:crazygames`, `npm run build:poki`), avec publicités facultatives (revivre, doubler les couronnes).
+- Content-Security-Policy stricte ajoutée au moment du build.
+- Vérification automatique des traductions (`npm run check:i18n`).
+
+### Modifié
+
+- Nouvelle direction artistique « bannière héraldique » commune avec Catapulte Mania, en clair comme en sombre.
+- Le robot de test joue désormais les 100 niveaux, dans les 3 difficultés.
+
+### Compatibilité
+
+- Les sauvegardes de la version 1 sont converties automatiquement. Une partie en cours de la version 1 ne peut pas être reprise.
+
+### Mise en ligne
 
 - Mise en ligne sur Netlify (https://bastion-tower-defense.netlify.app), avec déploiement automatique à chaque push sur `main`.
 - En-têtes de cache et de sécurité (`netlify.toml`).

@@ -1,14 +1,14 @@
 {
   "name": "Bastion — Tower defense",
   "short_name": "Bastion",
-  "description": "Tower defense gratuit jouable sur navigateur, tablette et mobile.",
+  "description": "Tower defense gratuit : 100 niveaux, une histoire, et un mode à deux joueurs sur le même écran.",
   "lang": "fr",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f6f4ef",
-  "theme_color": "#f6f4ef",
+  "background_color": "#d9d5c8",
+  "theme_color": "#1e1a2b",
   "categories": ["games", "entertainment"],
   "icons": [
     { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },

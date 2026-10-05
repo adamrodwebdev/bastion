@@ -49,8 +49,14 @@ function build() {
   rmSync(OUT, { recursive: true, force: true });
   for (const file of walk(join(ROOT, 'src'))) {
     const rel = relative(ROOT, file);
-    const src = readFileSync(file, 'utf8');
     let target = join(OUT, rel);
+    mkdirSync(dirname(target), { recursive: true });
+    // Binary assets (fonts, images) are copied as-is: reading them as text would corrupt them.
+    if (!/\.(vue|js|css)$/.test(file)) {
+      copyFileSync(file, target);
+      continue;
+    }
+    const src = readFileSync(file, 'utf8');
     let out = src;
     if (file.endsWith('.vue')) {
       target += '.js';

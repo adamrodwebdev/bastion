@@ -17,9 +17,9 @@ export class Difficulty {
     Object.freeze(this);
   }
 
-  static EASY = new Difficulty('easy', { hpMult: 0.75, speedMult: 0.9, rewardMult: 1.2, goldMult: 1.3, lives: 25, scoreMult: 0.75 });
+  static EASY = new Difficulty('easy', { hpMult: 0.75, speedMult: 0.92, rewardMult: 1.15, goldMult: 1.25, lives: 25, scoreMult: 0.75 });
   static NORMAL = new Difficulty('normal', { hpMult: 1, speedMult: 1, rewardMult: 1, goldMult: 1, lives: 20, scoreMult: 1 });
-  static HARD = new Difficulty('hard', { hpMult: 1.25, speedMult: 1.08, rewardMult: 0.95, goldMult: 0.95, lives: 15, scoreMult: 1.6 });
+  static HARD = new Difficulty('hard', { hpMult: 1.3, speedMult: 1.08, rewardMult: 0.95, goldMult: 0.95, lives: 12, scoreMult: 1.6 });
 
   static all() {
     return [Difficulty.EASY, Difficulty.NORMAL, Difficulty.HARD];

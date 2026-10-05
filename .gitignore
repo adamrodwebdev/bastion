@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+dist-*/
 standalone/
 
 # Local tools and logs

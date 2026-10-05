@@ -1,24 +1,38 @@
 /**
- * @file Holds the unlocked powers, updates their timers and combines their effects.
+ * @file Holds the powers taken into a level, updates their timers and combines their effects.
  */
 
 import { ALL_POWERS } from './powers.js';
+import { POWER_UNLOCK } from '../config/unlocks.js';
 
-/** Owns the unlocked powers, updates their timers and aggregates modifiers. */
+/** Default number of powers a player can take into a level. */
+export const DEFAULT_SLOTS = 4;
+
 export class PowerManager {
-  /** @param {string[]} unlockedIds */
-  constructor(unlockedIds = []) {
-    this.powers = ALL_POWERS.filter((P) => unlockedIds.includes(P.id)).map((P) => new P());
+  /** @param {string[]} loadout ids of the powers taken into the level */
+  constructor(loadout = []) {
+    this.powers = ALL_POWERS.filter((P) => loadout.includes(P.id)).map((P) => new P());
+    // Keep the player's chosen order.
+    this.powers.sort((a, b) => loadout.indexOf(a.id) - loadout.indexOf(b.id));
     this._cache = null;
   }
 
   /**
    * Powers unlocked once `completedLevels` levels have been beaten.
    * @param {number} completedLevels
-   * @returns {string[]} power ids
+   * @returns {string[]} power ids, in unlock order
    */
   static unlockedFor(completedLevels) {
-    return ALL_POWERS.filter((P) => completedLevels >= P.unlockAfterLevel).map((P) => P.id);
+    return ALL_POWERS.filter((P) => completedLevels >= POWER_UNLOCK[P.id]).map((P) => P.id);
+  }
+
+  /**
+   * Default loadout: the most recently unlocked powers that fit in the slots.
+   * @param {number} completedLevels
+   * @param {number} [slots]
+   */
+  static defaultLoadout(completedLevels, slots = DEFAULT_SLOTS) {
+    return PowerManager.unlockedFor(completedLevels).slice(0, slots);
   }
 
   static catalogue() {
@@ -27,7 +41,9 @@ export class PowerManager {
       icon: P.icon,
       duration: P.duration,
       cooldown: P.cooldown,
-      unlockAfterLevel: P.unlockAfterLevel,
+      targeted: P.targeted,
+      radius: P.radius,
+      unlockAfterLevel: POWER_UNLOCK[P.id],
     }));
   }
 
@@ -38,11 +54,12 @@ export class PowerManager {
   /**
    * @param {string} id
    * @param {import('../Game.js').Game} game
-   * @returns {boolean} false if locked or not ready
+   * @param {{x:number,y:number}|null} [target]
+   * @returns {boolean} false if not taken, not ready, or missing a target
    */
-  activate(id, game) {
+  activate(id, game, target = null) {
     const p = this.get(id);
-    const ok = !!p && p.activate(game);
+    const ok = !!p && p.activate(game, target);
     this._cache = null;
     return ok;
   }
@@ -50,6 +67,11 @@ export class PowerManager {
   update(dt, game) {
     for (const p of this.powers) p.update(dt, game);
     this._cache = null;
+  }
+
+  /** Total number of power activations (statistics). */
+  get totalUses() {
+    return this.powers.reduce((s, p) => s + p.uses, 0);
   }
 
   /**

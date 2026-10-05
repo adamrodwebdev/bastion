@@ -1,18 +1,16 @@
 <template>
-  <section v-if="powers.length" class="panel power-bar" aria-labelledby="powers-bar-title">
-    <h2 id="powers-bar-title" class="panel-title">
-      {{ $t('powers.title') }}
-      <small v-if="!waveRunning">{{ $t('powers.onlyDuringWave') }}</small>
-    </h2>
+  <section v-if="powers.length" class="panel power-bar" :aria-label="$t('powers.title')">
     <div class="power-grid">
       <button
-        v-for="p in powers"
+        v-for="(p, i) in powers"
         :key="p.id"
         type="button"
         class="power-btn"
-        :class="'is-' + p.state"
-        :disabled="!p.ready || !waveRunning"
+        :class="['is-' + p.state, { 'is-aiming': aiming === p.id }]"
+        :disabled="!p.ready || !enabled"
+        :aria-pressed="aiming === p.id ? 'true' : undefined"
         :title="$t('powers.' + p.id + '.desc')"
+        :data-tutorial="'power-' + p.id"
         @click="$emit('activate', p.id)"
       >
         <svg class="chrono" viewBox="0 0 44 44" aria-hidden="true">
@@ -23,13 +21,16 @@
         <span class="power-label">
           <span class="power-name">{{ $t('powers.' + p.id + '.name') }}</span>
           <span class="power-state">
-            <template v-if="p.state === 'ready'">{{ $t('powers.ready') }}</template>
+            <template v-if="aiming === p.id">{{ $t('powers.aim') }}</template>
+            <template v-else-if="p.state === 'ready'">{{ $t('powers.ready') }}</template>
             <template v-else-if="p.state === 'active'">{{ $t('powers.active', { s: p.seconds }) }}</template>
             <template v-else>{{ $t('powers.cooldown', { s: p.seconds }) }}</template>
           </span>
         </span>
+        <kbd v-if="keys[i]" class="power-key" aria-hidden="true">{{ keys[i] }}</kbd>
       </button>
     </div>
+    <p v-if="!enabled" class="power-hint">{{ $t('powers.onlyDuringWave') }}</p>
   </section>
 </template>
 
@@ -41,7 +42,9 @@ export default {
   name: 'PowerBar',
   props: {
     powers: { type: Array, required: true },
-    waveRunning: { type: Boolean, default: false },
+    enabled: { type: Boolean, default: false },
+    aiming: { type: String, default: null },
+    keys: { type: Array, default: () => ['Q', 'W', 'E', 'R', 'T'] },
   },
   emits: ['activate'],
   data() {

@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Bastion — Tower defense gratuit sur navigateur et mobile</title>
+    <title>Bastion — Tower defense gratuit : 100 niveaux, à deux sur le même écran</title>
     <meta
       name="description"
-      content="Bastion est un tower defense gratuit jouable dans le navigateur, sur mobile et tablette : 6 niveaux, 4 tours, pouvoirs spéciaux, 3 difficultés, sauvegarde automatique et mode sombre."
+      content="Bastion est un tower defense gratuit dans le navigateur, sur mobile et tablette : 100 niveaux, 10 tours, 18 ennemis, 10 pouvoirs, 300 succès, une histoire, la coopération et le duel à deux sur le même écran."
     />
-    <meta name="keywords" content="tower defense, jeu gratuit, jeu navigateur, jeu mobile, stratégie, Vue.js" />
+    <meta name="keywords" content="tower defense, jeu gratuit, jeu navigateur, jeu mobile, stratégie, multijoueur local, coopération, médiéval" />
     <meta name="author" content="Bastion" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <link rel="canonical" href="https://bastion-tower-defense.netlify.app/" />
@@ -16,9 +16,9 @@
     <link rel="alternate" hreflang="en" href="https://bastion-tower-defense.netlify.app/?lang=en" />
     <link rel="alternate" hreflang="x-default" href="https://bastion-tower-defense.netlify.app/" />
 
-    <meta name="theme-color" content="#f6f4ef" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f4ef" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f1117" />
+    <meta name="theme-color" content="#d9d5c8" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#d9d5c8" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141120" />
     <meta name="color-scheme" content="light dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -33,7 +33,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bastion" />
     <meta property="og:title" content="Bastion — Tower defense gratuit" />
-    <meta property="og:description" content="6 niveaux, 4 tours, des pouvoirs spéciaux et 3 difficultés. Jouable sur ordinateur, tablette et téléphone." />
+    <meta property="og:description" content="100 niveaux, 10 tours, 10 pouvoirs, une histoire et un mode à deux joueurs. Jouable sur ordinateur, tablette et téléphone." />
     <meta property="og:url" content="https://bastion-tower-defense.netlify.app/" />
     <meta property="og:image" content="https://bastion-tower-defense.netlify.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
@@ -42,7 +42,7 @@
     <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Bastion — Tower defense gratuit" />
-    <meta name="twitter:description" content="Défendez le bastion vague après vague, sur mobile comme sur ordinateur." />
+    <meta name="twitter:description" content="Défendez le royaume pendant 100 niveaux, seul ou à deux sur le même écran." />
     <meta name="twitter:image" content="https://bastion-tower-defense.netlify.app/og-image.png" />
 
     <!-- Structured data -->
@@ -52,14 +52,15 @@
         "@type": "VideoGame",
         "name": "Bastion",
         "url": "https://bastion-tower-defense.netlify.app/",
-        "description": "Tower defense gratuit jouable dans le navigateur : 6 niveaux, 4 tours, pouvoirs spéciaux, 3 difficultés.",
+        "description": "Tower defense gratuit dans le navigateur : campagne de 100 niveaux, 10 tours, 18 ennemis, 10 pouvoirs, 300 succès, coopération et duel à deux sur le même écran.",
+        "version": "2.0.0",
         "genre": ["Tower defense", "Strategy"],
         "gamePlatform": ["Web browser", "Mobile", "Tablet"],
         "applicationCategory": "Game",
         "operatingSystem": "Any",
         "inLanguage": ["fr", "en"],
-        "playMode": "SinglePlayer",
-        "numberOfPlayers": { "@type": "QuantitativeValue", "value": 1 },
+        "playMode": ["SinglePlayer", "CoOp", "MultiPlayer"],
+        "numberOfPlayers": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 2 },
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
       }
     </script>
@@ -83,7 +84,7 @@
         <section class="menu">
           <div class="hero">
             <h1 class="hero-title">Bastion</h1>
-            <p class="hero-tagline">Défendez le bastion. Une vague après l’autre.</p>
+            <p class="hero-tagline">Défendez le royaume. 100 niveaux, seul ou à deux.</p>
           </div>
           <noscript>
             <p class="notice notice--warn">JavaScript est nécessaire pour jouer à Bastion. / JavaScript is required to play Bastion.</p>
@@ -95,20 +96,23 @@
     <section class="seo-about" aria-labelledby="about-title">
       <h2 id="about-title">Bastion, un tower defense gratuit dans votre navigateur</h2>
       <p>
-        Placez des tours le long de la route, améliorez-les et repoussez des vagues d’ennemis de plus en plus
-        puissantes. Bastion se joue sans installation sur ordinateur, tablette et téléphone, en français ou en anglais.
+        Le duc Mordrac marche sur le royaume. Placez vos tours le long des routes, améliorez-les et repoussez
+        ses armées pendant une campagne de 100 niveaux. Bastion se joue sans installation sur ordinateur, tablette
+        et téléphone, en français ou en anglais.
       </p>
       <ul>
-        <li>6 niveaux à la difficulté croissante, de la Prairie à l’Abysse.</li>
-        <li>4 tours : Archer, Canon, Givre et Laser, chacune améliorable trois fois.</li>
-        <li>4 pouvoirs spéciaux à débloquer (Gel, Météores, Ruée vers l’or, Surcharge), limités par un chronomètre.</li>
-        <li>3 niveaux de difficulté : Facile, Normal, Difficile.</li>
-        <li>Sauvegarde automatique dans le navigateur, mode sombre et commandes au clavier.</li>
+        <li>Une campagne de 100 niveaux en 10 chapitres, racontée par des personnages.</li>
+        <li>10 tours (archers, caserne, canon, givre, baliste, catapulte, feu, foudre…) avec une version d’élite.</li>
+        <li>18 ennemis : volants, invisibles, blindés, soigneurs, béliers et boss.</li>
+        <li>10 pouvoirs spéciaux limités par un chronomètre, et un atelier d’améliorations permanentes.</li>
+        <li>3 défis par niveau, soit 300 succès à décrocher.</li>
+        <li>À deux sur le même écran : campagne en coopération ou duel en écran partagé.</li>
+        <li>3 difficultés, sauvegarde automatique, mode sombre et commandes au clavier.</li>
       </ul>
       <h2 lang="en">Bastion, a free browser tower defense game</h2>
       <p lang="en">
-        Build and upgrade towers, unlock timed special powers and survive increasingly difficult waves across six
-        levels. Playable on desktop, tablet and mobile, in English or French.
+        Build and upgrade towers, unlock timed special powers and stop Duke Mordrac across a 100-level story campaign.
+        Play alone, in co-op or in a split-screen duel on the same device, on desktop, tablet or phone.
       </p>
     </section>
 
