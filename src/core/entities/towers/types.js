@@ -145,7 +145,7 @@ export class CatapultTower extends Tower {
   }
 }
 
-/** Greek fire: short range, sets enemies on fire. Mastery: leaves burning ground. */
+/** Brazier: short range, sets enemies on fire. Mastery: leaves burning ground. */
 export class FireTower extends Tower {
   static type = 'fire';
   static cost = 120;

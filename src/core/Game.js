@@ -34,6 +34,9 @@ export const DEFAULT_MODS = Object.freeze({
   elite: [],
 });
 
+/** Extra enemy health when two players defend the same board together. */
+export const COOP_HP = 1.45;
+
 /** Colours of the players in two-player modes (also marked by a shape). */
 export const PLAYER_COLORS = Object.freeze(['#3e8ed0', '#e0662a']);
 
@@ -132,6 +135,8 @@ export class Game extends EventEmitter {
       blocks: 0,
       flyersKilled: 0,
       stealthKilled: 0,
+      flyerLeaks: 0,
+      stealthLeaks: 0,
       bossKills: 0,
       bossFurthest: 0,
       maxProgress: 0,
@@ -503,6 +508,8 @@ export class Game extends EventEmitter {
     this.lives -= lost;
     this.stats.leaks += 1;
     this.stats.livesLost += lost;
+    if (enemy.flying) this.stats.flyerLeaks += 1;
+    if (enemy.stealth) this.stats.stealthLeaks += 1;
     if (enemy.boss) this.stats.bossFurthest = 1;
     this.shake(0.25);
     this.emit('leak', { lives: this.lives, lost });
@@ -621,6 +628,28 @@ export class Game extends EventEmitter {
     let j = 0;
     for (let i = 0; i < arr.length; i++) if (arr[i].alive) arr[j++] = arr[i];
     arr.length = j;
+  }
+
+  /**
+   * Second chance after a defeat (rewarded video on portals): the level goes
+   * on with a few lives, and enemies close to the exit are pushed back.
+   * @param {number} lives
+   * @returns {boolean}
+   */
+  revive(lives = 5) {
+    if (this.state !== 'lost') return false;
+    this.lives = Math.min(this.maxLives, lives);
+    this.state = 'running';
+    this.revived = true;
+    for (const e of this.enemies) {
+      if (e.alive && e.progress > 0.75) {
+        e.distance = e.path.length * 0.5;
+        const p = e.path.pointAt(e.distance);
+        e.x = p.x;
+        e.y = p.y;
+      }
+    }
+    return true;
   }
 
   // ---------------------------------------------------------------- duel

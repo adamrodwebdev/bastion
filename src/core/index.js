@@ -2,7 +2,7 @@
  * @file Public API of the game engine. The UI should only import from this file.
  */
 
-export { Game, DEFAULT_MODS, PLAYER_COLORS } from './Game.js';
+export { Game, DEFAULT_MODS, PLAYER_COLORS, COOP_HP } from './Game.js';
 export { GameLoop } from './systems/GameLoop.js';
 export { Renderer } from './rendering/Renderer.js';
 export { LevelCatalog, LEVEL_COUNT } from './config/LevelCatalog.js';
