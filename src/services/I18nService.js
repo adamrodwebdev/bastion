@@ -7,8 +7,8 @@ import { EventEmitter } from '../core/utils/EventEmitter.js';
 /**
  * Lightweight translation service.
  *  - nested keys:      t('menu.play')
- *  - interpolation:    t('hud.wave', { n: 3, total: 8 })  →  "Vague {n}/{total}"
- *  - plural:           "1 étoile|{count} étoiles"         →  t(key, { count })
+ *  - interpolation:    t('hud.wave', { n: 3, total: 8 })  →  "Wave {n}/{total}"
+ *  - plural:           "1 star|{count} stars"             →  t(key, { count })
  *  - language detection: ?lang= query → saved setting → browser language
  * Also keeps <html lang>, <title> and meta description in sync (SEO / a11y).
  *
