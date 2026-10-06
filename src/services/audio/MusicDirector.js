@@ -22,11 +22,22 @@ import { SeededRandom } from '../../core/utils/SeededRandom.js'
  * Pieces are modal chord progressions (Dorian, Aeolian); melodies are drawn
  * from a fixed-seed generator: each piece always sounds the same, but without
  * an audible loop of a few seconds.
+ *
+ * The main theme (menus) uses a second, futuristic orchestra ("synth" style):
+ * pulsing pad that ducks under the kick, sixteenth-note arpeggiator with echo,
+ * gliding lead, sub bass and electronic drums. It plays at intensity 0, so it
+ * builds its own 16-bar structure: intro, full groove, breakdown with a riser.
  */
 
 /** Pieces: tempo, mode, chord progression (root in semitones, m = minor). */
 export const PIECES = Object.freeze({
-  menu: { bpm: 80, scale: [0, 2, 3, 5, 7, 9, 10], chords: [[0, 'm'], [-2, 'M'], [5, 'M'], [0, 'm']], seed: 11 },
+  menu: {
+    bpm: 100,
+    style: 'synth',
+    scale: [0, 2, 3, 5, 7, 8, 10],
+    chords: [[0, 'm'], [8, 'M'], [3, 'M'], [10, 'M'], [0, 'm'], [8, 'M'], [5, 'm'], [7, 'M']],
+    seed: 11,
+  },
   march: { bpm: 96, scale: [0, 2, 3, 5, 7, 9, 10], chords: [[0, 'm'], [-2, 'M'], [3, 'M'], [-2, 'M'], [0, 'm'], [5, 'M'], [-2, 'M'], [0, 'm']], seed: 23 },
   siege: { bpm: 104, scale: [0, 2, 3, 5, 7, 8, 10], chords: [[0, 'm'], [8, 'M'], [10, 'M'], [0, 'm'], [5, 'm'], [8, 'M'], [7, 'M'], [7, 'M']], seed: 37 },
   finale: { bpm: 112, scale: [0, 2, 3, 5, 7, 8, 11], chords: [[0, 'm'], [8, 'M'], [5, 'm'], [7, 'M'], [0, 'm'], [3, 'M'], [10, 'M'], [7, 'M']], seed: 41 },
@@ -61,6 +72,10 @@ export class MusicDirector {
   #pulse = 0
   #pulseUntil = 0
   #drone = null
+  /** Synth style only: pad bus (ducked by the kick) and echo send. */
+  #padBus = null
+  #echo = null
+  #lastLead = 0
   /** @type {(level: number) => void} */
   onClimax = () => {}
 
@@ -156,7 +171,8 @@ export class MusicDirector {
     this.#halt(false)
     if (!this.#enabled || !this.#ctx || !this.#piece) return
     this.#nextTime = this.#ctx.currentTime + 0.1
-    this.#drone = this.#makeDrone()
+    if (this.#piece.style === 'synth') this.#makeSynthRack()
+    else this.#drone = this.#makeDrone()
     this.#timer = setInterval(() => this.#schedule(), TICK_MS)
     this.#schedule()
   }
@@ -170,6 +186,15 @@ export class MusicDirector {
       d.gain.gain.setTargetAtTime(0.0001, t, 0.3)
       setTimeout(() => d.oscs.forEach((o) => o.stop()), 1500)
       this.#drone = null
+    }
+    if (this.#padBus) {
+      const nodes = [this.#padBus, this.#echo.input]
+      const t = this.#ctx.currentTime
+      this.#padBus.gain.setTargetAtTime(0.0001, t, 0.3)
+      this.#echo.input.gain.setTargetAtTime(0.0001, t, 0.3)
+      setTimeout(() => nodes.forEach((n) => n.disconnect()), 2500)
+      this.#padBus = null
+      this.#echo = null
     }
     if (clearPiece) this.#pieceId = null
   }
@@ -189,6 +214,7 @@ export class MusicDirector {
 
   /** One eighth note: decides what each instrument plays. */
   #playStep(step, t, eighth) {
+    if (this.#piece.style === 'synth') return this.#synthStep(step, t, eighth)
     const p = this.#piece
     const lvl = this.intensity
     const inBar = step % 8
@@ -258,6 +284,226 @@ export class MusicDirector {
       at += len
     })
     return out
+  }
+
+  /**
+   * One eighth note of the futuristic theme.
+   * 16-bar cycle: 0-3 intro (pad, arpeggio), 4-11 full groove,
+   * 12-15 breakdown (no kick) ending with a noise riser.
+   * Intensity still adds layers if the theme is ever used in play.
+   */
+  #synthStep(step, t, eighth) {
+    const p = this.#piece
+    const lvl = this.intensity
+    const inBar = step % 8
+    const bar = Math.floor(step / 8)
+    const part = bar % 16
+    const intro = part < 4
+    const breakdown = part >= 12
+    const groove = !intro && !breakdown
+    const [root, quality] = p.chords[bar % p.chords.length]
+    const chord = [0, quality === 'm' ? 3 : 4, 7].map((x) => x + root + this.#key)
+    const sixteenth = eighth / 2
+
+    // Pad: one long chord per bar.
+    if (inBar === 0) this.#pad(t, chord, eighth * 8, breakdown ? 1.25 : 1)
+
+    // Arpeggiator: two sixteenths per step, up and down two octaves.
+    const tones = [chord[0], chord[1], chord[2], chord[0] + 12]
+    const pattern = [0, 2, 1, 3, 0, 2, 1, 3, 1, 3, 2, 3, 0, 2, 1, 2]
+    const arpOn = !breakdown || inBar >= 4
+    for (let k = 0; k < 2 && arpOn; k++) {
+      const i = inBar * 2 + k
+      const accent = i % 4 === 0
+      this.#arp(t + k * sixteenth, hz(tones[pattern[i]] + 12), accent ? 0.05 : 0.034, part >= 4 ? 1 : 0.6)
+    }
+
+    // Kick, with the pad pumping under it.
+    const kicks = lvl >= 2 ? [0, 2, 4, 6] : [0, 4]
+    if ((groove || lvl >= 1) && kicks.includes(inBar)) {
+      this.#kick(t, 0.9)
+      this.#pump(t, eighth)
+    }
+
+    // Sub bass: long notes, then pulsing eighths from the groove on.
+    if (groove || lvl >= 1) {
+      const oct = inBar % 2 === 1 && (lvl >= 2 || part >= 8) ? 12 : 0
+      this.#subBass(t, hz(chord[0] - 24 + oct), eighth * 0.9, inBar % 2 === 0 ? 0.13 : 0.09)
+    } else if (inBar === 0) {
+      this.#subBass(t, hz(chord[0] - 24), eighth * 7.5, 0.08)
+    }
+
+    // Hats on the off-beats, clap on 2 and 4 (second half of the groove).
+    if (groove || lvl >= 1) {
+      if (inBar % 2 === 1) this.#hat(t, 0.05, 0.035)
+      if (lvl >= 2) this.#hat(t + sixteenth, 0.025, 0.02)
+      if ((part >= 8 || lvl >= 2) && (inBar === 2 || inBar === 6)) this.#clap(t)
+    }
+    if (lvl === 3 && bar % 4 === 0 && inBar === 0) this.#cymbal(t)
+
+    // Riser at the end of the breakdown.
+    if (part === 15 && inBar === 0) this.#riser(t, eighth * 8)
+
+    // Lead: one phrase per bar, every bar in the groove, one bar in two otherwise.
+    if (inBar === 0) this.#melody = this.#compose(chord, groove ? 2 : 0)
+    const playLead = groove || bar % 2 === 1
+    if (!playLead || intro && part < 2) return
+    for (const n of this.#melody.filter((m) => m.at === inBar)) {
+      this.#lead(t, hz(n.semi + 12), eighth * n.len * 0.92, groove ? 0.05 : 0.04)
+    }
+  }
+
+  /* ---------- Synth instruments ---------- */
+
+  #makeSynthRack() {
+    const ctx = this.#ctx
+    this.#padBus = ctx.createGain()
+    this.#padBus.gain.value = 1
+    this.#padBus.connect(this.#mix)
+    // Echo: dotted-eighth delay, darkened at each repeat.
+    const input = ctx.createGain()
+    input.gain.value = 0.3
+    const delay = ctx.createDelay(2)
+    delay.delayTime.value = (30 / this.#piece.bpm) * 1.5
+    const feedback = ctx.createGain()
+    feedback.gain.value = 0.38
+    const tone = ctx.createBiquadFilter()
+    tone.type = 'lowpass'
+    tone.frequency.value = 2600
+    input.connect(delay).connect(tone).connect(feedback).connect(delay)
+    tone.connect(this.#mix)
+    this.#echo = { input }
+    this.#lastLead = 0
+  }
+
+  /** Synth voice gain routed to the mix and, optionally, to the echo. */
+  #voice(t, attack, hold, release, peak, send = 0) {
+    const g = this.#env(t, attack, hold, release, peak)
+    if (send && this.#echo) {
+      const s = this.#ctx.createGain()
+      s.gain.value = send
+      g.connect(s).connect(this.#echo.input)
+    }
+    return g
+  }
+
+  #pad(t, chord, dur, bright) {
+    const ctx = this.#ctx
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.022, t + 0.5)
+    g.gain.setValueAtTime(0.022, t + dur - 0.1)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.7)
+    const lp = ctx.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.Q.value = 2
+    lp.frequency.setValueAtTime(500 * bright, t)
+    lp.frequency.linearRampToValueAtTime(1300 * bright, t + dur * 0.6)
+    lp.frequency.linearRampToValueAtTime(700 * bright, t + dur + 0.6)
+    lp.connect(g).connect(this.#padBus || this.#mix)
+    for (const semi of [chord[0], chord[1], chord[2], chord[0] + 12]) {
+      for (const detune of [-9, 0, 9]) {
+        const o = this.#osc('sawtooth', hz(semi), t, dur + 0.75, lp)
+        o.detune.value = detune
+      }
+    }
+  }
+
+  /** Pumping: the pad dips under each kick ("sidechain"). */
+  #pump(t, eighth) {
+    if (!this.#padBus) return
+    const g = this.#padBus.gain
+    g.cancelScheduledValues(t)
+    g.setValueAtTime(1, t)
+    g.linearRampToValueAtTime(0.3, t + 0.01)
+    g.setTargetAtTime(1, t + 0.03, eighth * 0.35)
+  }
+
+  #arp(t, freq, peak, open) {
+    const g = this.#voice(t, 0.003, 0.02, 0.14, peak, 0.6)
+    const lp = this.#ctx.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.Q.value = 6
+    lp.frequency.setValueAtTime(freq * 2 + 2400 * open, t)
+    lp.frequency.exponentialRampToValueAtTime(freq * 1.2, t + 0.14)
+    lp.connect(g)
+    this.#osc('square', freq, t, 0.2, lp)
+  }
+
+  #lead(t, freq, dur, peak) {
+    const ctx = this.#ctx
+    const g = this.#voice(t, 0.02, Math.max(0, dur - 0.1), 0.25, peak, 0.5)
+    const lp = ctx.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = 2400
+    lp.Q.value = 1.5
+    lp.connect(g)
+    // Glide from the previous note, then a delayed vibrato.
+    const from = this.#lastLead || freq
+    this.#lastLead = freq
+    const lfo = ctx.createOscillator()
+    const depth = ctx.createGain()
+    lfo.frequency.value = 5.5
+    depth.gain.setValueAtTime(0, t)
+    depth.gain.linearRampToValueAtTime(8, t + Math.min(dur, 0.5))
+    lfo.connect(depth)
+    lfo.start(t)
+    lfo.stop(t + dur + 0.3)
+    for (const detune of [-7, 7]) {
+      const o = this.#osc('sawtooth', from, t, dur + 0.3, lp)
+      o.frequency.exponentialRampToValueAtTime(freq, t + 0.06)
+      o.detune.value = detune
+      depth.connect(o.detune)
+    }
+  }
+
+  #subBass(t, freq, dur, peak) {
+    const g = this.#env(t, 0.008, dur * 0.5, dur * 0.5, peak)
+    const lp = this.#ctx.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.setValueAtTime(900, t)
+    lp.frequency.exponentialRampToValueAtTime(180, t + Math.min(dur, 0.25))
+    lp.connect(g)
+    this.#osc('sine', freq, t, dur, g)
+    this.#osc('sawtooth', freq, t, dur, lp)
+  }
+
+  #kick(t, k) {
+    const g = this.#env(t, 0.002, 0.02, 0.3, 0.3 * k)
+    const o = this.#osc('sine', 130, t, 0.35, g)
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.12)
+    this.#noise(t, 0.012, 3000, 'highpass', 0.05 * k)
+  }
+
+  #hat(t, dur, peak) {
+    this.#noise(t, dur, 8500, 'highpass', peak)
+  }
+
+  #clap(t) {
+    for (const [dt, k] of [[0, 0.6], [0.012, 0.7], [0.026, 1]]) this.#noise(t + dt, dt === 0.026 ? 0.16 : 0.01, 1600, 'bandpass', 0.09 * k)
+  }
+
+  /** Filtered noise sweeping up over one bar, into the next section. */
+  #riser(t, dur) {
+    const ctx = this.#ctx
+    const len = Math.ceil(ctx.sampleRate * (dur + 0.1))
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate)
+    const d = buf.getChannelData(0)
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    const bp = ctx.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.Q.value = 3
+    bp.frequency.setValueAtTime(400, t)
+    bp.frequency.exponentialRampToValueAtTime(7000, t + dur)
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0.0001, t)
+    g.gain.exponentialRampToValueAtTime(0.05, t + dur * 0.95)
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.05)
+    src.connect(bp).connect(g).connect(this.#mix)
+    src.start(t)
+    src.stop(t + dur + 0.1)
   }
 
   /* ---------- Instruments ---------- */
