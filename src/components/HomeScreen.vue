@@ -1,24 +1,7 @@
 <template>
   <section class="home" aria-labelledby="home-title">
     <div class="hero">
-      <svg class="hero-art" viewBox="0 0 320 150" aria-hidden="true">
-        <path d="M0 118 Q 60 92 120 110 T 240 100 T 320 112 V150 H0Z" class="hero-hill" />
-        <path d="M-5 128 C 60 128 80 92 150 95 S 240 128 325 122" class="hero-road" />
-        <g class="hero-tower" transform="translate(222 40)">
-          <rect x="0" y="16" width="44" height="58" rx="4" />
-          <path d="M-4 16h52V3h-9v6h-8V3h-8v6h-8V3h-8v6H5V3h-9z" />
-          <rect x="16" y="48" width="12" height="26" rx="6" class="hero-door" />
-          <path d="M22 3V-14l16 6-16 6" class="hero-flag" />
-        </g>
-        <g class="hero-tower hero-tower--small" transform="translate(150 68)">
-          <rect x="0" y="10" width="26" height="34" rx="3" />
-          <path d="M-3 10h32V2h-6v4h-5V2h-5v4h-5V2H3v4H-3z" />
-        </g>
-        <circle cx="92" cy="96" r="6" class="hero-enemy" />
-        <circle cx="66" cy="104" r="5" class="hero-enemy hero-enemy--2" />
-        <circle cx="42" cy="112" r="7" class="hero-enemy hero-enemy--3" />
-        <path d="M110 40 q8 -8 16 0 q8 -8 16 0" class="hero-crow" />
-      </svg>
+      <canvas ref="hero" class="hero-art hero-canvas" aria-hidden="true"></canvas>
       <h1 id="home-title" class="hero-title">Bastion</h1>
       <p class="hero-tagline">{{ $t('app.tagline') }}</p>
     </div>
@@ -80,6 +63,7 @@
 import AppIcon from './AppIcon.vue';
 import { services } from '../services/index.js';
 import { LevelCatalog } from '../core/index.js';
+import { HeroScene } from '../core/rendering/HeroScene.js';
 
 export default {
   name: 'HomeScreen',
@@ -114,6 +98,53 @@ export default {
     },
     episodes() {
       return this.saves.progress.episodes.length;
+    },
+  },
+  watch: {
+    '$store.theme'(mode) {
+      if (this.scene) {
+        this.scene.night = mode === 'dark';
+        this.scene.draw(this.time || 0);
+      }
+    },
+  },
+  mounted() {
+    // The panorama is decoration: painted after the first frame so it never delays the page.
+    this.raf = requestAnimationFrame(() => this.startHero());
+  },
+  beforeUnmount() {
+    cancelAnimationFrame(this.raf);
+    this.observer?.disconnect();
+  },
+  methods: {
+    startHero() {
+      const canvas = this.$refs.hero;
+      if (!canvas || !canvas.getContext) return;
+      const scene = new HeroScene(canvas);
+      scene.night = this.$store.theme === 'dark';
+      scene.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      this.scene = scene;
+      this.time = 4;
+      const fit = () => {
+        scene.resize(canvas.clientWidth || 420, Math.min(globalThis.devicePixelRatio || 1, 2));
+        scene.draw(this.time);
+      };
+      fit();
+      if (typeof ResizeObserver === 'function') {
+        this.observer = new ResizeObserver(fit);
+        this.observer.observe(canvas);
+      }
+      if (scene.reduced) return;
+      let last = performance.now();
+      const loop = (now) => {
+        this.raf = requestAnimationFrame(loop);
+        // About 30 frames per second is plenty for a menu.
+        if (now - last < 32 || document.hidden) return;
+        this.time += Math.min(0.1, (now - last) / 1000);
+        last = now;
+        scene.draw(this.time);
+      };
+      this.raf = requestAnimationFrame(loop);
     },
   },
 };

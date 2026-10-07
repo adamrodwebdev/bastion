@@ -13,7 +13,7 @@
         :data-tutorial="'shop-' + item.type"
         @click="$emit('pick', item.type)"
       >
-        <span class="tower-swatch" :data-type="item.type" :style="{ '--c': item.color }" aria-hidden="true"></span>
+        <SpriteIcon :type="item.type" :px="34" />
         <span class="shop-name">{{ $t('towers.' + item.type + '.name') }}</span>
         <span class="shop-cost"><AppIcon name="coin" class="coin-icon" />{{ item.cost }}<span class="sr-only"> {{ $t('hud.gold') }}</span></span>
         <span class="shop-tags" aria-hidden="true">
@@ -32,11 +32,12 @@
 /**
  * @file Shop of the towers available in the level. Emits `pick` with the tower type.
  */
+import SpriteIcon from './SpriteIcon.vue';
 import AppIcon from './AppIcon.vue';
 
 export default {
   name: 'TowerShop',
-  components: { AppIcon },
+  components: { AppIcon, SpriteIcon },
   props: {
     items: { type: Array, required: true },
     armedType: { type: String, default: null },

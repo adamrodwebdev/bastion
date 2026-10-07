@@ -467,6 +467,11 @@ export default {
     storyDesc: 'Les épisodes de la Chronique et la réplique avant chaque niveau.',
     tutorials: 'Conseils de Gontran',
     tutorialsDesc: 'Les explications la première fois qu’une tour ou un pouvoir apparaît.',
+    display: 'Affichage',
+    gore: 'Sang',
+    goreDesc: 'Gouttes et taches de sang quand un ennemi est touché. Désactivé : de la poussière à la place.',
+    particles: 'Particules',
+    particlesDesc: 'Débris, fumée, braises et météo (neige, pluie, feuilles…). À couper sur un appareil lent.',
     players: 'Noms des joueurs',
     keys: 'Clavier',
     keyList: {

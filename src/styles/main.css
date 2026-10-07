@@ -671,85 +671,17 @@ kbd {
 }
 
 /* Swatches: towers and enemies drawn in CSS, shapes match the board */
-.tower-swatch {
-  --c: #888;
+/* Pictures of towers and enemies, painted by the board's drawings (SpriteIcon). */
+.sprite-icon {
   display: inline-block;
   flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.2), 0 0 0 3px #4a4f5c;
+  object-fit: contain;
+  image-rendering: auto;
+  filter: drop-shadow(0 2px 1px rgb(0 0 0 / 0.25));
+  user-select: none;
+  pointer-events: none;
 }
 
-.tower-swatch[data-type='cannon'],
-.tower-swatch[data-type='catapult'],
-.tower-swatch[data-type='treasury'] {
-  border-radius: 7px;
-}
-
-.tower-swatch[data-type='frost'] {
-  border-radius: 0;
-  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%);
-}
-
-.tower-swatch[data-type='ballista'] {
-  border-radius: 0;
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-}
-
-.tower-swatch[data-type='barracks'],
-.tower-swatch[data-type='watch'] {
-  border-radius: 0;
-  clip-path: polygon(50% 0, 100% 35%, 100% 100%, 0 100%, 0 35%);
-}
-
-.tower-swatch[data-type='fire'] {
-  border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%;
-}
-
-.enemy-swatch {
-  --c: #888;
-  display: inline-block;
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.2);
-}
-
-.enemy-swatch--sm {
-  width: 14px;
-  height: 14px;
-}
-
-.enemy-swatch[data-type='runner'],
-.enemy-swatch[data-type='wolf'] {
-  border-radius: 0;
-  clip-path: polygon(100% 50%, 0 0, 0 100%);
-}
-
-.enemy-swatch[data-type='knight'],
-.enemy-swatch[data-type='golem'],
-.enemy-swatch[data-type='shield'],
-.enemy-swatch[data-type='ram'],
-.enemy-swatch[data-type='siege'] {
-  border-radius: 25%;
-}
-
-.enemy-swatch[data-type='priest'],
-.enemy-swatch[data-type='warlock'],
-.enemy-swatch[data-type='necromancer'] {
-  border-radius: 0;
-  clip-path: polygon(50% 0, 100% 100%, 0 100%);
-}
-
-.enemy-swatch[data-type='crow'],
-.enemy-swatch[data-type='wyvern'] {
-  border-radius: 0;
-  clip-path: polygon(0 30%, 50% 60%, 100% 30%, 70% 80%, 30% 80%);
-}
 
 /* Chapter colours (cards, tabs, previews) */
 .theme-meadow { --t1: #bfe3a5; --t2: #4f8a3c; --road: #ead7ac; }
@@ -805,72 +737,16 @@ kbd {
 }
 
 .hero-art {
-  width: min(100%, 420px);
+  width: min(100%, 520px);
   height: auto;
 }
 
-.hero-hill {
-  fill: color-mix(in srgb, #4f6b3a 45%, var(--bg));
-}
-
-.hero-road {
-  fill: none;
-  stroke: color-mix(in srgb, #d9b07a 75%, var(--bg));
-  stroke-width: 10;
-  stroke-linecap: round;
-}
-
-.hero-tower {
-  fill: #5b5670;
-}
-
-[data-theme='dark'] .hero-tower {
-  fill: #8a83a6;
-}
-
-.hero-door {
-  fill: var(--c-gold);
-}
-
-.hero-flag {
-  fill: var(--c-madder);
-  stroke: #5b5670;
-  stroke-width: 2;
-}
-
-.hero-enemy {
-  fill: #a3322b;
-  animation: march 3.4s ease-in-out infinite alternate;
-}
-
-.hero-enemy--2 {
-  fill: #d4a537;
-  animation-delay: 0.3s;
-}
-
-.hero-enemy--3 {
-  fill: #5b4b8a;
-  animation-delay: 0.6s;
-}
-
-.hero-crow {
-  fill: none;
-  stroke: var(--text);
-  stroke-width: 3;
-  stroke-linecap: round;
-  animation: fly 6s ease-in-out infinite alternate;
-}
-
-@keyframes march {
-  to {
-    transform: translateX(30px);
-  }
-}
-
-@keyframes fly {
-  to {
-    transform: translate(40px, -8px);
-  }
+/* Painted panorama (HeroScene): ratio 8 × 3.6 reserved up front, no layout shift. */
+.hero-canvas {
+  display: block;
+  aspect-ratio: 8 / 3.6;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 }
 
 .hero-title {
@@ -1721,7 +1597,7 @@ kbd {
 .shop-item {
   position: relative;
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-columns: 34px minmax(0, 1fr);
   grid-template-areas: 'icon name' 'icon cost';
   align-items: center;
   column-gap: 6px;
@@ -1746,16 +1622,16 @@ kbd {
   opacity: 0.55;
 }
 
-.shop-item .tower-swatch {
+.shop-item .sprite-icon {
   grid-area: icon;
-  width: 24px;
-  height: 24px;
+  width: 34px;
+  height: 34px;
 }
 
 .shop-name {
   grid-area: name;
-  overflow-wrap: break-word;
-  hyphens: auto;
+  overflow-wrap: normal;
+  hyphens: manual;
   font-weight: 800;
   font-size: 0.85rem;
   line-height: 1.15;
@@ -2559,9 +2435,9 @@ kbd {
   font-weight: 700;
 }
 
-.duel-shop-item .tower-swatch {
-  width: 22px;
-  height: 22px;
+.duel-shop-item .sprite-icon {
+  width: 28px;
+  height: 28px;
 }
 
 .duel-shop-item.is-armed {
@@ -2824,9 +2700,9 @@ kbd {
     text-align: center;
   }
 
-  .shop-item .tower-swatch {
-    width: 24px;
-    height: 24px;
+  .shop-item .sprite-icon {
+    width: 32px;
+    height: 32px;
   }
 
   .shop-name {

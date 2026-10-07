@@ -29,6 +29,18 @@
       </section>
 
       <section class="card settings-card">
+        <h2 class="section-title">{{ $t('settings.display') }}</h2>
+        <label class="toggle">
+          <input id="set-gore" type="checkbox" :checked="s.gore" @change="set('gore', $event.target.checked)" />
+          <span><strong>{{ $t('settings.gore') }}</strong><small>{{ $t('settings.goreDesc') }}</small></span>
+        </label>
+        <label class="toggle">
+          <input id="set-particles" type="checkbox" :checked="s.particles" @change="set('particles', $event.target.checked)" />
+          <span><strong>{{ $t('settings.particles') }}</strong><small>{{ $t('settings.particlesDesc') }}</small></span>
+        </label>
+      </section>
+
+      <section class="card settings-card">
         <h2 class="section-title">{{ $t('settings.players') }}</h2>
         <label v-for="i in [0, 1]" :key="i" class="field">
           <span>{{ $t('coop.player', { n: i + 1 }) }}</span>

@@ -39,7 +39,7 @@
           :title="$t('towers.' + t.type + '.name') + ' · ' + t.cost"
           @click="pick(t.type)"
         >
-          <span class="tower-swatch" :data-type="t.type" :style="{ '--c': t.color }" aria-hidden="true"></span>
+          <SpriteIcon :type="t.type" :px="26" />
           <span class="duel-cost">{{ t.cost }}</span>
           <kbd v-if="keys.build[i]" aria-hidden="true">{{ keys.build[i] }}</kbd>
         </button>
@@ -56,7 +56,7 @@
           :title="$t('duel.sendTitle', { n: s.count, enemy: $t('enemies.' + s.type + '.name'), cost: s.cost, income: s.income })"
           @click="$emit('send', s.type)"
         >
-          <span class="enemy-swatch enemy-swatch--sm" :data-type="s.type" :style="{ '--c': s.color }" aria-hidden="true"></span>
+          <SpriteIcon kind="enemy" :type="s.type" :px="20" />
           <span>{{ s.count }}×</span>
           <span class="duel-cost">{{ s.cost }}</span>
           <kbd v-if="keys.send[i]" aria-hidden="true">{{ keys.send[i] }}</kbd>
@@ -72,14 +72,16 @@
  * The parent (DuelScreen) owns the match and the loop; this component draws
  * its game and turns taps and keys into actions for its player.
  */
+import SpriteIcon from './SpriteIcon.vue';
 import { markRaw } from 'vue';
 import { Renderer, TowerFactory, EnemyFactory } from '../core/index.js';
 import { SENDABLE } from '../core/modes/DuelMatch.js';
+import { services } from '../services/index.js';
 import AppIcon from './AppIcon.vue';
 
 export default {
   name: 'DuelBoard',
-  components: { AppIcon },
+  components: { AppIcon, SpriteIcon },
   props: {
     match: { type: Object, required: true },
     player: { type: Number, required: true },
@@ -127,6 +129,8 @@ export default {
     r.showAirLanes = true;
     r.setMode(this.$store.theme);
     r.reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    r.setOptions({ gore: services.saves.settings.gore, particles: services.saves.settings.particles });
+    r.attach(this.game);
     this.r = markRaw(r);
     this.resize();
   },

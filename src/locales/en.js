@@ -467,6 +467,11 @@ export default {
     storyDesc: 'The Chronicle episodes and the line before every level.',
     tutorials: 'Gontran’s tips',
     tutorialsDesc: 'Explanations the first time a tower or a power shows up.',
+    display: 'Display',
+    gore: 'Blood',
+    goreDesc: 'Blood drops and stains when an enemy is hit. Off: dust instead.',
+    particles: 'Particles',
+    particlesDesc: 'Debris, smoke, embers and weather (snow, rain, leaves…). Turn off on a slow device.',
     players: 'Player names',
     keys: 'Keyboard',
     keyList: {

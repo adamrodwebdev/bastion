@@ -26,8 +26,8 @@
         <h3 class="brief-h">{{ $t('briefing.new') }}</h3>
         <ul class="news" role="list">
           <li v-for="n in news" :key="n.kind + n.id" class="news-item">
-            <span v-if="n.kind === 'enemy'" class="enemy-swatch" :data-type="n.id" :style="{ '--c': n.color }" aria-hidden="true"></span>
-            <span v-else class="tower-swatch" :data-type="n.id" :style="{ '--c': n.color }" aria-hidden="true"></span>
+            <SpriteIcon v-if="n.kind === 'enemy'" kind="enemy" :type="n.id" :px="40" />
+            <SpriteIcon v-else :type="n.id" :px="40" />
             <span>
               <strong>{{ n.kind === 'enemy' ? $t('enemies.' + n.id + '.name') : $t('towers.' + n.id + '.name') }}</strong>
               <span class="news-desc">{{ n.kind === 'enemy' ? $t('enemies.' + n.id + '.desc') : $t('towers.' + n.id + '.desc') }}</span>
@@ -40,7 +40,7 @@
         <h3 class="brief-h">{{ $t('briefing.enemies') }}</h3>
         <ul class="chips" role="list">
           <li v-for="e in enemies" :key="e.type" class="chip" :title="$t('enemies.' + e.type + '.desc')">
-            <span class="enemy-swatch enemy-swatch--sm" :data-type="e.type" :style="{ '--c': e.color }" aria-hidden="true"></span>
+            <SpriteIcon kind="enemy" :type="e.type" :px="22" />
             {{ $t('enemies.' + e.type + '.name') }}
             <AppIcon v-if="e.flying" name="wing" />
             <AppIcon v-if="e.stealth" name="eye" />
@@ -102,6 +102,7 @@
  * @file Level briefing: the character's line, newcomers, enemies, the three
  * challenges and the powers to take into the level.
  */
+import SpriteIcon from './SpriteIcon.vue';
 import AppIcon from './AppIcon.vue';
 import StarRow from './StarRow.vue';
 import PixelPortrait from './PixelPortrait.vue';
@@ -113,7 +114,7 @@ import { StoryRepository } from '../core/story/StoryRepository.js';
 
 export default {
   name: 'BriefingPanel',
-  components: { AppIcon, StarRow, PixelPortrait, DifficultyPicker },
+  components: { AppIcon, StarRow, PixelPortrait, DifficultyPicker, SpriteIcon },
   props: { number: { type: Number, required: true } },
   data() {
     return { loadout: services.saves.loadout(this.$store.track) };

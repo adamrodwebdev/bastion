@@ -15,7 +15,7 @@
       <ul class="ws-grid" role="list">
         <li v-for="u in g.items" :key="u.id" class="ws-card card" :class="{ 'is-max': u.max, 'is-locked': u.reason === 'locked' }">
           <div class="ws-head">
-            <span v-if="u.tower" class="tower-swatch" :data-type="u.tower" :style="{ '--c': u.color }" aria-hidden="true"></span>
+            <SpriteIcon v-if="u.tower" :type="u.tower" :level="3" elite :px="40" />
             <AppIcon v-else :name="u.icon" class="ws-icon" />
             <div>
               <h3 class="ws-name">{{ u.tower ? $t('workshop.mastery', { tower: $t('towers.' + u.tower + '.name') }) : $t('workshop.list.' + u.id + '.name') }}</h3>
@@ -44,6 +44,7 @@
 /**
  * @file Gontran's workshop: permanent upgrades bought with crowns.
  */
+import SpriteIcon from './SpriteIcon.vue';
 import AppIcon from './AppIcon.vue';
 import ScreenHeader from './ScreenHeader.vue';
 import PixelPortrait from './PixelPortrait.vue';
@@ -53,7 +54,7 @@ import { UpgradeCatalog } from '../core/progression/UpgradeCatalog.js';
 
 export default {
   name: 'WorkshopScreen',
-  components: { AppIcon, ScreenHeader, PixelPortrait },
+  components: { AppIcon, ScreenHeader, PixelPortrait, SpriteIcon },
   computed: {
     saves() {
       // eslint-disable-next-line no-unused-expressions
