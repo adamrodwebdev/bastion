@@ -62,8 +62,7 @@
  */
 import AppIcon from './AppIcon.vue';
 import { services } from '../services/index.js';
-import { LevelCatalog } from '../core/index.js';
-import { HeroScene } from '../core/rendering/HeroScene.js';
+import { LevelCatalog } from '../core/config/LevelCatalog.js';
 
 export default {
   name: 'HomeScreen',
@@ -117,9 +116,12 @@ export default {
     this.observer?.disconnect();
   },
   methods: {
-    startHero() {
+    async startHero() {
       const canvas = this.$refs.hero;
       if (!canvas || !canvas.getContext) return;
+      // Loaded separately: the panorama never delays the first paint.
+      const { HeroScene } = await import('../core/rendering/HeroScene.js');
+      if (!this.$refs.hero) return;
       const scene = new HeroScene(canvas);
       scene.night = this.$store.theme === 'dark';
       scene.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;

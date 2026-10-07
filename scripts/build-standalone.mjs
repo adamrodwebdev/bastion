@@ -29,6 +29,7 @@ function rewriteImports(code) {
   return code
     .replace(/from\s+'vue'/g, `from '${VUE_CDN}'`)
     .replace(/from\s+'(\.[^']+)\.vue'/g, "from '$1.vue.js'")
+    .replace(/import\('(\.[^']+)\.vue'\)/g, "import('$1.vue.js')")
     .replace(/^import\s+'[^']+\.css';\s*$/gm, '');
 }
 

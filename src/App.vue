@@ -61,23 +61,37 @@
 /**
  * @file Root component: header (language, theme), current screen, story, toasts.
  */
+import { defineAsyncComponent } from 'vue';
 import AppIcon from './components/AppIcon.vue';
 import HomeScreen from './components/HomeScreen.vue';
-import CampaignScreen from './components/CampaignScreen.vue';
-import GameScreen from './components/GameScreen.vue';
-import WorkshopScreen from './components/WorkshopScreen.vue';
-import AchievementsScreen from './components/AchievementsScreen.vue';
-import ChronicleScreen from './components/ChronicleScreen.vue';
-import SettingsScreen from './components/SettingsScreen.vue';
-import MultiplayerScreen from './components/MultiplayerScreen.vue';
-import DuelScreen from './components/DuelScreen.vue';
-import StoryPanel from './components/StoryPanel.vue';
 import ToastStack from './components/ToastStack.vue';
+
+// Every screen but the home one is loaded on demand: the first page stays light
+// (fast on phones), the rest is fetched in the background right after.
+const screens = {
+  CampaignScreen: () => import('./components/CampaignScreen.vue'),
+  GameScreen: () => import('./components/GameScreen.vue'),
+  WorkshopScreen: () => import('./components/WorkshopScreen.vue'),
+  AchievementsScreen: () => import('./components/AchievementsScreen.vue'),
+  ChronicleScreen: () => import('./components/ChronicleScreen.vue'),
+  SettingsScreen: () => import('./components/SettingsScreen.vue'),
+  MultiplayerScreen: () => import('./components/MultiplayerScreen.vue'),
+  DuelScreen: () => import('./components/DuelScreen.vue'),
+  StoryPanel: () => import('./components/StoryPanel.vue'),
+};
+const lazy = Object.fromEntries(Object.entries(screens).map(([name, load]) => [name, defineAsyncComponent(load)]));
+
+/** Warms up the other screens once the browser is idle. */
+function prefetchScreens() {
+  const run = () => Object.values(screens).forEach((load) => load().catch(() => {}));
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 4000 });
+  else setTimeout(run, 2500);
+}
 import { services } from './services/index.js';
 
 export default {
   name: 'App',
-  components: { AppIcon, HomeScreen, CampaignScreen, GameScreen, WorkshopScreen, AchievementsScreen, ChronicleScreen, SettingsScreen, MultiplayerScreen, DuelScreen, StoryPanel, ToastStack },
+  components: { AppIcon, HomeScreen, ToastStack, ...lazy },
   computed: {
     languages() {
       return services.i18n.available;
@@ -98,6 +112,9 @@ export default {
         document.documentElement.classList.toggle('in-game', v);
       },
     },
+  },
+  mounted() {
+    prefetchScreens();
   },
   methods: {
     setLocale(code) {
