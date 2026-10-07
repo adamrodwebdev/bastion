@@ -471,7 +471,7 @@ export class Game extends EventEmitter {
     }
     if (fireZone) this.addFireZone({ x, y, ...fireZone, source, owner, cause });
     if (crit) this.addEffect(new Effect('text', { x, y: y - 0.3, text: '!', color: '#ffd166', ttl: 0.5 }));
-    this.emit('hit', { kind: source ? source.type : 'power' });
+    this.emit('hit', { kind: source ? source.type : 'power', x, y, splash, dtype, target, cause });
   }
 
   _onKill(enemy, source, cause) {

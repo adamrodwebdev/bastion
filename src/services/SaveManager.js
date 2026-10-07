@@ -38,6 +38,9 @@ const DEFAULT_SETTINGS = () => ({
   story: true,
   tutorials: true,
   names: ['', ''],
+  // Blood is off by default on game portals (family-friendly hosts), on elsewhere.
+  gore: typeof __TARGET__ === 'undefined' || __TARGET__ === 'web',
+  particles: true,
 });
 
 const int = (v, min, max, fallback = min) => (Number.isInteger(v) && v >= min && v <= max ? v : fallback);
@@ -97,7 +100,7 @@ export class SaveManager extends EventEmitter {
     if (['system', 'light', 'dark'].includes(raw.theme)) s.theme = raw.theme;
     if (DIFFICULTIES.includes(raw.difficulty)) s.difficulty = raw.difficulty;
     for (const k of ['music', 'sfx']) if (typeof raw[k] === 'number' && raw[k] >= 0 && raw[k] <= 1) s[k] = raw[k];
-    for (const k of ['story', 'tutorials']) if (typeof raw[k] === 'boolean') s[k] = raw[k];
+    for (const k of ['story', 'tutorials', 'gore', 'particles']) if (typeof raw[k] === 'boolean') s[k] = raw[k];
     if (Array.isArray(raw.names)) s.names = [0, 1].map((i) => String(raw.names[i] ?? '').slice(0, 16));
     return s;
   }

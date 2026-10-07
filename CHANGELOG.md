@@ -10,7 +10,24 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 ## [Non publié]
 
+### Ajouté
+
+- **Refonte graphique complète**, toujours dessinée par le code (aucune image à télécharger) :
+  - terrain peint pour chacun des 10 chapitres : herbe texturée, routes pavées, eau animée, arbres et rochers propres au décor ;
+  - les 10 tours sont de vrais bâtiments, en bois au niveau 1, en pierre ensuite, avec des ornements dorés pour l'élite ; leurs parties bougent (l'archer vise, le canon recule, la catapulte lance, le cristal de givre flotte, les braseros brûlent, les drapeaux flottent) ;
+  - les 18 ennemis et les soldats sont de vrais personnages animés : ils marchent, frappent et tombent ;
+  - le camp de Mordrac marque l'entrée, la porte du château marque la sortie ;
+  - mode sombre transformé en nuit, avec torches et lueurs ;
+  - météo selon le chapitre : pollen, lucioles, poussière, brume, neige, feuilles, pluie et éclairs, cendres, oiseaux, pétales ;
+  - sang, débris, fumée et braises ;
+  - panorama animé sur l'écran d'accueil ;
+  - icônes des tours et des ennemis redessinées dans toute l'interface.
+- Réglages **Sang** et **Particules** (écran Réglages, partie « Affichage »). Le sang est désactivé par défaut dans les versions CrazyGames et Poki.
+
 ### Modifié
+
+- Les écrans autres que l'accueil sont chargés à la demande : la première page reste rapide sur téléphone.
+- Images de présentation (`marketing/`, `public/og-image.png`) refaites avec les nouveaux graphismes.
 
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).
 

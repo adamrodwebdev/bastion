@@ -1,7 +1,7 @@
 <template>
   <section class="panel tower-panel" :aria-label="$t('towers.' + info.type + '.name')">
     <div class="tower-panel-head">
-      <span class="tower-swatch" :data-type="info.type" :style="{ '--c': info.color }" aria-hidden="true"></span>
+      <SpriteIcon :type="info.type" :level="Math.min(info.level, 3)" :elite="info.elite" :px="48" />
       <div>
         <h2 class="panel-title">{{ $t('towers.' + info.type + '.name') }}</h2>
         <p class="tower-level">
@@ -64,11 +64,12 @@
 /**
  * @file Details of the selected tower: stats, targeting, upgrade, sell.
  */
+import SpriteIcon from './SpriteIcon.vue';
 import AppIcon from './AppIcon.vue';
 
 export default {
   name: 'TowerPanel',
-  components: { AppIcon },
+  components: { AppIcon, SpriteIcon },
   props: { info: { type: Object, required: true } },
   emits: ['upgrade', 'sell', 'targeting', 'close', 'preview'],
   data() {

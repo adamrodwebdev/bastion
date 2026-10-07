@@ -85,7 +85,7 @@
             <span class="next-wave-label">{{ $t('hud.nextWave') }}</span>
             <ul class="next-wave-list" role="list">
               <li v-for="g in nextWave" :key="g.type" class="chip">
-                <span class="enemy-swatch enemy-swatch--sm" :data-type="g.type" :style="{ '--c': g.color }" aria-hidden="true"></span>
+                <SpriteIcon kind="enemy" :type="g.type" :px="20" />
                 {{ g.count }} × {{ $t('enemies.' + g.type + '.name') }}
               </li>
             </ul>
@@ -132,6 +132,7 @@
  * the keyboard (his own cursor) or by touch after picking his name in the
  * sidebar.
  */
+import SpriteIcon from './SpriteIcon.vue';
 import { markRaw } from 'vue';
 import { Game, GameLoop, Renderer, LevelCatalog, Difficulty, TowerFactory, EnemyFactory, COOP_HP } from '../core/index.js';
 import { achievementsFor, evaluateAchievements, runOf } from '../core/progression/Achievements.js';
@@ -152,7 +153,7 @@ const POWER_KEYS = ['q', 'w', 'e', 'r', 't'];
 
 export default {
   name: 'GameScreen',
-  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble },
+  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble, SpriteIcon },
   data() {
     return {
       tick: 0,
@@ -335,6 +336,8 @@ export default {
       const renderer = new Renderer(this.$refs.canvas, game.level);
       renderer.setMode(this.$store.theme);
       renderer.reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      renderer.setOptions({ gore: services.saves.settings.gore, particles: services.saves.settings.particles });
+      renderer.attach(game);
 
       const loop = new GameLoop(
         (dt) => game.update(dt),
