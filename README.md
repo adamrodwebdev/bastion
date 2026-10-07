@@ -24,6 +24,7 @@ Le jeu se passe dans le même royaume que [Catapulte Mania](https://github.com/a
 - **Une aide pas à pas** dans les premiers niveaux, puis à chaque nouvelle tour et chaque nouveau pouvoir.
 - **Sauvegarde automatique** dans le navigateur. On peut quitter au milieu d'un niveau et reprendre plus tard.
 - **Musique et bruitages** créés directement par le navigateur (aucun fichier son à télécharger).
+- **Graphismes peints par le code** : bâtiments et personnages animés, météo, jour et nuit. Les réglages permettent de couper le **sang** et les **particules** (le sang est coupé par défaut sur CrazyGames et Poki).
 - **Français et anglais**, **mode sombre**, et commandes au clavier.
 
 ## Lancer le projet
@@ -99,6 +100,7 @@ Chaque fichier commence par un commentaire qui explique son rôle. Les détails 
 | Les textes et l'histoire | `src/locales/fr.js` et `src/locales/en.js` |
 | Le mode Duel | `src/core/modes/DuelMatch.js` |
 | Les couleurs et la mise en page | `src/styles/main.css` |
+| Le dessin du plateau (terrain, bâtiments, personnages, particules) | `src/core/rendering/` |
 
 Après un changement d'équilibrage, lancez `npm test` pour voir si les niveaux restent gagnables. Après un changement de texte, lancez `npm run check:i18n`.
 
