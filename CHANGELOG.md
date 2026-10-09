@@ -22,11 +22,18 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
   - sang, débris, fumée et braises ;
   - panorama animé sur l'écran d'accueil ;
   - icônes des tours et des ennemis redessinées dans toute l'interface.
+- **Indonésien** (Bahasa Indonesia), en plus du français et de l'anglais. La langue est choisie automatiquement selon le navigateur, et peut être changée dans l'en-tête.
+- **Écran Apprendre** pour les nouveaux joueurs :
+  - 4 leçons guidées (Premiers pas, Bloquer la route, Vagues et pouvoirs, Connaître l'ennemi) avec Maître Gontran, un cercle doré sur les boutons à toucher et une case du plateau qui brille ;
+  - 25 couronnes la première fois que chaque leçon est réussie ;
+  - le guide du défenseur : règles, types de dégâts, fiches des tours, des ennemis et des pouvoirs, commandes à deux.
+- Sur l'accueil, une carte « Nouveau dans le royaume ? » propose la première leçon tant que le joueur n'a pas commencé.
 - Réglages **Sang** et **Particules** (écran Réglages, partie « Affichage »). Le sang est désactivé par défaut dans les versions CrazyGames et Poki.
 
 ### Modifié
 
 - Les écrans autres que l'accueil sont chargés à la demande : la première page reste rapide sur téléphone.
+- Les langues sont chargées à la demande : seule celle du joueur est téléchargée.
 - Images de présentation (`marketing/`, `public/og-image.png`) refaites avec les nouveaux graphismes.
 
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).

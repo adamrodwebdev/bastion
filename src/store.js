@@ -12,7 +12,7 @@ import { StoryRepository } from './core/story/StoryRepository.js';
  * it listens to their events and mirrors what the UI needs to display.
  */
 export const store = reactive({
-  /** 'home' | 'campaign' | 'game' | 'workshop' | 'achievements' | 'chronicle' | 'settings' | 'multiplayer' | 'duel' */
+  /** 'home' | 'campaign' | 'game' | 'workshop' | 'achievements' | 'chronicle' | 'settings' | 'multiplayer' | 'duel' | 'learn' */
   view: 'home',
   locale: 'en',
   theme: 'light',
@@ -116,6 +116,13 @@ export const actions = {
       track,
       loadout: loadout || services.saves.loadout(track),
     };
+    actions.go('game');
+  },
+
+  /** Starts a training lesson ('t1'…): a guided game that is never saved. */
+  startTraining(id) {
+    store.briefing = null;
+    store.game = { levelNumber: 1, resume: false, key: store.game.key + 1, track: 'solo', loadout: [], training: id };
     actions.go('game');
   },
 

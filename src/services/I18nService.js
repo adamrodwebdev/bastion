@@ -1,5 +1,5 @@
 /**
- * @file Translation service (French / English) and language detection.
+ * @file Translation service (French / English / Indonesian) and language detection.
  */
 
 import { EventEmitter } from '../core/utils/EventEmitter.js';
@@ -12,22 +12,26 @@ import { EventEmitter } from '../core/utils/EventEmitter.js';
  *  - language detection: ?lang= query → saved setting → browser language
  * Also keeps <html lang>, <title> and meta description in sync (SEO / a11y).
  *
- * Adding a language = add a dictionary in src/locales and register it.
+ * Dictionaries are loaded on demand (see src/locales/index.js).
  */
 export class I18nService extends EventEmitter {
   /**
-   * @param {Record<string, object>} dictionaries  e.g. { fr, en }
+   * @param {Record<string, () => Promise<{default: object}>>} loaders one dynamic import per language
+   * @param {Record<string, string>} names language names shown in the picker
    * @param {string} fallback
    */
-  constructor(dictionaries, fallback = 'en') {
+  constructor(loaders, names, fallback = 'en') {
     super();
-    this.dictionaries = dictionaries;
+    this.loaders = loaders;
+    this.names = names;
+    /** Dictionaries already loaded. */
+    this.dictionaries = {};
     this.fallback = fallback;
     this.locale = fallback;
   }
 
   get available() {
-    return Object.keys(this.dictionaries).map((code) => ({ code, label: this.dictionaries[code]._meta.label }));
+    return Object.keys(this.loaders).map((code) => ({ code, label: this.names[code] || code }));
   }
 
   /** Picks the best language among the supported ones. */
@@ -44,14 +48,24 @@ export class I18nService extends EventEmitter {
     if (nav) candidates.push(...(nav.languages || [nav.language]));
     for (const c of candidates) {
       const code = String(c || '').toLowerCase().split('-')[0];
-      if (this.dictionaries[code]) return code;
+      if (this.loaders[code]) return code;
     }
     return this.fallback;
   }
 
-  /** @param {string} code 'fr' | 'en' — ignored if the language is not available */
-  setLocale(code) {
-    if (!this.dictionaries[code]) return;
+  /** Loads a dictionary (cached). */
+  async load(code) {
+    if (!this.dictionaries[code]) this.dictionaries[code] = (await this.loaders[code]()).default;
+    return this.dictionaries[code];
+  }
+
+  /**
+   * Switches language once its dictionary is loaded.
+   * @param {string} code 'fr' | 'en' | 'id' — ignored if the language is not available
+   */
+  async setLocale(code) {
+    if (!this.loaders[code]) return;
+    await this.load(code);
     this.locale = code;
     this._syncDocument();
     this.emit('change', code);
@@ -59,7 +73,8 @@ export class I18nService extends EventEmitter {
 
   _syncDocument() {
     if (typeof document === 'undefined') return;
-    const meta = this.dictionaries[this.locale]._meta;
+    const meta = this.dictionaries[this.locale]?._meta;
+    if (!meta) return;
     document.documentElement.lang = this.locale;
     document.title = meta.title;
     const desc = document.querySelector('meta[name="description"]');
@@ -80,7 +95,7 @@ export class I18nService extends EventEmitter {
    */
   t(key, params = {}) {
     let str = this._lookup(this.dictionaries[this.locale], key);
-    if (str === undefined) str = this._lookup(this.dictionaries[this.fallback], key);
+    if (str === undefined && this.dictionaries[this.fallback]) str = this._lookup(this.dictionaries[this.fallback], key);
     if (typeof str !== 'string') return key;
     if (str.includes('|') && params.count !== undefined) {
       const [one, many] = str.split('|');

@@ -8,8 +8,7 @@ import { I18nService } from './I18nService.js';
 import { ThemeService } from './ThemeService.js';
 import { AudioService } from './audio/AudioService.js';
 import { NoAdService } from './ads/AdService.js';
-import fr from '../locales/fr.js';
-import en from '../locales/en.js';
+import { LOADERS, LANGUAGE_NAMES } from '../locales/index.js';
 
 /**
  * Service container (simple dependency injection).
@@ -19,17 +18,20 @@ class ServiceContainer {
   constructor() {
     this.storage = new StorageService('bastion-td');
     this.saves = new SaveManager(this.storage);
-    this.i18n = new I18nService({ fr, en }, 'en');
+    this.i18n = new I18nService(LOADERS, LANGUAGE_NAMES, 'en');
     this.theme = new ThemeService();
     this.audio = new AudioService();
     /** Portal SDK (CrazyGames, Poki) or a silent stand-in on our own site. */
     this.ads = new NoAdService();
   }
 
-  /** Applies saved settings (language, theme, volumes) — call once at startup. */
-  bootstrap() {
+  /**
+   * Applies saved settings (language, theme, volumes) — call once at startup.
+   * @returns {Promise<this>} resolved once the player's language is loaded
+   */
+  async bootstrap() {
     const settings = this.saves.settings;
-    this.i18n.setLocale(this.i18n.detect(settings.locale));
+    await this.i18n.setLocale(this.i18n.detect(settings.locale));
     this.theme.setMode(settings.theme);
     this.audio.setVolumes({ sfx: settings.sfx, music: settings.music });
     // Persist user choices.
@@ -64,7 +66,7 @@ class ServiceContainer {
     this.audio.setPortalMuted(ads.portalMuted);
     if (ads.locale && !this.saves.settings.locale) {
       const code = ads.locale.slice(0, 2).toLowerCase();
-      this.i18n.setLocale(this.i18n.dictionaries[code] ? code : 'en');
+      this.i18n.setLocale(this.i18n.loaders[code] ? code : 'en');
     }
     ads.loadingFinished();
     return ads;

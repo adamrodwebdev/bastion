@@ -281,6 +281,10 @@ button:disabled {
   color: inherit;
   font-size: 0.9rem;
   font-weight: 600;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .lang-select option {
@@ -517,6 +521,12 @@ button:disabled {
   background: var(--danger);
   color: #fff;
   border-color: transparent;
+}
+
+.badge-success {
+  background: color-mix(in srgb, var(--success) 22%, var(--surface));
+  color: var(--text);
+  border-color: var(--success);
 }
 
 .chips {
@@ -777,7 +787,7 @@ kbd {
 
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -2587,6 +2597,319 @@ kbd {
   }
 }
 
+/* ---------- Training and guide ---------- */
+.spotlight {
+  position: fixed;
+  z-index: 55;
+  border: 3px solid #ffd166;
+  border-radius: 12px;
+  box-shadow: 0 0 0 4px rgb(255 209 102 / 0.3), 0 0 22px rgb(255 209 102 / 0.75);
+  pointer-events: none;
+  animation: spot-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes spot-pulse {
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 8px rgb(255 209 102 / 0.15), 0 0 30px rgb(255 209 102 / 0.9);
+  }
+}
+
+.coach-next {
+  margin-top: 6px;
+}
+
+.new-player {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+
+.new-player-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.new-player-title {
+  font: 700 1.05rem/1.2 var(--font-display);
+}
+
+.new-player-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.learn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.lesson-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson-card {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 14px;
+}
+
+.lesson-card.is-next {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent), var(--shadow);
+}
+
+.lesson-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lesson-num {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--action);
+  color: var(--action-text);
+  font-weight: 800;
+  flex: none;
+}
+
+.lesson-card.is-done .lesson-num {
+  background: var(--success);
+}
+
+.lesson-icon {
+  width: 1.3em;
+  height: 1.3em;
+  color: var(--accent-text);
+}
+
+.lesson-title {
+  font: 700 1.02rem/1.2 var(--font-display);
+}
+
+.lesson-desc {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.lesson-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.lesson-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.guide-tabs .segmented-track {
+  grid-auto-flow: row;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+}
+
+.guide-panel {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.guide-sub {
+  font: 700 1rem/1.2 var(--font-display);
+  margin-top: 6px;
+}
+
+.guide-lead {
+  color: var(--muted);
+}
+
+.rule-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.rule {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+}
+
+.rule-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  color: var(--accent-text);
+}
+
+.rule-title {
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+.damage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.damage-card {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-left: 5px solid var(--border-strong);
+  font-size: 0.9rem;
+}
+
+.damage--physical { border-left-color: #8a919c; }
+.damage--fire { border-left-color: #ff7b1c; }
+.damage--magic { border-left-color: #9b7bff; }
+.damage--true { border-left-color: var(--accent); }
+
+.codex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.codex-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+}
+
+.codex-card.is-locked .sprite-icon,
+.codex-card.is-locked .power-glyph {
+  filter: grayscale(0.8) opacity(0.6);
+}
+
+.codex-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.codex-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+}
+
+.codex-desc {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.codex-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.codex-tip {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 0.85rem;
+  color: var(--accent-text);
+}
+
+.chip-sm {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  min-height: 0;
+}
+
+.chip-muted {
+  opacity: 0.8;
+}
+
+.trait--boss,
+.trait--armored {
+  border-color: var(--danger);
+}
+
+.trait--flying,
+.trait--stealth {
+  border-color: var(--action);
+}
+
+.power-glyph--lg {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 3px solid var(--accent);
+  font-size: 1.6rem;
+}
+
+.two-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.two-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+}
+
+.key-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  align-items: center;
+}
+
+.kbd-inline {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font: 700 0.8rem/1.4 var(--font-body);
+}
+
+@media (max-width: 599px) {
+  .new-player {
+    flex-wrap: wrap;
+  }
+
+  .new-player .btn {
+    width: 100%;
+  }
+
+  .codex-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Phones in landscape: compact header, side-by-side layout */
 @media (orientation: landscape) and (max-height: 540px) {
   :root {
@@ -2734,7 +3057,7 @@ kbd {
   }
 
   .home-grid {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .tile {
@@ -2766,10 +3089,15 @@ kbd {
 
   .lang-select {
     padding: 0 10px 0 30px;
+    max-width: 7.5rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .spotlight {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {

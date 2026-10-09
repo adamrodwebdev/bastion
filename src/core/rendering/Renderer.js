@@ -336,6 +336,7 @@ export class Renderer {
     ctx.setTransform(...this._worldTransform(ox, oy));
     this._drawCursors(ui.cursors || []);
     if (ui.aim) this._drawAim(ui.aim, t);
+    if (ui.hint) this._drawHint(ui.hint, this._wall());
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     for (const e of game.enemies) {
       if (e.alive && e.hp < e.maxHp && (!e.stealth || e.revealed)) {
@@ -1015,6 +1016,40 @@ export class Renderer {
 
   _playerMarkSprite(x, y, player, r) {
     this._playerMark(x, y, player, r);
+  }
+
+  /** Wall-clock seconds (tutorial marks keep moving while the game is paused). */
+  _wall() {
+    return (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000;
+  }
+
+  /** Training: pulsing golden tile and a bouncing arrow over the tile to touch. */
+  _drawHint(hint, t) {
+    const ctx = this.ctx;
+    const k = (Math.sin(t * 5) + 1) / 2;
+    ctx.fillStyle = `rgba(255,209,102,${0.18 + 0.2 * k})`;
+    ctx.fillRect(hint.col + 0.05, hint.row + 0.05, 0.9, 0.9);
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 0.05 + 0.03 * k;
+    ctx.strokeRect(hint.col + 0.05, hint.row + 0.05, 0.9, 0.9);
+    this._sprite(hint.col + 0.5, hint.row + 0.5);
+    const bob = this.reducedMotion ? 0 : Math.abs(Math.sin(t * 4)) * 0.18;
+    const y = -0.55 - bob;
+    ctx.fillStyle = '#ffd166';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 0.03;
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.3);
+    ctx.lineTo(0.2, y + 0.05);
+    ctx.lineTo(0.08, y + 0.05);
+    ctx.lineTo(0.08, y - 0.2);
+    ctx.lineTo(-0.08, y - 0.2);
+    ctx.lineTo(-0.08, y + 0.05);
+    ctx.lineTo(-0.2, y + 0.05);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.setTransform(...this._worldTransform(this._ox, this._oy));
   }
 
   _drawAim(aim, t) {

@@ -7,6 +7,16 @@
     </div>
 
     <div class="home-menu">
+      <div v-if="newPlayer" class="new-player card">
+        <PixelPortrait id="gontran" height="3.6rem" decorative />
+        <div class="new-player-body">
+          <p class="new-player-title">{{ $t('home.newPlayer') }}</p>
+          <p class="new-player-text">{{ $t('home.newPlayerText') }}</p>
+        </div>
+        <button type="button" class="btn btn-primary" @click="$actions.startTraining(firstLesson)">
+          <AppIcon name="play" /> {{ $t('home.newPlayerStart') }}
+        </button>
+      </div>
       <button v-if="saved" type="button" class="btn btn-primary btn-lg home-continue" @click="$actions.resumeGame()">
         <AppIcon name="play" />
         <span class="btn-stack">
@@ -39,6 +49,11 @@
           <span class="tile-title">{{ $t('achievements.title') }}</span>
           <span class="tile-meta">{{ achievements }} / 300</span>
         </button>
+        <button type="button" class="tile" @click="$actions.go('learn')">
+          <AppIcon name="target" />
+          <span class="tile-title">{{ $t('learn.title') }}</span>
+          <span class="tile-meta">{{ $t('home.lessons', { n: trainingDone, total: lessonCount }) }}</span>
+        </button>
         <button type="button" class="tile" @click="$actions.go('chronicle')">
           <AppIcon name="book" />
           <span class="tile-title">{{ $t('story.chronicle') }}</span>
@@ -61,12 +76,14 @@
  * @file Home screen: continue, campaign, two players, workshop, challenges, chronicle.
  */
 import AppIcon from './AppIcon.vue';
+import PixelPortrait from './PixelPortrait.vue';
+import { LESSONS } from '../core/tutorial/Training.js';
 import { services } from '../services/index.js';
 import { LevelCatalog } from '../core/config/LevelCatalog.js';
 
 export default {
   name: 'HomeScreen',
-  components: { AppIcon },
+  components: { AppIcon, PixelPortrait },
   computed: {
     saves() {
       // eslint-disable-next-line no-unused-expressions
@@ -97,6 +114,19 @@ export default {
     },
     episodes() {
       return this.saves.progress.episodes.length;
+    },
+    trainingDone() {
+      return this.saves.training.length;
+    },
+    lessonCount() {
+      return LESSONS.length;
+    },
+    /** Never played: the training is offered first. */
+    newPlayer() {
+      return this.trainingDone === 0 && this.saves.campaign('solo').completed === 0 && !this.saved;
+    },
+    firstLesson() {
+      return LESSONS[0].id;
     },
   },
   watch: {

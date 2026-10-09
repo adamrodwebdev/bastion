@@ -1,10 +1,16 @@
 <template>
   <div class="board-overlay end-overlay" role="dialog" aria-modal="true" aria-labelledby="end-title">
     <div class="end-card card">
-      <h2 id="end-title" class="end-title" :class="result.won ? 'is-won' : 'is-lost'">{{ result.won ? $t('end.won') : $t('end.lost') }}</h2>
-      <p class="end-text">{{ result.won ? $t('end.wonText') : $t('end.lostText') }}</p>
-      <StarRow v-if="result.won" :value="result.stars" large />
-      <p class="end-score">{{ $t('end.score', { score: result.score }) }}</p>
+      <template v-if="result.training">
+        <h2 id="end-title" class="end-title" :class="result.won ? 'is-won' : 'is-lost'">{{ result.won ? $t('training.won') : $t('end.lost') }}</h2>
+        <p class="end-text">{{ result.won ? $t('training.lessons.' + result.training + '.learned') : $t('training.lost') }}</p>
+      </template>
+      <template v-else>
+        <h2 id="end-title" class="end-title" :class="result.won ? 'is-won' : 'is-lost'">{{ result.won ? $t('end.won') : $t('end.lost') }}</h2>
+        <p class="end-text">{{ result.won ? $t('end.wonText') : $t('end.lostText') }}</p>
+        <StarRow v-if="result.won" :value="result.stars" large />
+        <p class="end-score">{{ $t('end.score', { score: result.score }) }}</p>
+      </template>
 
       <ul v-if="result.won && result.challenges.length" class="end-challenges" role="list">
         <li v-for="c in result.challenges" :key="c.id" :class="{ 'is-done': c.passed, 'is-new': c.newly }">
@@ -32,9 +38,9 @@
       </button>
 
       <div class="end-actions">
-        <button v-if="result.won && !result.last" ref="primary" type="button" class="btn btn-primary" @click="$emit('next')">{{ $t('end.next') }}</button>
+        <button v-if="result.won && !result.last" ref="primary" type="button" class="btn btn-primary" @click="$emit('next')">{{ nextLabel }}</button>
         <button ref="retry" type="button" class="btn" :class="result.won && !result.last ? 'btn-secondary' : 'btn-primary'" @click="$emit('retry')">{{ $t('end.retry') }}</button>
-        <button type="button" class="btn btn-ghost" @click="$emit('levels')">{{ $t('end.levels') }}</button>
+        <button type="button" class="btn btn-ghost" @click="$emit('levels')">{{ result.training ? $t('training.back') : $t('end.levels') }}</button>
       </div>
     </div>
   </div>
@@ -52,6 +58,12 @@ export default {
   components: { AppIcon, StarRow },
   props: { result: { type: Object, required: true } },
   emits: ['next', 'retry', 'levels', 'revive', 'double'],
+  computed: {
+    nextLabel() {
+      if (!this.result.training) return this.$t('end.next');
+      return this.result.nextLesson ? this.$t('training.nextLesson') : this.$t('training.toCampaign');
+    },
+  },
   mounted() {
     this.$nextTick(() => {
       const b = this.$refs.primary || this.$refs.retry;

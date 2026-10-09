@@ -1,6 +1,6 @@
 <template>
   <section class="game" :class="{ 'is-paused': paused, 'is-coop': coop }" aria-labelledby="game-title">
-    <h1 id="game-title" class="sr-only">Bastion — {{ $t('briefing.level', { n: levelNumber }) }}</h1>
+    <h1 id="game-title" class="sr-only">Bastion — {{ training ? $t('training.lessons.' + training + '.title') : $t('briefing.level', { n: levelNumber }) }}</h1>
 
     <!-- HUD ------------------------------------------------------------ -->
     <div class="hud">
@@ -22,11 +22,11 @@
         </div>
       </div>
       <div class="hud-controls">
-        <button type="button" class="icon-btn" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :title="paused ? $t('hud.resume') : $t('hud.pause')" :disabled="!!end" @click="togglePause">
+        <button type="button" class="icon-btn" data-tutorial="pause" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :title="paused ? $t('hud.resume') : $t('hud.pause')" :disabled="!!end" @click="togglePause">
           <AppIcon :name="paused ? 'play' : 'pause'" />
         </button>
-        <button type="button" class="icon-btn icon-btn--text" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">×{{ speed }}</button>
-        <button type="button" class="icon-btn" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
+        <button type="button" class="icon-btn icon-btn--text" data-tutorial="speed" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">×{{ speed }}</button>
+        <button v-if="!training" type="button" class="icon-btn" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
           <AppIcon name="save" />
         </button>
       </div>
@@ -37,7 +37,8 @@
       <span class="boss-track"><span class="boss-fill" :style="{ width: boss.ratio * 100 + '%' }"></span></span>
     </div>
 
-    <CoachBubble v-if="coachText && !end" :text="coachText" @dismiss="dismissCoach" />
+    <CoachBubble v-if="coachText && !end" :text="coachText" :next="coachNext" @dismiss="dismissCoach" @next="ackCoach" />
+    <div v-if="spot && coachText && !end" class="spotlight" :style="spot" aria-hidden="true"></div>
 
     <div class="game-layout">
       <!-- Board ------------------------------------------------------- -->
@@ -64,7 +65,8 @@
               <h2 class="pause-title">{{ $t('hud.paused') }}</h2>
               <button type="button" class="btn btn-primary btn-lg" @click="togglePause">{{ $t('hud.resume') }}</button>
               <button type="button" class="btn btn-secondary" @click="restart">{{ $t('end.retry') }}</button>
-              <button type="button" class="btn btn-ghost" @click="saveAndQuit">{{ $t('hud.save') }}</button>
+              <button v-if="training" type="button" class="btn btn-ghost" @click="quit">{{ $t('training.quit') }}</button>
+              <button v-else type="button" class="btn btn-ghost" @click="saveAndQuit">{{ $t('hud.save') }}</button>
             </div>
           </div>
 
@@ -81,7 +83,7 @@
             <span v-else>{{ hud.done ? $t('hud.lastWave') : $t('hud.waveRunning') }}</span>
             <kbd aria-hidden="true">␣</kbd>
           </button>
-          <div v-if="nextWave.length && hud.canStart" class="next-wave">
+          <div v-if="nextWave.length && hud.canStart" class="next-wave" data-tutorial="next-wave">
             <span class="next-wave-label">{{ $t('hud.nextWave') }}</span>
             <ul class="next-wave-list" role="list">
               <li v-for="g in nextWave" :key="g.type" class="chip">
@@ -137,6 +139,7 @@ import { markRaw } from 'vue';
 import { Game, GameLoop, Renderer, LevelCatalog, Difficulty, TowerFactory, EnemyFactory, COOP_HP } from '../core/index.js';
 import { achievementsFor, evaluateAchievements, runOf } from '../core/progression/Achievements.js';
 import { Tutorial } from '../core/tutorial/Tutorial.js';
+import { LESSONS, lessonById, trainingLevel, TrainingScript, TRAINING_REWARD } from '../core/tutorial/Training.js';
 import { StoryRepository } from '../core/story/StoryRepository.js';
 import { RewardTicket } from '../services/ads/RewardTicket.js';
 import { services } from '../services/index.js';
@@ -174,6 +177,11 @@ export default {
       livesHit: false,
       end: null,
       coachText: '',
+      coachNext: false,
+      coachCell: null,
+      spot: null,
+      spotTarget: null,
+      training: null,
       announce: '',
     };
   },
@@ -318,7 +326,13 @@ export default {
       const { resume, levelNumber, loadout } = this.$store.game;
       const track = this.coop ? 'coop' : 'solo';
       let game = null;
-      if (resume) game = Game.restore(services.saves.loadGame());
+      const lesson = this.$store.game.training ? lessonById(this.$store.game.training) : null;
+      if (lesson) {
+        // Training: its own small map, gentle difficulty, no workshop bonus.
+        this.training = lesson.id;
+        game = new Game({ level: trainingLevel(lesson), difficulty: Difficulty.get('easy'), loadout: lesson.loadout, mods: {}, players: 1 });
+      }
+      if (!game && resume) game = Game.restore(services.saves.loadGame());
       if (!game) {
         const level = LevelCatalog.byNumber(levelNumber) || LevelCatalog.byNumber(1);
         game = new Game({
@@ -349,7 +363,9 @@ export default {
       this.engine.loop = markRaw(loop);
       this.bindGameEvents(game);
 
-      if (services.saves.settings.tutorials && !this.coop) {
+      if (lesson) {
+        this.engine.tutorial = markRaw(new TrainingScript(lesson));
+      } else if (services.saves.settings.tutorials && !this.coop) {
         const seenPowers = (id) => services.saves.hasSeen('tutorials', id);
         const newPowers = game.powers.powers.map((p) => p.id).filter((id) => !seenPowers(`power-${id}`));
         this.engine.tutorial = markRaw(new Tutorial({ level: game.level, newPowers, seen: seenPowers }));
@@ -402,6 +418,7 @@ export default {
     },
 
     finish(won, stars, score) {
+      if (this.training) return this.finishTraining(won, stars, score);
       const game = this.engine.game;
       const level = game.level;
       const track = this.coop ? 'coop' : 'solo';
@@ -434,6 +451,33 @@ export default {
       if (won && StoryRepository.beatAfter(level.number) && services.saves.settings.story) {
         this.$actions.showStory(StoryRepository.beatAfter(level.number).id);
       }
+    },
+
+    finishTraining(won, stars, score) {
+      const id = this.training;
+      services.audio?.sfx(won ? 'victory' : 'defeat');
+      services.audio?.music(won ? 'victory' : 'menu');
+      this.$store.toasts.splice(0);
+      const crowns = won ? services.saves.completeTraining(id, TRAINING_REWARD) : 0;
+      // What a lesson taught needs no repeat in the campaign.
+      const taught = { t1: 'basics', t2: 'targeting', t3: 'early' }[id];
+      if (won && taught) services.saves.markSeen('tutorials', taught);
+      const next = LESSONS[LESSONS.findIndex((l) => l.id === id) + 1] || null;
+      this.end = {
+        won,
+        stars,
+        score,
+        training: id,
+        nextLesson: next ? next.id : null,
+        crowns: { total: crowns, parts: crowns ? [{ id: 'training', amount: crowns }] : [] },
+        challenges: [],
+        newPowers: [],
+        last: false,
+        canRevive: false,
+        canDouble: false,
+      };
+      this.clearSelection();
+      this.sync();
     },
 
     teardown() {
@@ -473,6 +517,7 @@ export default {
         aim: power && this.aimPoint ? { ...this.aimPoint, radius: power.constructor.radius } : null,
         cursors,
         coop: this.coop,
+        hint: this.coachText && !this.end ? this.coachCell : null,
       });
       const now = performance.now();
       if (now - this.engine.lastSync > 100) this.sync(now);
@@ -497,13 +542,25 @@ export default {
       if (!g.isOver) services.audio?.intensity(g.enemies.some((e) => e.boss) ? 3 : g.state === 'running' ? 2 : 1);
       const tut = this.engine.tutorial;
       if (tut && !this.end) {
-        const step = tut.current({ game: g, cellSelected: Boolean(this.selectedCell), armedType: this.armedType });
+        const step = tut.current({
+          game: g,
+          cellSelected: Boolean(this.selectedCell),
+          selected: this.selectedCell,
+          selectedTower: this.selectedTower,
+          armedType: this.armedType,
+          speed: this.speed,
+          aiming: this.aiming,
+        });
         this.coachText = step ? this.coachMessage(step) : '';
+        this.coachNext = Boolean(step && step.next);
+        this.coachCell = step && step.cell ? { col: step.cell[0], row: step.cell[1] } : null;
+        this.placeSpotlight(step && step.target);
         for (const id of tut.finished.splice(0)) services.saves.markSeen('tutorials', id);
       }
     },
 
     coachMessage(step) {
+      if (step.raw) return this.$t(step.key);
       const p = { ...step.params };
       if (p.type) p.tower = this.$t('towers.' + p.type + '.name');
       if (p.type) p.desc = this.$t('towers.' + p.type + '.desc');
@@ -519,9 +576,34 @@ export default {
       this.sync();
     },
 
+    /** "Next" on a training explanation. */
+    ackCoach() {
+      this.engine.tutorial?.ack?.();
+      this.sync();
+    },
+
+    /** Golden ring around the interface element the coach talks about. */
+    placeSpotlight(target) {
+      const el = target ? document.querySelector(`[data-tutorial="${target}"]`) : null;
+      if (!el || !el.offsetParent) {
+        this.spot = null;
+        this.spotTarget = null;
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      // On phones the shop or the powers can sit below the fold: bring them in once.
+      if (target !== this.spotTarget) {
+        this.spotTarget = target;
+        if (r.top < 0 || r.bottom > window.innerHeight) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+      const pad = 6;
+      this.spot = { left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` };
+    },
+
     autosave() {
       const g = this.engine.game;
-      if (!g || g.isOver) return;
+      // Training games are short and never saved (the campaign save stays untouched).
+      if (!g || g.isOver || this.training) return;
       if (g.state === 'prepare' && g.towers.length === 0) return;
       services.saves.saveGame({ ...g.serialize(), track: this.coop ? 'coop' : 'solo' });
     },
@@ -802,15 +884,22 @@ export default {
     },
 
     quit() {
-      this.$actions.openCampaign(this.coop ? 'coop' : 'solo');
+      if (this.training) this.$actions.go('learn');
+      else this.$actions.openCampaign(this.coop ? 'coop' : 'solo');
     },
 
     async restart() {
+      if (this.training) return this.$actions.startTraining(this.training);
       await this.$actions.betweenLevels();
       this.$actions.startLevel(this.levelNumber, { track: this.coop ? 'coop' : 'solo' });
     },
 
     async nextLevel() {
+      if (this.training) {
+        if (this.end && this.end.nextLesson) this.$actions.startTraining(this.end.nextLesson);
+        else this.$actions.openCampaign('solo');
+        return;
+      }
       await this.$actions.betweenLevels();
       const track = this.coop ? 'coop' : 'solo';
       this.$actions.openCampaign(track);
@@ -819,6 +908,7 @@ export default {
     },
 
     async toLevels() {
+      if (this.training) return this.$actions.go('learn');
       await this.$actions.betweenLevels();
       this.$actions.openCampaign(this.coop ? 'coop' : 'solo');
     },

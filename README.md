@@ -21,11 +21,14 @@ Le jeu se passe dans le même royaume que [Catapulte Mania](https://github.com/a
   - **Coopération** : une campagne de 100 niveaux à deux. Chaque joueur a son or et ses tours.
   - **Duel** : l'écran est coupé en deux. Chacun défend son côté et envoie des ennemis chez l'autre.
 - **3 difficultés** : Facile, Normal, Difficile.
+- **L'écran Apprendre**, pour les nouveaux joueurs :
+  - **4 leçons guidées** sur de petites cartes : Maître Gontran explique, un cercle doré montre où toucher, et la leçon avance dès que le joueur a fait le geste. Chaque leçon réussie rapporte 25 couronnes la première fois ;
+  - **le guide du défenseur** : les règles, les types de dégâts, et la fiche de chaque tour, ennemi et pouvoir (avec la bonne parade contre chaque ennemi).
 - **Une aide pas à pas** dans les premiers niveaux, puis à chaque nouvelle tour et chaque nouveau pouvoir.
 - **Sauvegarde automatique** dans le navigateur. On peut quitter au milieu d'un niveau et reprendre plus tard.
 - **Musique et bruitages** créés directement par le navigateur (aucun fichier son à télécharger).
 - **Graphismes peints par le code** : bâtiments et personnages animés, météo, jour et nuit. Les réglages permettent de couper le **sang** et les **particules** (le sang est coupé par défaut sur CrazyGames et Poki).
-- **Français et anglais**, **mode sombre**, et commandes au clavier.
+- **Français, anglais et indonésien**, **mode sombre**, et commandes au clavier.
 
 ## Lancer le projet
 
@@ -43,7 +46,7 @@ Autres commandes utiles :
 | `npm run build` | Crée la version finale du site dans le dossier `dist/`. |
 | `npm run preview` | Affiche la version finale en local, pour la vérifier avant de la mettre en ligne. |
 | `npm test` | Un robot joue les 100 niveaux pour vérifier qu'ils sont tous gagnables. |
-| `npm run check:i18n` | Vérifie qu'aucun texte ne manque en français ou en anglais. |
+| `npm run check:i18n` | Vérifie qu'aucun texte ne manque dans aucune langue. |
 | `npm run build:crazygames` | Crée la version pour le site CrazyGames (avec ses publicités) dans `dist-crazygames/`. |
 | `npm run build:poki` | Crée la version pour le site Poki (avec ses publicités) dans `dist-poki/`. |
 
@@ -97,7 +100,8 @@ Chaque fichier commence par un commentaire qui explique son rôle. Les détails 
 | Les défis des niveaux | `src/core/progression/Achievements.js` |
 | Les améliorations de l'Atelier | `src/core/progression/UpgradeCatalog.js` |
 | Le nombre de couronnes gagnées | `src/core/progression/GoldRules.js` |
-| Les textes et l'histoire | `src/locales/fr.js` et `src/locales/en.js` |
+| Les textes et l'histoire | `src/locales/fr.js`, `en.js` et `id.js` |
+| Les leçons guidées | `src/core/tutorial/Training.js` |
 | Le mode Duel | `src/core/modes/DuelMatch.js` |
 | Les couleurs et la mise en page | `src/styles/main.css` |
 | Le dessin du plateau (terrain, bâtiments, personnages, particules) | `src/core/rendering/` |
@@ -108,7 +112,9 @@ Après un changement d'équilibrage, lancez `npm test` pour voir si les niveaux 
 
 1. Copiez `src/locales/en.js` et renommez la copie (par exemple `de.js` pour l'allemand).
 2. Traduisez les textes, sans changer les noms des clés.
-3. Ajoutez la langue dans `src/services/index.js` et dans `scripts/check-i18n.mjs`.
+3. Ajoutez la langue dans `src/locales/index.js` (son chargement et son nom) et dans `scripts/check-i18n.mjs`.
+
+Chaque langue est chargée seulement quand un joueur la choisit : en ajouter une ne ralentit pas le jeu.
 
 ## Jouer au clavier
 
