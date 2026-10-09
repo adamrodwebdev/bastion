@@ -21,7 +21,7 @@
 
     <p v-if="!info.mine" class="notice">{{ $t('tower.notYours') }}</p>
 
-    <fieldset v-if="info.canTarget && info.mine" class="segmented segmented--compact segmented--small">
+    <fieldset v-if="info.canTarget && info.mine" class="segmented segmented--compact segmented--small" data-tutorial="targeting">
       <legend>{{ $t('tower.targeting') }}</legend>
       <div class="segmented-track">
         <label v-for="id in targetings" :key="id" class="segmented-option" :class="{ 'is-active': info.targeting === id }">

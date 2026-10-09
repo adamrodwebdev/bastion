@@ -13,14 +13,16 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import en from '../src/locales/en.js';
 import fr from '../src/locales/fr.js';
+import id from '../src/locales/id.js';
 import { EnemyFactory, TowerFactory, PowerManager, CHAPTERS } from '../src/core/index.js';
 import { ACHIEVEMENTS } from '../src/core/progression/Achievements.js';
 import { UPGRADES } from '../src/core/progression/UpgradeCatalog.js';
 import { BEATS } from '../src/core/story/StoryRepository.js';
 import { CHARACTERS } from '../src/core/story/Portraits.js';
+import { LESSONS } from '../src/core/tutorial/Training.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const LOCALES = { en, fr };
+const LOCALES = { en, fr, id };
 const problems = [];
 
 const get = (dict, key) => key.split('.').reduce((n, p) => (n && typeof n === 'object' ? n[p] : undefined), dict);
@@ -59,11 +61,21 @@ for (let n = 1; n <= 100; n++) used.add(`story.lines.l${n}`);
 for (const c of Object.keys(CHARACTERS)) used.add(`characters.${c}.name`);
 for (const k of ['first', 'strongest', 'closest']) used.add(`tower.targets.${k}`);
 for (const k of ['damage', 'range', 'dps', 'kills', 'soldiers', 'hp', 'buff', 'income']) used.add(`tower.stats.${k}`);
-for (const k of ['firstWin', 'stars', 'challenges', 'allChallenges', 'replay']) used.add(`end.crowns.${k}`);
+for (const k of ['firstWin', 'stars', 'challenges', 'allChallenges', 'replay', 'training']) used.add(`end.crowns.${k}`);
 for (const d of ['easy', 'normal', 'hard']) used.add(`difficulty.${d}`).add(`difficulty.${d}Desc`);
 for (const k of ['select', 'build', 'second', 'wave', 'upgrade', 'early', 'targeting', 'newTower', 'newPower']) used.add(`tutorial.${k}`);
 for (const k of ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2']) used.add(`settings.keyList.${k}.keys`).add(`settings.keyList.${k}.what`);
 for (let i = 1; i <= 7; i++) used.add(`howTo.steps.${i}`);
+for (const l of LESSONS) {
+  ['title', 'desc', 'learned'].forEach((k) => used.add(`training.lessons.${l.id}.${k}`));
+  for (const s of l.steps) used.add(`training.steps.${l.id}.${s.key}`);
+}
+for (const k of ['basics', 'towers', 'enemies', 'powers', 'two']) used.add(`learn.tabs.${k}`);
+for (const k of ['goal', 'build', 'gold', 'waves', 'upgrade', 'powers', 'stars', 'workshop']) used.add(`learn.rules.${k}.title`).add(`learn.rules.${k}.text`);
+const damage = new Set(['physical', 'fire', 'magic', 'true', ...TowerFactory.catalogue().map((t) => t.dtype).filter(Boolean)]);
+for (const d of damage) used.add(`learn.damage.${d}.name`).add(`learn.damage.${d}.text`);
+for (const k of ['boss', 'flying', 'stealth', 'armored', 'resistant', 'unslowable', 'unblockable', 'fast']) used.add(`learn.traits.${k}`);
+for (const k of ['air', 'stealth', 'armor', 'golem', 'healer', 'warlock', 'ram', 'siege', 'necro', 'fast', 'berserker', 'boss']) used.add(`learn.tips.${k}`);
 
 for (const key of used) {
   for (const [code, dict] of Object.entries(LOCALES)) {

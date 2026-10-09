@@ -46,6 +46,7 @@
     <SettingsScreen v-else-if="$store.view === 'settings'" />
     <MultiplayerScreen v-else-if="$store.view === 'multiplayer'" />
     <DuelScreen v-else-if="$store.view === 'duel'" :key="$store.duel.key" />
+    <LearnScreen v-else-if="$store.view === 'learn'" />
   </main>
 
   <footer v-if="!inPlay" class="app-footer">
@@ -78,6 +79,7 @@ const screens = {
   MultiplayerScreen: () => import('./components/MultiplayerScreen.vue'),
   DuelScreen: () => import('./components/DuelScreen.vue'),
   StoryPanel: () => import('./components/StoryPanel.vue'),
+  LearnScreen: () => import('./components/LearnScreen.vue'),
 };
 const lazy = Object.fromEntries(Object.entries(screens).map(([name, load]) => [name, defineAsyncComponent(load)]));
 

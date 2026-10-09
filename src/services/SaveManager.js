@@ -26,6 +26,7 @@ const DEFAULT_PROGRESS = () => ({
   loadout: [],
   episodes: [],
   tutorials: [],
+  training: [],
   duel: { played: 0, wins: [0, 0] },
 });
 
@@ -89,6 +90,7 @@ export class SaveManager extends EventEmitter {
     p.loadout = Array.isArray(raw.loadout) ? raw.loadout.filter((x) => typeof x === 'string').slice(0, DEFAULT_SLOTS + 1) : [];
     p.episodes = Array.isArray(raw.episodes) ? raw.episodes.filter((x) => typeof x === 'string').slice(0, 50) : [];
     p.tutorials = Array.isArray(raw.tutorials) ? raw.tutorials.filter((x) => typeof x === 'string').slice(0, 100) : [];
+    p.training = Array.isArray(raw.training) ? raw.training.filter((x) => typeof x === 'string' && /^t\d$/.test(x)).slice(0, 10) : [];
     p.duel = { played: int(raw.duel?.played, 0, 1e6, 0), wins: [int(raw.duel?.wins?.[0], 0, 1e6, 0), int(raw.duel?.wins?.[1], 0, 1e6, 0)] };
     return p;
   }
@@ -198,6 +200,27 @@ export class SaveManager extends EventEmitter {
     this.progress.crownsEarned += n;
     this.progress.crowns += n;
     this._persistProgress();
+  }
+
+  // ------------------------------------------------------------ training
+  /** Lessons already completed ('t1'…). */
+  get training() {
+    return this.progress.training;
+  }
+
+  /**
+   * Records a completed lesson.
+   * @param {string} id lesson id
+   * @param {number} reward crowns given the first time
+   * @returns {number} crowns earned now (0 if already done)
+   */
+  completeTraining(id, reward) {
+    if (this.progress.training.includes(id)) return 0;
+    this.progress.training.push(id);
+    this.progress.crownsEarned += reward;
+    this.progress.crowns += reward;
+    this._persistProgress();
+    return reward;
   }
 
   // ------------------------------------------------------------ workshop

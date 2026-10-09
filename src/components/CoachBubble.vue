@@ -4,6 +4,7 @@
     <div class="coach-body">
       <p class="coach-name">{{ $t('characters.gontran.name') }}</p>
       <p class="coach-text">{{ text }}</p>
+      <button v-if="next" ref="next" type="button" class="btn btn-primary btn-sm coach-next" @click="$emit('next')">{{ $t('training.next') }}</button>
     </div>
     <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tutorial.dismiss')" @click="$emit('dismiss')"><AppIcon name="close" /></button>
   </div>
@@ -19,7 +20,11 @@ import PixelPortrait from './PixelPortrait.vue';
 export default {
   name: 'CoachBubble',
   components: { AppIcon, PixelPortrait },
-  props: { text: { type: String, required: true } },
-  emits: ['dismiss'],
+  props: {
+    text: { type: String, required: true },
+    /** Shows a "Next" button (explanation steps of the training). */
+    next: { type: Boolean, default: false },
+  },
+  emits: ['dismiss', 'next'],
 };
 </script>
