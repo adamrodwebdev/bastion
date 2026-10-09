@@ -4,6 +4,7 @@
     <loc>https://bastion-tower-defense.netlify.app/</loc>
     <xhtml:link rel="alternate" hreflang="fr" href="https://bastion-tower-defense.netlify.app/?lang=fr" />
     <xhtml:link rel="alternate" hreflang="en" href="https://bastion-tower-defense.netlify.app/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="id" href="https://bastion-tower-defense.netlify.app/?lang=id" />
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
