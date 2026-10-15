@@ -115,6 +115,7 @@ export class Tower extends Entity {
     }
     this.angle = Math.atan2(target.y - this.y, target.x - this.x);
     this.fire(target, game);
+    game.emit('shot', this);
     this.recoil = 1;
     this.cooldown = 1 / this.stats.fireRate;
   }

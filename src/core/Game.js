@@ -21,8 +21,11 @@ import { Difficulty } from './config/Difficulty.js';
  *   'building' (between waves) → 'wave' → 'building' → … → 'won' | 'lost'
  *
  * Events emitted:
- *   - 'waveStart' { wave, total }   a wave has just started
+ *   - 'waveStart' { wave, total, early }  a wave has just started (early = gold paid for calling it early)
  *   - 'waveEnd'   { wave, bonus }   all enemies of the wave are gone
+ *   - 'shot'      (tower)           a tower fired (sound, muzzle flash)
+ *   - 'impact'    { x, y, splash, source }  an area hit landed (explosion, frost burst)
+ *   - 'kill'      { enemy, reward } an enemy died
  *   - 'leak'      { lives }         an enemy reached the exit
  *   - 'build' | 'upgrade' | 'sell'  (tower)
  *   - 'power'     (powerId)         a special power was activated
@@ -37,6 +40,11 @@ import { Difficulty } from './config/Difficulty.js';
 export class Game extends EventEmitter {
   /** Bump when the save format changes: older saves are then ignored instead of crashing. */
   static SAVE_VERSION = 1;
+
+  /** Early-call bonus: seconds during which it shrinks to 0, base gold and gold per wave reached. */
+  static EARLY_WINDOW = 18;
+  static EARLY_BASE = 10;
+  static EARLY_PER_WAVE = 4;
 
   /**
    * @param {object} o
@@ -71,9 +79,28 @@ export class Game extends EventEmitter {
     return this.state === 'won' || this.state === 'lost';
   }
 
-  /** @returns {boolean} true when the player may launch the next wave. */
+  /** @returns {boolean} true when the player may launch the next wave (between waves, or early). */
   get canStartWave() {
-    return this.state === 'building' && this.waves.hasMoreWaves;
+    return (this.state === 'building' || this.canCallEarly) && this.waves.hasMoreWaves;
+  }
+
+  /**
+   * Early call (as in Kingdom Rush): once the current wave has finished spawning,
+   * the next one can be launched at once for a gold bonus that shrinks with time.
+   * @returns {boolean}
+   */
+  get canCallEarly() {
+    return this.state === 'wave' && !this.waves.spawning && this.waves.hasMoreWaves && !this.isOver;
+  }
+
+  /** @returns {number} 1 → 0: share of the early-call window left (0 between waves). */
+  get earlyRatio() {
+    return this.canCallEarly ? Math.max(0, 1 - this.waves.calm / Game.EARLY_WINDOW) : 0;
+  }
+
+  /** @returns {number} gold paid right now for calling the next wave early (0 between waves). */
+  get earlyBonus() {
+    return Math.round((Game.EARLY_BASE + Game.EARLY_PER_WAVE * this.waves.current) * this.earlyRatio);
   }
 
   /**
@@ -93,9 +120,15 @@ export class Game extends EventEmitter {
    */
   startWave() {
     if (!this.canStartWave) return false;
+    let early = 0;
+    if (this.state === 'wave') {
+      // Called early: the running wave's end bonus is paid now, plus the early bonus.
+      early = this.earlyBonus;
+      this.gold += this._waveBonus() + early;
+    }
     this.waves.startNext();
     this.state = 'wave';
-    this.emit('waveStart', { wave: this.waves.current, total: this.waves.total });
+    this.emit('waveStart', { wave: this.waves.current, total: this.waves.total, early });
     return true;
   }
 
@@ -195,6 +228,7 @@ export class Game extends EventEmitter {
     const { damage, splash = 0, slow, pierce = false, source = null } = payload;
     if (splash > 0) {
       const r2 = splash * splash;
+      this.emit('impact', { x, y, splash, source });
       this.addEffect(new Effect('ring', { x, y, radius: splash, color: source ? source.constructor.color : '#fff', ttl: 0.3 }));
       for (const e of this.enemies) {
         if (!e.alive) continue;
@@ -232,6 +266,7 @@ export class Game extends EventEmitter {
     this.kills += 1;
     this.score += Math.round(reward * 10 * this.difficulty.scoreMult);
     if (source) source.kills += 1;
+    this.emit('kill', { enemy, reward });
     this.addEffect(new Effect('spark', { x: enemy.x, y: enemy.y, radius: enemy.radius * 2.2, color: enemy.color, ttl: 0.35 }));
     this.addEffect(new Effect('text', { x: enemy.x, y: enemy.y - 0.2, text: `+${reward}`, color: '#ffd166', ttl: 0.7 }));
   }
@@ -290,7 +325,7 @@ export class Game extends EventEmitter {
 
   /** @private Pays the end-of-wave bonus, then wins the level or goes back to building. */
   _endWave() {
-    const bonus = 20 + this.waves.current * 5;
+    const bonus = this._waveBonus();
     this.gold += bonus;
     if (!this.waves.hasMoreWaves) {
       this._finish(true);
@@ -299,6 +334,11 @@ export class Game extends EventEmitter {
     this.state = 'building';
     this.projectiles.length = 0;
     this.emit('waveEnd', { wave: this.waves.current, bonus });
+  }
+
+  /** @private Gold paid when the current wave is cleared (or called early). */
+  _waveBonus() {
+    return 20 + this.waves.current * 5;
   }
 
   /**

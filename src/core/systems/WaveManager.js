@@ -20,6 +20,7 @@ export class WaveManager {
     this.queue = []; // [{ time, type }]
     this.elapsed = 0;
     this.spawning = false;
+    this.calm = 0; // seconds since the current wave finished spawning (early-call bonus)
   }
 
   get total() {
@@ -49,6 +50,7 @@ export class WaveManager {
     this.waveIndex += 1;
     this.queue = WaveManager.buildSchedule(this.level.waves[this.waveIndex]);
     this.elapsed = 0;
+    this.calm = 0;
     this.spawning = true;
     return true;
   }
@@ -72,7 +74,10 @@ export class WaveManager {
 
   /** @returns {import('../entities/enemies/Enemy.js').Enemy[]} newly spawned enemies */
   update(dt, path) {
-    if (!this.spawning) return [];
+    if (!this.spawning) {
+      this.calm += dt;
+      return [];
+    }
     this.elapsed += dt;
     const spawned = [];
     const scaling = this.scaling();
@@ -85,7 +90,7 @@ export class WaveManager {
   }
 
   serialize() {
-    return { waveIndex: this.waveIndex, queue: this.queue, elapsed: this.elapsed, spawning: this.spawning };
+    return { waveIndex: this.waveIndex, queue: this.queue, elapsed: this.elapsed, spawning: this.spawning, calm: this.calm };
   }
 
   restore(data) {
@@ -93,5 +98,6 @@ export class WaveManager {
     this.queue = data.queue || [];
     this.elapsed = data.elapsed || 0;
     this.spawning = !!data.spawning;
+    this.calm = data.calm || 0;
   }
 }
