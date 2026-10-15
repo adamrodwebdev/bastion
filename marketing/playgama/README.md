@@ -23,11 +23,13 @@ l'écran titre (« Bastion », puis « Tower Defense » sous le logo) et dans le
 - **Screen Orientation** : landscape et portrait (le plateau pivote sur un téléphone tenu en hauteur)
 - **Game Languages** : English, French, Indonesian
 - **Game Features** : aucune (le mode à deux se joue sur le même écran, sans réseau ; ni classement ni achat)
-- **Distribution** : partenaires par défaut, **en excluant Playhop et Yandex Games** (le russe y est exigé)
+- **Distribution** : partenaires par défaut, **en excluant Yandex Games** (le russe y est exigé). La liste
+  de Playgama ne propose pas Playhop à part. Attention : cocher « I want to exclude specific platforms »
+  sélectionne les 13 plateformes, il faut décocher toutes les autres.
 - **Link** : https://bastion-tower-defense.netlify.app/
-- **Question sur l'outil d'IA** : le code a été écrit avec Claude Code (modèle Claude Opus 5.5) sous la
-  direction de l'auteur ; les graphismes sont dessinés par le code (Canvas), sans image générée par IA ; la
-  musique et les sons sont synthétisés en direct.
+- **Agent et modèle** : Claude Code, Claude Opus, version exacte `claude-opus-5-5`. Le code a été écrit avec
+  Claude Code sous la direction de l'auteur ; les graphismes sont dessinés par le code (Canvas), sans image
+  générée par IA ; la musique et les sons sont synthétisés en direct.
 
 **Description** :
 
@@ -76,7 +78,7 @@ l'écran titre (« Bastion », puis « Tower Defense » sous le logo) et dans le
 | Pas de sang ni de violence explicite (GameDistribution) | ✓ | Sang coupé par défaut sur les portails (réglage) |
 | Difficulté croissante, progression, son | ✓ | 100 niveaux, robot de `npm test`, musique et bruitages synthétisés |
 | Titre de 2 à 4 mots identique dans le jeu et la fiche | ✓ | « Bastion Tower Defense » |
-| Yandex / Playhop : russe | — | Non traduit : exclure Playhop et Yandex Games |
+| Yandex Games : russe | — | Non traduit : Yandex Games exclu dans la fiche |
 
 ## Risques à surveiller
 
