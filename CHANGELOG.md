@@ -12,6 +12,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 ### Ajouté
 
+- **Version Playgama** (`npm run package:playgama`) avec le Playgama Bridge SDK v2 : publicités entre deux niveaux et vidéos facultatives, sauvegardes sur la plateforme, langue de la plateforme à chaque lancement, son et pause de la plateforme (y compris pendant les publicités qu'elle lance), messages de niveau. Aucune publicité n'est proposée quand un bloqueur est détecté. Le paquet contrôle les exigences de Playgama et de ses partenaires, et trois couvertures sont peintes par le moteur du jeu (`marketing/playgama/`).
+- **Bouton son** dans l'en-tête, sur tous les écrans : coupe la musique et les bruitages, et s'en souvient.
 - **Refonte graphique complète**, toujours dessinée par le code (aucune image à télécharger) :
   - terrain peint pour chacun des 10 chapitres : herbe texturée, routes pavées, eau animée, arbres et rochers propres au décor ;
   - les 10 tours sont de vrais bâtiments, en bois au niveau 1, en pierre ensuite, avec des ornements dorés pour l'élite ; leurs parties bougent (l'archer vise, le canon recule, la catapulte lance, le cristal de givre flotte, les braseros brûlent, les drapeaux flottent) ;
@@ -35,6 +37,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 ### Modifié
 
+- Sur un écran en largeur, le plateau ne pivote plus en portrait (seuls les écrans tenus en hauteur le font pivoter).
+- Sur un téléphone très étroit, le choix de la langue se réduit à son icône globe pour laisser la place au bouton son.
 - **HUD sur la carte** : sur téléphone en portrait, les vies, l'or, la vague et les boutons forment un bandeau au-dessus de la carte ; sur les écrans plus grands (et les téléphones à l'horizontale), ce sont des plaques posées dans les coins de la carte, qui gagne la hauteur de l'ancienne ligne de HUD. La barre du boss est posée en haut de la carte.
 - **Vagues en dents de scie** : la menace ne monte plus en ligne droite. Après la première vague, les vagues vont par trois (respiration ×0,8, montée ×1, pic ×1,2), et la dernière vague est renforcée (×1,15) pour rester le point culminant du niveau. Une vague qui présente un nouvel ennemi ne fait jamais de pic. Réglé avec le robot : les 100 niveaux restent gagnables en Facile et en Normal.
 - Les écrans autres que l'accueil sont chargés à la demande : la première page reste rapide sur téléphone.
@@ -42,6 +46,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - Images de présentation (`marketing/`, `public/og-image.png`) refaites avec les nouveaux graphismes.
 
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).
+
+### Mise en ligne
+
+- Version Playgama publiée dans le bac à sable (Sandbox) de Playgama : https://playgama.ai/play/4f2wgyuhvp.
 
 ## [2.0.0] - 2026-10-05
 

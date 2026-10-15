@@ -22,6 +22,8 @@ export default {
     cancel: 'Cancel',
     footer: '100% in-browser game. Your data stays on this device.',
     adBreak: 'Ad break…',
+    mute: 'Mute sound',
+    unmute: 'Turn sound on',
   },
   common: {
     stars: '{count} star|{count} stars',

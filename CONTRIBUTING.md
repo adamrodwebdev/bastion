@@ -71,7 +71,7 @@ docs: explique comment ajouter une langue
 
 **Vérification automatique (CI).** À chaque pull request et à chaque envoi sur `main`, GitHub Actions
 ([.github/workflows/ci.yml](.github/workflows/ci.yml)) installe le projet sous Node 20 (la version des
-builds Netlify) et Node 24, puis lance les trois builds (site, CrazyGames, Poki), `npm run check:i18n`,
+builds Netlify) et Node 24, puis lance les builds (site, CrazyGames, Poki, et Playgama avec les contrôles de son paquet), `npm run check:i18n`,
 `npm test` et la campagne en Facile (`node scripts/simulate.mjs --diff=easy`). Le résultat s'affiche en bas
 de la pull request. Les deux vérifications sont **obligatoires** : `main` est protégée, et une pull request
 ne peut pas y être fusionnée tant qu'elles ne sont pas au vert (les administrateurs du dépôt peuvent passer

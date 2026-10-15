@@ -31,6 +31,10 @@ export const store = reactive({
   duel: { key: 0, arena: 1 },
   toasts: [],
   adBusy: false,
+  /** Sound button of the header (music and effects). */
+  muted: false,
+  /** The portal pauses the game (Playgama: its overlay, an ad it shows). */
+  portalPaused: false,
 });
 
 let toastId = 0;
@@ -47,14 +51,27 @@ export const actions = {
     i18n.on('change', (l) => (store.locale = l));
     theme.on('change', (r) => (store.theme = r));
     saves.on('progress', () => (store.progressTick += 1));
-    saves.on('settings', () => (store.progressTick += 1));
+    store.muted = saves.settings.muted;
+    saves.on('settings', (s) => {
+      store.progressTick += 1;
+      store.muted = s.muted;
+    });
   },
 
   go(view) {
     store.view = view;
     store.briefing = null;
     if (view !== 'game') store.savedGame = services.saves.loadGame();
-    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+      // Portal builds without a page scrollbar scroll inside the main area.
+      document.querySelector('.app-main')?.scrollTo?.(0, 0);
+    }
+  },
+
+  /** Sound on or off (header button), kept in the settings. */
+  toggleMute() {
+    services.saves.updateSettings({ muted: !services.saves.settings.muted });
   },
 
   setDifficulty(id) {

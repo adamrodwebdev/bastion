@@ -13,8 +13,9 @@ import { RewardTicket } from './RewardTicket.js'
  * (CrazyGamesAdService, PokiAdService), loaded only in that portal's build.
  * Our own site's build uses NoAdService: no third-party script.
  *
- * Events: `pause` (an ad starts: mute the sound, block the controls)
- * and `resume` (it has finished or failed).
+ * Events: `pause` (an ad starts: mute the sound, block the controls),
+ * `resume` (it has finished or failed), `mute` (the portal's sound button) and
+ * `portalPause` (the portal pauses or resumes the game, e.g. during an ad it shows).
  */
 export class AdService extends EventEmitter {
   /** Platform identifier. */
@@ -46,6 +47,8 @@ export class AdService extends EventEmitter {
   gameplayStart() {}
   /** The player leaves the game (end, pause, menu). */
   gameplayStop() {}
+  /** The level is over (won or lost). */
+  levelEnded(won) {} // eslint-disable-line no-unused-vars
 
   /**
    * Portal share link carrying parameters (v3.9, "Beat my shot"),
@@ -84,6 +87,16 @@ export class AdService extends EventEmitter {
     return null
   }
 
+  /** Must the portal's language win over the player's saved choice at launch? */
+  get localeAuthoritative() {
+    return false
+  }
+
+  /** Is the game paused by the portal right now? (`portalPause` event on every change) */
+  get portalPaused() {
+    return false
+  }
+
   get cloudStorage() {
     return null
   }
@@ -107,7 +120,7 @@ export class AdService extends EventEmitter {
    */
   async rewarded(purpose) {
     if (this.#busy || !this.rewardedAvailable) return null
-    const ok = await this.#wrap((pause) => this._showRewarded(pause))
+    const ok = await this.#wrap((pause) => this._showRewarded(pause, purpose))
     this.policy.shown()
     return ok ? RewardTicket.issue(purpose) : null
   }
@@ -134,8 +147,8 @@ export class AdService extends EventEmitter {
   async _showInterstitial() {
     return false
   }
-  /** @returns {Promise<boolean>} video watched to the end */
-  async _showRewarded() {
+  /** @returns {Promise<boolean>} video watched to the end (`purpose`: the reward, for the placement) */
+  async _showRewarded(pause, purpose) { // eslint-disable-line no-unused-vars
     return false
   }
 }

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bastion Tower Defense — Playgama covers</title>
+    <style>
+      @font-face {
+        font-family: 'Cinzel';
+        font-weight: 700;
+        src: url('../../src/assets/fonts/cinzel-700.woff2') format('woff2');
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #1e1a2b;
+        color: #ece6d6;
+        font: 15px/1.5 system-ui, sans-serif;
+      }
+      .covers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      figure {
+        margin: 0;
+        display: grid;
+        gap: 6px;
+      }
+      canvas {
+        max-width: min(100%, 480px);
+        height: auto;
+        border: 1px solid #4d4664;
+      }
+      a {
+        color: #e9c35f;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bastion Tower Defense — Playgama covers</h1>
+    <p>
+      Rendered by the game's own engine (no image file): a staged battle, cropped on the action, with the title.
+      Open with <code>npm run dev</code> at <code>/marketing/playgama/kit.html</code>, then save each cover.
+    </p>
+    <div class="covers" id="covers"></div>
+    <script type="module" src="./kit.js"></script>
+  </body>
+</html>

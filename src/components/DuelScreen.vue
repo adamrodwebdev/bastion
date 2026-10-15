@@ -93,6 +93,12 @@ export default {
     });
     this.match.on('start', () => services.audio.sfx('horn'));
   },
+  watch: {
+    /** The portal pauses the game (Playgama overlay or ad): the duel stops; the players resume it. */
+    '$store.portalPaused'(paused) {
+      if (paused && !this.paused && !this.result) this.togglePause();
+    },
+  },
   mounted() {
     this.loop = markRaw(
       new GameLoop(

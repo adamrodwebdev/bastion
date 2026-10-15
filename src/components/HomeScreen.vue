@@ -2,7 +2,8 @@
   <section class="home" aria-labelledby="home-title">
     <div class="hero">
       <canvas ref="hero" class="hero-art hero-canvas" aria-hidden="true"></canvas>
-      <h1 id="home-title" class="hero-title">Bastion</h1>
+      <!-- Portals asking for a 2 to 4-word title shown in the game (Playgama): "Bastion Tower Defense". -->
+      <h1 id="home-title" class="hero-title">Bastion<span v-if="longTitle" class="hero-title-sub"> Tower Defense</span></h1>
       <p class="hero-tagline">{{ $t('app.tagline') }}</p>
     </div>
 
@@ -85,6 +86,10 @@ export default {
   name: 'HomeScreen',
   components: { AppIcon, PixelPortrait },
   computed: {
+    /** The full name under the logo, on the portals listing the game as "Bastion Tower Defense". */
+    longTitle() {
+      return typeof __TARGET__ === 'string' && __TARGET__ === 'playgama';
+    },
     saves() {
       // eslint-disable-next-line no-unused-expressions
       this.$store.progressTick;

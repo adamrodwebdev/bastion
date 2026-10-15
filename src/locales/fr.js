@@ -22,6 +22,8 @@ export default {
     cancel: 'Annuler',
     footer: 'Jeu 100 % dans le navigateur. Vos données restent sur cet appareil.',
     adBreak: 'Publicité en cours…',
+    mute: 'Couper le son',
+    unmute: 'Remettre le son',
   },
   common: {
     stars: '{count} étoile|{count} étoiles',

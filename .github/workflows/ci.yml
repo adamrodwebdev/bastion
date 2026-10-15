@@ -1,6 +1,7 @@
-# Checks every pull request and every push to main: the three builds (site and
-# portals), the translations, and the campaign bot (all 100 levels must stay
-# winnable in Normal and Easy). Same steps as the checklist in CONTRIBUTING.md.
+# Checks every pull request and every push to main: the builds (site and portals,
+# with the Playgama package and its checks), the translations, and the campaign
+# bot (all 100 levels must stay winnable in Normal and Easy). Same steps as the
+# checklist in CONTRIBUTING.md.
 name: CI
 
 on:
@@ -48,6 +49,9 @@ jobs:
 
       - name: Build Poki
         run: npm run build:poki
+
+      - name: Paquet Playgama (build et contrôles)
+        run: node scripts/package-playgama.mjs --check
 
       - name: Traductions
         run: npm run check:i18n

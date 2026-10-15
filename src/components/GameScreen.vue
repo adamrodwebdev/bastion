@@ -416,6 +416,10 @@ export default {
     '$store.theme'(mode) {
       if (this.engine.renderer) this.engine.renderer.setMode(mode);
     },
+    /** The portal pauses the game (Playgama overlay or ad): the level stops; the player resumes it. */
+    '$store.portalPaused'(paused) {
+      if (paused && !this.paused && !this.end) this.togglePause();
+    },
   },
   created() {
     // Non-reactive holder for engine objects (kept out of Vue for speed).
@@ -560,6 +564,7 @@ export default {
       this.$store.toasts.splice(0);
       services.audio?.sfx(won ? 'victory' : 'defeat');
       services.audio?.music(won ? 'victory' : 'menu');
+      services.ads?.levelEnded(won);
       services.ads?.gameplayStop();
       const mask = won ? evaluateAchievements(level, runOf(game)) : 0;
       const before = services.saves.achievementsFor(level.number, track);
@@ -633,7 +638,8 @@ export default {
       const key = `${width}x${Math.round(maxHeight)}`;
       if (key === this.engine.size) return;
       this.engine.size = key;
-      r.resize(width, maxHeight);
+      // The board turns only on screens held upright: never on a wide desktop window.
+      r.resize(width, maxHeight, portrait);
       const map = this.engine.game.map;
       this.board = {
         w: parseFloat(r.canvas.style.width),

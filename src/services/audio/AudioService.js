@@ -23,6 +23,8 @@ export class AudioService {
     this.musicVolume = 0.6;
     this.adMuted = false;
     this.portalMuted = false;
+    this.portalPaused = false;
+    this.userMuted = false;
     this.readyCallbacks = new Set();
     this.director = new MusicDirector(this);
     this.scene = null;
@@ -48,8 +50,20 @@ export class AudioService {
     this._applyGain();
   }
 
+  /** Silence while the portal pauses the game (its overlay, an ad it shows). */
+  setPortalPaused(on) {
+    this.portalPaused = Boolean(on);
+    this._applyGain();
+  }
+
+  /** Silence chosen by the player (sound button in the header). */
+  setUserMuted(on) {
+    this.userMuted = Boolean(on);
+    this._applyGain();
+  }
+
   get silent() {
-    return this.adMuted || this.portalMuted;
+    return this.adMuted || this.portalMuted || this.portalPaused || this.userMuted;
   }
 
   _applyGain() {
