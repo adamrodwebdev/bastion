@@ -5,6 +5,7 @@
 export { Game } from './Game.js';
 export { GameLoop } from './systems/GameLoop.js';
 export { Renderer } from './rendering/Renderer.js';
+export { Sprites } from './rendering/Sprites.js';
 export { LevelCatalog } from './config/LevelCatalog.js';
 export { Difficulty } from './config/Difficulty.js';
 export { TowerFactory } from './entities/towers/TowerFactory.js';

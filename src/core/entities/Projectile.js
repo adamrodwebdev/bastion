@@ -21,6 +21,9 @@ export class Projectile extends Entity {
    */
   constructor({ x, y, target, speed, payload, color, size = 0.09 }) {
     super(x, y);
+    this.sx = x; // launch point, used by the renderer for arcs (cannon balls)
+    this.sy = y;
+    this.kind = payload.source ? payload.source.type : 'arrow';
     this.target = target;
     this.tx = target.x;
     this.ty = target.y;
