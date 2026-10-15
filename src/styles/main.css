@@ -764,6 +764,15 @@ kbd {
   letter-spacing: 0.08em;
 }
 
+.hero-title-sub {
+  display: block;
+  margin-top: 0.3em;
+  font-size: 0.34em;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
 .hero-tagline {
   color: var(--muted);
   font-size: 1.05rem;
@@ -2872,6 +2881,42 @@ kbd {
   animation: none;
 }
 
+/* ---------- Portals without a page scrollbar (Playgama) ----------
+   The app fills the game frame: the header stays, only the main area scrolls,
+   inside the game. The site's footer (about our own site) is not shown there. */
+:root[data-target='playgama'],
+:root[data-target='playgama'] body {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+:root[data-target='playgama'] #app {
+  height: 100%;
+  min-height: 0;
+}
+
+:root[data-target='playgama'] .app-main {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  padding-inline: max(16px, calc((100% - 1320px) / 2));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+:root[data-target='playgama'] .app-footer {
+  display: none;
+}
+
+/* The game itself uses the whole width, so the board reaches the edges of the
+   available area on large screens (menus stay in a centred column). */
+:root[data-target='playgama'] .app-main.view-game {
+  padding-inline: max(16px, env(safe-area-inset-left));
+}
+
 /* ---------- Training and guide ---------- */
 .spotlight {
   position: fixed;
@@ -3365,6 +3410,34 @@ kbd {
   .lang-select {
     padding: 0 10px 0 30px;
     max-width: 7.5rem;
+  }
+}
+
+/* Very narrow phones: the language picker shrinks to its globe (the list still shows
+   every language in its own language), so the sound button fits too. */
+@media (max-width: 399px) {
+  .lang-select {
+    width: var(--tap);
+    max-width: none;
+    height: var(--tap);
+    padding: 0;
+    color: transparent;
+  }
+
+  .lang-select option {
+    color: var(--text);
+  }
+
+  .select-icon {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* Under 360 px the crowns stay in the workshop only. */
+@media (max-width: 359px) {
+  .crowns-badge {
+    display: none;
   }
 }
 

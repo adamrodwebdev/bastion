@@ -20,6 +20,8 @@ export default {
     cancel: 'Batal',
     footer: 'Game 100% di browser. Datamu tetap di perangkat ini.',
     adBreak: 'Jeda iklan…',
+    mute: 'Matikan suara',
+    unmute: 'Nyalakan suara',
   },
   common: {
     stars: '{count} bintang|{count} bintang',

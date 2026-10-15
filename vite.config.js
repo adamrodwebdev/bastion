@@ -4,9 +4,12 @@
  * - `npm run build`             → our site, no ads (dist/)
  * - `npm run build:crazygames`  → CrazyGames version, with its SDK (dist-crazygames/)
  * - `npm run build:poki`        → Poki version, with its SDK (dist-poki/)
+ * - `npm run build:playgama`    → Playgama version, with its Bridge SDK (dist-playgama/);
+ *                                 `npm run package:playgama` checks it and zips it
  *
  * A strict Content-Security-Policy is injected at build time only (the Vite dev
- * server needs injected styles).
+ * server needs injected styles), except in the Playgama build: its Bridge loads the
+ * SDK of whichever partner site runs the game, from many hosts.
  */
 
 import { defineConfig } from 'vite';
@@ -14,7 +17,34 @@ import vue from '@vitejs/plugin-vue';
 import { createHash } from 'node:crypto';
 import { buildCsp } from './build/csp.js';
 
-const PORTALS = ['crazygames', 'poki'];
+const PORTALS = ['crazygames', 'poki', 'playgama'];
+
+/** Playgama Bridge SDK v2: the only external file the Playgama build may load. */
+export const PLAYGAMA_BRIDGE = 'https://bridge.playgama.com/v2/stable/playgama-bridge.js';
+
+/**
+ * Bridge configuration (playgama-bridge-config.json next to index.html):
+ * interstitials between levels, rewarded videos for a second chance and for
+ * doubling crowns, both orientations. Language and saves need no configuration.
+ */
+const PLAYGAMA_CONFIG = {
+  advertisement: {
+    minimumDelayBetweenInterstitial: 60,
+    interstitial: {
+      placementFallback: 'between_levels',
+      placements: [{ id: 'between_levels' }],
+    },
+    rewarded: {
+      preloadOnStart: 'revive',
+      placementFallback: 'revive',
+      placements: [{ id: 'revive' }, { id: 'double_crowns' }],
+    },
+  },
+  device: {
+    useBuiltInOrientationPopup: false,
+    supportedOrientations: ['portrait', 'landscape'],
+  },
+};
 
 /** Injects the CSP, allowing the inline (non-module) scripts of index.html by hash. */
 function cspPlugin(target) {
@@ -55,6 +85,35 @@ function portalPlugin() {
   };
 }
 
+/**
+ * Playgama: Bridge loaded in the <head> before the game (the portal's build check
+ * looks for it there), its configuration next to index.html, and no localStorage:
+ * the script applying the saved theme before first paint is removed (saves live in
+ * `bridge.storage`). The page of Playgama has its own social and search tags: ours
+ * (pointing to our site) and the home-screen icon are removed.
+ */
+function playgamaPlugin() {
+  return {
+    name: 'bastion-playgama',
+    apply: 'build',
+    enforce: 'post',
+    transformIndexHtml(html) {
+      return {
+        html: html
+          .replace(/ *<!-- Applies the saved theme before first paint[^>]*-->\s*<script>[\s\S]*?<\/script>\n?/, '')
+          .replace(/ *<meta (property|name)="(og:[^"]*|twitter:[^"]*|keywords|robots)"[^>]*>\n?/g, '')
+          .replace(/ *<link rel="apple-touch-icon"[^>]*>\n?/g, '')
+          .replace(/<title>[^<]*<\/title>/, '<title>Bastion Tower Defense</title>'),
+        tags: [{ tag: 'script', attrs: { src: PLAYGAMA_BRIDGE }, injectTo: 'head-prepend' }],
+      };
+    },
+    generateBundle() {
+      const source = `${JSON.stringify(PLAYGAMA_CONFIG, null, 2)}\n`;
+      this.emitFile({ type: 'asset', fileName: 'playgama-bridge-config.json', source });
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   /** Target platform: our site ('web') or a portal (mode of the same name). */
   const target = PORTALS.includes(mode) ? mode : 'web';
@@ -63,7 +122,12 @@ export default defineConfig(({ mode }) => {
   return {
     // Relative base: the build works from any sub-folder (Netlify, portals, etc.).
     base: './',
-    plugins: [vue(), cspPlugin(target), ...(portal ? [portalPlugin()] : [])],
+    plugins: [
+      vue(),
+      ...(target === 'playgama' ? [] : [cspPlugin(target)]),
+      ...(portal ? [portalPlugin()] : []),
+      ...(target === 'playgama' ? [playgamaPlugin()] : []),
+    ],
     build: {
       outDir: portal ? `dist-${target}` : 'dist',
       // Broad compatibility (Safari 14+, Chrome/Edge/Firefox 90+), modern syntax down-levelled by esbuild.

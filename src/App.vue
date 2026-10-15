@@ -24,6 +24,16 @@
       <button
         type="button"
         class="icon-btn"
+        :aria-label="$store.muted ? $t('app.unmute') : $t('app.mute')"
+        :title="$store.muted ? $t('app.unmute') : $t('app.mute')"
+        :aria-pressed="$store.muted ? 'true' : 'false'"
+        @click="$actions.toggleMute()"
+      >
+        <AppIcon :name="$store.muted ? 'mute' : 'sound'" />
+      </button>
+      <button
+        type="button"
+        class="icon-btn"
         :aria-label="$store.theme === 'dark' ? $t('app.themeToLight') : $t('app.themeToDark')"
         :title="$store.theme === 'dark' ? $t('app.themeToLight') : $t('app.themeToDark')"
         @click="toggleTheme"

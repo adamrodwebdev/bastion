@@ -17,6 +17,7 @@ export async function createAdService() {
     // the other portals are dropped from the bundle (no SDK trace on our site).
     if (__TARGET__ === 'crazygames') service = new (await import('./CrazyGamesAdService.js')).CrazyGamesAdService()
     else if (__TARGET__ === 'poki') service = new (await import('./PokiAdService.js')).PokiAdService()
+    else if (__TARGET__ === 'playgama') service = new (await import('./PlaygamaAdService.js')).PlaygamaAdService()
     if (!service) return new NoAdService()
     await service.init()
     return service
