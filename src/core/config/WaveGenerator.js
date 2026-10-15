@@ -6,6 +6,12 @@
  * filled with enemies picked among those already introduced, favouring the
  * chapter's own troops and any newcomer. The result is deterministic: the same
  * level always gets the same waves.
+ *
+ * Pacing: the budget does not climb in a straight line. After the first wave,
+ * waves come in acts of three — breather, build-up, spike — so tension rises and
+ * falls, and the last wave is pushed so it stays the climax. A wave that
+ * presents a newcomer never spikes: the player meets it in calm conditions.
+ * (Tuned with the campaign bot: every level stays winnable in Easy and Normal.)
  */
 
 import { EnemyFactory } from '../entities/enemies/EnemyFactory.js';
@@ -22,6 +28,11 @@ const HEAVY = new Set(['knight', 'golem', 'ram', 'siege', 'wyvern', 'necromancer
  */
 
 export class WaveGenerator {
+  /** Budget multipliers of an act: breather, build-up, spike. */
+  static ACT = Object.freeze([0.8, 1, 1.2]);
+  /** Budget multiplier of the last wave, so it stays above the last spike. */
+  static LAST = 1.15;
+
   /**
    * Number of waves of a level.
    * @param {number} number level number (1-100)
@@ -42,6 +53,22 @@ export class WaveGenerator {
   static budget(number, wave) {
     const base = 7 + 0.12 * (number - 1);
     return base * (1 + 0.2 * wave);
+  }
+
+  /**
+   * Pacing multiplier of a wave's budget: 1 for the first wave, acts of three
+   * waves (×0.8, ×1, ×1.2) in between, ×1.15 for the last one. Never above 1 on a
+   * wave that presents a newcomer.
+   * @param {number} wave 0-based wave index
+   * @param {number} count number of waves of the level
+   * @param {boolean} [teaching] the wave presents an enemy new to the campaign
+   * @returns {number}
+   */
+  static pace(wave, count, teaching = false) {
+    let p = 1;
+    if (wave === count - 1) p = WaveGenerator.LAST;
+    else if (wave > 0) p = WaveGenerator.ACT[(wave - 1) % WaveGenerator.ACT.length];
+    return teaching ? Math.min(1, p) : p;
   }
 
   /**
@@ -79,15 +106,16 @@ export class WaveGenerator {
     const waves = [];
 
     for (let w = 0; w < count; w++) {
-      const budget = WaveGenerator.budget(number, w);
+      // A newcomer shows up from the second wave of its intro level, every other wave.
+      const teaching = intro.length > 0 && w >= 1 && w % 2 === 1;
+      const budget = WaveGenerator.budget(number, w) * WaveGenerator.pace(w, count, teaching);
       let pool = { ...roster };
       if (w < 2) for (const t of Object.keys(pool)) if (HEAVY.has(t)) delete pool[t];
       if (!Object.keys(pool).length) pool = { grunt: 1 };
 
       const groupCount = Math.min(Object.keys(pool).length, 1 + (w >= 2 ? 1 : 0) + (w >= 5 && rng.next() < 0.5 ? 1 : 0));
       const picked = [];
-      // A newcomer shows up from the second wave of its intro level.
-      if (intro.length && w >= 1 && w % 2 === 1) picked.push(intro[0]);
+      if (teaching) picked.push(intro[0]);
       while (picked.length < groupCount) {
         const t = rng.weighted(pool);
         delete pool[t];
