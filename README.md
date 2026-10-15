@@ -21,6 +21,7 @@ Le jeu se passe dans le même royaume que [Catapulte Mania](https://github.com/a
   - **Coopération** : une campagne de 100 niveaux à deux. Chaque joueur a son or et ses tours.
   - **Duel** : l'écran est coupé en deux. Chacun défend son côté et envoie des ennemis chez l'autre.
 - **3 difficultés** : Facile, Normal, Difficile.
+- **Construire d'un geste** : toucher une case libre ouvre un menu radial avec les tours du niveau. Avant chaque vague, des chevrons montrent les routes qu'elle prendra, et un drapeau sur la première case de chaque route permet de l'appeler en avance contre un bonus d'or.
 - **L'écran Apprendre**, pour les nouveaux joueurs :
   - **4 leçons guidées** sur de petites cartes : Maître Gontran explique, un cercle doré montre où toucher, et la leçon avance dès que le joueur a fait le geste. Chaque leçon réussie rapporte 25 couronnes la première fois ;
   - **le guide du défenseur** : les règles, les types de dégâts, et la fiche de chaque tour, ennemi et pouvoir (avec la bonne parade contre chaque ennemi).
