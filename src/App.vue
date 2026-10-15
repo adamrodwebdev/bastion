@@ -21,6 +21,23 @@
         </select>
       </label>
 
+      <button type="button" class="icon-btn" :aria-label="$store.music ? $t('app.musicOn') : $t('app.musicOff')" :title="$store.music ? $t('app.musicOn') : $t('app.musicOff')" :aria-pressed="$store.music ? 'true' : 'false'" @click="$actions.toggleMusic()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 18V6l11-2v12" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+          <circle cx="6.5" cy="18" r="2.5" fill="currentColor" />
+          <circle cx="17.5" cy="16" r="2.5" fill="currentColor" />
+          <path v-if="!$store.music" d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <button type="button" class="icon-btn" :aria-label="$store.sound ? $t('app.soundOn') : $t('app.soundOff')" :title="$store.sound ? $t('app.soundOn') : $t('app.soundOff')" :aria-pressed="$store.sound ? 'true' : 'false'" @click="$actions.toggleSound()">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+          <path v-if="$store.sound" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path v-else d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+
       <button
         type="button"
         class="icon-btn"

@@ -19,13 +19,15 @@ export const store = reactive({
   savedGame: null,
   game: { levelIndex: 0, resume: false, key: 0 },
   toasts: [],
+  sound: true,
+  music: true,
 });
 
 let toastId = 0;
 
 export const actions = {
   init() {
-    const { i18n, theme, saves } = services;
+    const { i18n, theme, saves, audio } = services;
     store.locale = i18n.locale;
     store.theme = theme.resolved;
     store.difficulty = saves.settings.difficulty;
@@ -34,12 +36,27 @@ export const actions = {
     i18n.on('change', (l) => (store.locale = l));
     theme.on('change', (r) => (store.theme = r));
     saves.on('progress', (p) => (store.progress = clone(p)));
+    store.sound = audio.soundOn;
+    store.music = audio.musicOn;
+    audio.on('change', () => {
+      store.sound = audio.soundOn;
+      store.music = audio.musicOn;
+    });
   },
 
   go(view) {
     store.view = view;
+    if (view !== 'game') services.audio.playMood('menu');
     if (view !== 'game') store.savedGame = services.saves.loadGame();
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
+  },
+
+  toggleSound() {
+    services.audio.setSound(!store.sound);
+  },
+
+  toggleMusic() {
+    services.audio.setMusic(!store.music);
   },
 
   setDifficulty(id) {

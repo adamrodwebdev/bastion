@@ -13,7 +13,7 @@ const DEFAULT_PROGRESS = () => ({
   best: {}, // levelId -> best score
 });
 
-const DEFAULT_SETTINGS = () => ({ locale: null, theme: 'system', difficulty: 'normal', sound: true });
+const DEFAULT_SETTINGS = () => ({ locale: null, theme: 'system', difficulty: 'normal', sound: true, music: true });
 
 /**
  * Persistence of everything the player owns: campaign progress,
@@ -77,7 +77,7 @@ export class SaveManager extends EventEmitter {
   }
 
   // ------------------------------------------------------------ settings
-  /** @param {Partial<{locale:string, theme:string, difficulty:string, sound:boolean}>} patch */
+  /** @param {Partial<{locale:string, theme:string, difficulty:string, sound:boolean, music:boolean}>} patch */
   updateSettings(patch) {
     Object.assign(this.settings, patch);
     this.storage.set('settings', this.settings);
