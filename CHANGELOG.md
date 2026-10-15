@@ -47,6 +47,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).
 
+### Mise en ligne
+
+- Version Playgama publiée dans le bac à sable (Sandbox) de Playgama : https://playgama.ai/play/4f2wgyuhvp.
+
 ## [2.0.0] - 2026-10-05
 
 Bastion change de dimension : le jeu rejoint le royaume de Catapulte Mania et devient une vraie campagne.

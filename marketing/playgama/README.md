@@ -15,6 +15,19 @@ l'écran titre (« Bastion », puis « Tower Defense » sous le logo) et dans le
   bataille mise en scène sur le niveau 7), sans image générée : `npm run dev`, puis
   `/marketing/playgama/kit.html` pour les refaire et les enregistrer.
 
+## Mise en ligne
+
+- **Sandbox** : publiée le 15/10/2026 avec `bastion-tower-defense-playgama-2.0.0.zip`, page publique
+  https://playgama.ai/play/4f2wgyuhvp. La revue pour le catalogue s'ouvre à 100 parties et 5 min de jeu en
+  moyenne (carte « Playgama Sandbox » de la console).
+- **Outil QA** (build hébergé, Bridge v2.3.1) : initialisation, `game_ready` unique, langue de la plateforme,
+  lecture groupée et écriture des sauvegardes, pause et son de la plateforme : validés. Publicités non testées
+  (bloqueur dans le Chrome de l'auteur). Chrome bloque l'outil QA sur un jeu servi en `localhost` (accès au
+  réseau local) : lui donner l'adresse du build hébergé, visible dans la page Sandbox
+  (`https://sb-<id>.games.playgama.net/…/index.html`).
+- **Nouvelle version** : `npm run package:playgama`, puis Update Game › déposer l'archive › Save Changes ›
+  Continue › choisir le build › Publish to Sandbox. Le lien public et les sauvegardes des joueurs restent.
+
 ## Formulaire (Dashboard › Add Game)
 
 - **Title** : Bastion Tower Defense
