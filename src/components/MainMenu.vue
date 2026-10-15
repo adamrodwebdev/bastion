@@ -1,22 +1,13 @@
 <template>
   <section class="menu" aria-labelledby="menu-title">
     <div class="hero">
-      <div class="hero-text">
-        <h1 id="menu-title" class="hero-title">Bastion</h1>
-        <p class="hero-tagline">{{ $t('app.tagline') }}</p>
+      <div class="hero-scene">
+        <LevelMap :level="heroLevel" showcase />
+        <div class="hero-text">
+          <h1 id="menu-title" class="hero-title">Bastion</h1>
+          <p class="hero-tagline">{{ $t('app.tagline') }}</p>
+        </div>
       </div>
-      <svg class="hero-art" viewBox="0 0 220 120" aria-hidden="true">
-        <path d="M0 96 Q 40 70 80 90 T 160 80 T 220 92 V120 H0Z" class="hero-hill" />
-        <path d="M-5 104 C 40 104 50 70 100 72 S 160 104 225 100" class="hero-road" />
-        <g class="hero-tower" transform="translate(150 34)">
-          <rect x="0" y="12" width="34" height="46" rx="4" />
-          <path d="M-3 12h40V2h-7v5h-6V2h-6v5h-6V2h-6v5H4V2h-7z" />
-          <rect x="12" y="38" width="10" height="20" rx="5" class="hero-door" />
-        </g>
-        <circle cx="64" cy="76" r="6" class="hero-enemy" />
-        <circle cx="40" cy="86" r="5" class="hero-enemy hero-enemy--2" />
-        <circle cx="18" cy="96" r="4" class="hero-enemy hero-enemy--3" />
-      </svg>
     </div>
 
     <div class="menu-card card">
@@ -63,16 +54,20 @@
  * @file Home screen: continue / play, difficulty, stars, how to play, reset.
  */
 import DifficultyPicker from './DifficultyPicker.vue';
+import LevelMap from './LevelMap.vue';
 import { services } from '../services/index.js';
 import { LevelCatalog } from '../core/index.js';
 
 export default {
   name: 'MainMenu',
-  components: { DifficultyPicker },
+  components: { DifficultyPicker, LevelMap },
   data() {
     return { confirmReset: false };
   },
   computed: {
+    heroLevel() {
+      return LevelCatalog.get(0);
+    },
     saved() {
       const s = this.$store.savedGame;
       if (!s) return null;

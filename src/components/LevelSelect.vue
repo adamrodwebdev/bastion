@@ -19,11 +19,9 @@
           :aria-describedby="'lvl-desc-' + level.id"
           @click="$actions.startLevel(level.index)"
         >
-          <svg class="level-preview" :viewBox="'0 0 ' + level.cols + ' ' + level.rows" aria-hidden="true" :data-theme-level="level.theme">
-            <rect width="100%" height="100%" class="lp-ground" />
-            <polyline :points="level.polyline" class="lp-road-edge" />
-            <polyline :points="level.polyline" class="lp-road" />
-          </svg>
+          <span class="level-preview">
+            <LevelMap :level="level.model" />
+          </span>
           <span class="level-info">
             <span class="level-number">{{ $t('levels.level', { n: level.number }) }}</span>
             <span class="level-name">{{ $t('levels.names.' + level.id) }}</span>
@@ -70,11 +68,12 @@
  * @file Level picker with stars, locks, rewards and the list of powers.
  */
 import DifficultyPicker from './DifficultyPicker.vue';
+import LevelMap from './LevelMap.vue';
 import { LevelCatalog, PowerManager } from '../core/index.js';
 
 export default {
   name: 'LevelSelect',
-  components: { DifficultyPicker },
+  components: { DifficultyPicker, LevelMap },
   computed: {
     levels() {
       const progress = this.$store.progress;
@@ -82,6 +81,7 @@ export default {
       return LevelCatalog.all().map((level) => {
         const stars = progress.stars[level.id] || {};
         return {
+          model: level,
           id: level.id,
           index: level.index,
           number: level.number,
@@ -93,7 +93,6 @@ export default {
           stars: stars[this.$store.difficulty] || 0,
           best: progress.best[level.id] || 0,
           reward: powers.find((p) => p.unlockAfterLevel === level.number) || null,
-          polyline: level.waypoints.map(([c, r]) => `${c + 0.5},${r + 0.5}`).join(' '),
         };
       });
     },

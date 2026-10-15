@@ -46,7 +46,7 @@ export class ThemeService extends EventEmitter {
       document.documentElement.dataset.theme = resolved;
       document.documentElement.style.colorScheme = resolved;
       const meta = document.querySelector('meta[name="theme-color"]:not([media])');
-      if (meta) meta.setAttribute('content', resolved === 'dark' ? '#0f1117' : '#f6f4ef');
+      if (meta) meta.setAttribute('content', resolved === 'dark' ? '#110f1c' : '#f1e7d2');
     }
     this.emit('change', resolved);
   }

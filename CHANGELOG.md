@@ -10,6 +10,26 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 ## [Non publié]
 
+### Ajouté
+
+- Nouvelle direction artistique dessinée par le code : terrains peints par biome (prairie, canyon, lagune, volcan, forteresse, abysse), route usée, décors (arbres, mesas, mares, roches de lave, ruines, cristaux), grotte d'entrée et porte du bastion.
+- Mode sombre transformé en crépuscule : éclairage de nuit, lanternes des tours, projectiles lumineux, particules d'ambiance (pollen, lucioles, poussière, braises, feuilles, neige, feux follets).
+- Tours et ennemis redessinés avec des silhouettes distinctes ; chaque amélioration change l'apparence de la tour.
+- Effets de jeu : débris, fumée, pièces, tremblement d'écran (désactivé si les animations sont réduites), chiffres flottants.
+- Sons et musique générés dans le navigateur (aucun fichier audio), avec des boutons pour couper les bruitages et la musique.
+- Appel anticipé de la vague : une fois la vague en cours entièrement sortie, la suivante peut être lancée tout de suite contre un bonus d'or qui diminue en 18 secondes.
+- Annonce de la vague : drapeau à l'entrée, chevrons sur la route, pastilles de progression avec la dernière vague marquée.
+- Les cartes des niveaux et l'écran titre montrent les vraies cartes peintes ; la boutique montre les vraies tours.
+- Maquette vivante de la prochaine itération (`npm run mockup`).
+- Menu de construction radial : toucher une case libre affiche les quatre tours autour d'elle, avec l'aperçu de portée ; les tours trop chères sont grisées ; toucher à nouveau la case ferme le menu.
+- Barre de vie du boss en haut du plateau (en bas si l'entrée des ennemis est en haut), et court ralenti quand il tombe.
+- Drapeau d'appel de vague sur la grotte : un anneau montre le temps restant et le bonus d'or.
+
+### Modifié
+
+- Le HUD (vies, or, vague, score, pause, vitesse) devient un bandeau en bois au-dessus de la carte sur téléphone, et des plaques posées sur la carte sur les écrans plus grands : le plateau gagne de la hauteur.
+- Rythme des vagues en dents de scie (montée, pic, respiration) ; chaque nouvel ennemi arrive d'abord seul, avec un conseil.
+
 ### Amélioré
 
 - Sur téléphone en mode portrait, la boutique de tours tient sur une seule ligne : le plateau, la boutique et le bouton de vague sont visibles sans faire défiler l'écran.

@@ -1,7 +1,7 @@
 <template>
   <section class="panel tower-panel" aria-labelledby="tower-panel-title">
     <div class="tower-panel-head">
-      <span class="tower-swatch" :data-type="info.type" :style="{ '--c': info.color }" aria-hidden="true"></span>
+      <TowerIcon :type="info.type" :level="info.level" class="tower-swatch" />
       <div>
         <h2 id="tower-panel-title" class="panel-title">{{ $t('towers.' + info.type + '.name') }}</h2>
         <p class="tower-level">
@@ -55,8 +55,11 @@
 /**
  * @file Details of the selected tower: stats, targeting, upgrade, sell.
  */
+import TowerIcon from './TowerIcon.vue';
+
 export default {
   name: 'TowerPanel',
+  components: { TowerIcon },
   props: { info: { type: Object, required: true } },
   emits: ['upgrade', 'sell', 'targeting', 'close', 'preview'],
   data() {

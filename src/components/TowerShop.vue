@@ -13,7 +13,7 @@
         :title="$t('towers.' + item.type + '.desc')"
         @click="$emit('pick', item.type)"
       >
-        <span class="tower-swatch" :data-type="item.type" :style="{ '--c': item.color }" aria-hidden="true"></span>
+        <TowerIcon :type="item.type" class="tower-swatch" />
         <span class="shop-name">{{ $t('towers.' + item.type + '.name') }}</span>
         <span class="shop-cost">
           <span class="coin" aria-hidden="true"></span>{{ item.cost }}<span class="sr-only"> {{ $t('hud.gold') }}</span>
@@ -30,8 +30,11 @@
 /**
  * @file Shop listing the buildable towers. Emits `pick` with the tower type.
  */
+import TowerIcon from './TowerIcon.vue';
+
 export default {
   name: 'TowerShop',
+  components: { TowerIcon },
   props: {
     items: { type: Array, required: true },
     armedType: { type: String, default: null },
