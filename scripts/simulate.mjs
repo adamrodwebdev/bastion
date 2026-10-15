@@ -11,6 +11,8 @@
  * (or Easy) by the bot.
  */
 
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Game, LevelCatalog, Difficulty, PowerManager } from '../src/core/index.js';
 import { Bot } from './Bot.mjs';
 
@@ -78,7 +80,11 @@ export function play(number, difficulty = diff, { save = false, mods = expectedM
   };
 }
 
-const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop());
+// Run only when executed directly (not when imported). Compared as file paths so that
+// Windows paths (backslashes, drive letter case) are recognised too.
+const entry = process.argv[1] ? resolve(process.argv[1]) : '';
+const self = fileURLToPath(import.meta.url);
+const isMain = process.platform === 'win32' ? entry.toLowerCase() === self.toLowerCase() : entry === self;
 if (isMain) {
   let errors = 0;
   let losses = 0;
