@@ -29,9 +29,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
   - le guide du défenseur : règles, types de dégâts, fiches des tours, des ennemis et des pouvoirs, commandes à deux.
 - Sur l'accueil, une carte « Nouveau dans le royaume ? » propose la première leçon tant que le joueur n'a pas commencé.
 - Réglages **Sang** et **Particules** (écran Réglages, partie « Affichage »). Le sang est désactivé par défaut dans les versions CrazyGames et Poki.
+- **Menu de construction radial** : toucher une case libre affiche autour d'elle les tours du niveau (de 2 à 10), dans l'ordre de la boutique, avec leur prix et l'aperçu de portée au survol. Les tours trop chères sont grisées. Toucher à nouveau la case ferme le menu. Sur un petit plateau qui ne peut pas contenir l'anneau, les tours s'alignent dans un bandeau le long d'un bord. La boutique reste disponible.
+- **Drapeau d'appel** sur la première case de chaque route que prendra la prochaine vague : il lance la vague, et son anneau se vide avec le compte à rebours en affichant le bonus d'or de l'appel anticipé.
+- **Chevrons sur les routes** avant chaque vague : ils défilent vers la porte le long des routes (et des couloirs aériens) que prendra la vague suivante. Ils restent immobiles si les animations sont réduites.
 
 ### Modifié
 
+- **HUD sur la carte** : sur téléphone en portrait, les vies, l'or, la vague et les boutons forment un bandeau au-dessus de la carte ; sur les écrans plus grands (et les téléphones à l'horizontale), ce sont des plaques posées dans les coins de la carte, qui gagne la hauteur de l'ancienne ligne de HUD. La barre du boss est posée en haut de la carte.
+- **Vagues en dents de scie** : la menace ne monte plus en ligne droite. Après la première vague, les vagues vont par trois (respiration ×0,8, montée ×1, pic ×1,2), et la dernière vague est renforcée (×1,15) pour rester le point culminant du niveau. Une vague qui présente un nouvel ennemi ne fait jamais de pic. Réglé avec le robot : les 100 niveaux restent gagnables en Facile et en Normal.
 - Les écrans autres que l'accueil sont chargés à la demande : la première page reste rapide sur téléphone.
 - Les langues sont chargées à la demande : seule celle du joueur est téléchargée.
 - Images de présentation (`marketing/`, `public/og-image.png`) refaites avec les nouveaux graphismes.

@@ -1,0 +1,59 @@
+# Checks every pull request and every push to main: the three builds (site and
+# portals), the translations, and the campaign bot (all 100 levels must stay
+# winnable in Normal and Easy). Same steps as the checklist in CONTRIBUTING.md.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Vérifications (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20: version used by the Netlify build (netlify.toml). 24: current LTS.
+        node: [20, 24]
+    steps:
+      - name: Récupération du code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Node.js ${{ matrix.node }}
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Installation
+        run: npm ci
+
+      - name: Build du site
+        run: npm run build
+
+      - name: Build CrazyGames
+        run: npm run build:crazygames
+
+      - name: Build Poki
+        run: npm run build:poki
+
+      - name: Traductions
+        run: npm run check:i18n
+
+      - name: Campagne en Normal (robot)
+        run: npm test
+
+      - name: Campagne en Facile (robot)
+        run: node scripts/simulate.mjs --diff=easy

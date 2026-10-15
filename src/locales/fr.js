@@ -189,6 +189,8 @@ export default {
     lastWave: 'Dernière vague',
     waveRunning: 'Vague en cours…',
     nextWave: 'Prochaine vague',
+    callFlag: 'Appeler la vague suivante maintenant : +{n} or',
+    buildMenu: 'Construire une tour sur cette case',
   },
   coop: {
     whoPlays: 'Qui joue à l’écran ?',

@@ -69,6 +69,14 @@ docs: explique comment ajouter une langue
 - [ ] Les méthodes publiques ont un commentaire JSDoc (`@param`, `@returns`).
 - [ ] Le CHANGELOG est à jour.
 
+**Vérification automatique (CI).** À chaque pull request et à chaque envoi sur `main`, GitHub Actions
+([.github/workflows/ci.yml](.github/workflows/ci.yml)) installe le projet sous Node 20 (la version des
+builds Netlify) et Node 24, puis lance les trois builds (site, CrazyGames, Poki), `npm run check:i18n`,
+`npm test` et la campagne en Facile (`node scripts/simulate.mjs --diff=easy`). Le résultat s'affiche en bas
+de la pull request. Les deux vérifications sont **obligatoires** : `main` est protégée, et une pull request
+ne peut pas y être fusionnée tant qu'elles ne sont pas au vert (les administrateurs du dépôt peuvent passer
+outre en cas d'urgence). Les tests sur téléphone, en mode sombre et à deux restent à faire à la main.
+
 ## Règles de code
 
 - **Langue** : le code et les commentaires sont en anglais. Les textes affichés au joueur sont dans `src/locales/`, jamais écrits en dur dans les composants.
