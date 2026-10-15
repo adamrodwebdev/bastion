@@ -50,6 +50,7 @@ Autres commandes utiles :
 | `npm run check:i18n` | Vérifie qu'aucun texte ne manque dans aucune langue. |
 | `npm run build:crazygames` | Crée la version pour le site CrazyGames (avec ses publicités) dans `dist-crazygames/`. |
 | `npm run build:poki` | Crée la version pour le site Poki (avec ses publicités) dans `dist-poki/`. |
+| `npm run package:playgama` | Crée la version pour Playgama, vérifie ses exigences et la compresse dans `release/`. |
 
 Le robot de `npm test` accepte quelques options, par exemple :
 
@@ -76,6 +77,14 @@ Ces sites accueillent des jeux web et les rémunèrent avec de la publicité.
 4. Ajoutez les images de présentation du dossier `marketing/` (formats 1920×1080, 800×1200 et 800×800).
 
 Ces versions affichent une publicité entre deux niveaux (pas trop souvent) et proposent des publicités **facultatives** : revivre après une défaite, ou doubler les couronnes gagnées. Notre propre site, lui, n'a aucune publicité.
+
+## Publier sur Playgama
+
+Playgama diffuse aussi le jeu sur ses sites partenaires. Sa version passe par le **Playgama Bridge SDK** : publicités, sauvegardes (jamais dans le navigateur directement), langue, son et pause de la plateforme.
+
+1. Lancez `npm run package:playgama` : il crée la version, contrôle les exigences de Playgama et de ses partenaires, puis écrit le `.zip` à envoyer dans `release/`.
+2. Dans la console développeur de Playgama, ajoutez le jeu et remplissez la fiche avec les textes de [marketing/playgama/README.md](marketing/playgama/README.md), sous le titre **Bastion Tower Defense** (celui qu'affiche la version Playgama).
+3. Ajoutez les trois couvertures de `marketing/playgama/`, puis testez le jeu avec l'outil QA de la console avant de le soumettre.
 
 ## Comment le code est organisé
 
