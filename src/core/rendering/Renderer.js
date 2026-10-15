@@ -235,6 +235,7 @@ export class Renderer {
    * @param {{x:number,y:number,radius:number}|null} [ui.aim] targeted power being aimed
    * @param {Array<{col:number,row:number,player:number}>} [ui.cursors] keyboard cursors (two players)
    * @param {boolean} [ui.coop] draw tower owners
+   * @param {Array<{index:number, air:boolean}>|null} [ui.telegraph] roads the next wave will take (chevrons)
    */
   render(game, ui = {}) {
     const ctx = this.ctx;
@@ -275,6 +276,7 @@ export class Renderer {
     this._drawZones(game.zones, t);
     this._drawGroundEffects(game.effects, t);
     this._drawCells(game, ui);
+    if (ui.telegraph) this._drawTelegraph(game.map, ui.telegraph, t);
     for (const e of game.enemies) {
       if (e.type === 'warlock' && e.alive) {
         ctx.strokeStyle = 'rgba(170,90,220,0.35)';
@@ -360,6 +362,48 @@ export class Renderer {
       ctx.stroke();
     }
     ctx.setLineDash([]);
+  }
+
+  /**
+   * Before a wave: chevrons flow along the roads (and flight lanes) it will take,
+   * towards the gate. They stand still with reduced motion.
+   * @param {import('../world/GameMap.js').GameMap} map
+   * @param {Array<{index:number, air:boolean}>} routes
+   * @param {number} t visual clock (seconds)
+   */
+  _drawTelegraph(map, routes, t) {
+    const ctx = this.ctx;
+    const gap = 1.1;
+    const shift = this.reducedMotion ? gap / 2 : (t * 1.3) % gap;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const { index, air } of routes) {
+      const path = (air ? map.airPaths : map.paths)[index];
+      if (!path) continue;
+      for (let d = shift; d < path.length; d += gap) {
+        const p = path.pointAt(d);
+        if (p.x < 0 || p.y < 0 || p.x > this.cols || p.y > this.rows) continue;
+        const fade = Math.max(0, Math.min(1, d / 1.5, (path.length - d) / 1.5));
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.beginPath();
+        ctx.moveTo(-0.08, -0.13);
+        ctx.lineTo(0.06, 0);
+        ctx.lineTo(-0.08, 0.13);
+        // Dark edge first, so the chevrons read on light and dark roads alike.
+        ctx.globalAlpha = 0.35 * fade;
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 0.11;
+        ctx.stroke();
+        ctx.globalAlpha = 0.85 * fade;
+        ctx.strokeStyle = air ? '#d6ecff' : '#fff4d6';
+        ctx.lineWidth = 0.055;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   _buildGates(map) {
