@@ -17,7 +17,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node scripts/simulate.mjs",
-    "build:standalone": "node scripts/build-standalone.mjs"
+    "build:standalone": "node scripts/build-standalone.mjs",
+    "mockup": "node scripts/build-mockup.mjs"
   },
   "dependencies": {
     "vue": "^3.5.13"

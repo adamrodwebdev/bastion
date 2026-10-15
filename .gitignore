@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 standalone/
+mockup/dist/
 
 # Local tools and logs
 .harness/

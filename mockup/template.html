@@ -1,0 +1,325 @@
+<title>Bastion Battle Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap">
+<style>
+/* Layout: a dusk war-room board — the live battle is the hero, HUD overlaid on the map,
+   numbered callouts tie each proposal to the notes below. Deliberately single dark look. */
+:root {
+  --ink: #120f1d;
+  --panel: #1d1930;
+  --panel-2: #29233f;
+  --line: #3d3560;
+  --text: #f3eeff;
+  --muted: #b6aed0;
+  --gold: #ffc54d;
+  --gold-deep: #c9780d;
+  --ember: #ff7a3e;
+  --heart: #ff5d6c;
+  --frost: #7fe3f0;
+  --display: 'Lilita One', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background:
+    radial-gradient(90% 50% at 50% -10%, rgb(255 140 50 / 18%), transparent 60%),
+    radial-gradient(70% 50% at 100% 100%, rgb(120 90 220 / 16%), transparent 70%),
+    var(--ink);
+  color: var(--text);
+  font: 500 16px/1.55 var(--body);
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 40px; }
+
+/* ---------------------------------------------------------------- header */
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 24px; }
+.eyebrow { margin: 0; color: var(--gold); font: 800 0.78rem/1 var(--body); letter-spacing: 0.14em; text-transform: uppercase; }
+h1 { margin: 6px 0 0; font: 400 clamp(2.4rem, 7vw, 4.2rem)/0.95 var(--display); letter-spacing: 0.01em; text-wrap: balance;
+  background: linear-gradient(180deg, #fff3cc 15%, var(--gold) 60%, #e08e1b); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 3px 0 #6b3a05); }
+.lede { margin: 10px 0 0; max-width: 60ch; color: var(--muted); }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; }
+.seg { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); }
+.seg button, .pill { min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font: 800 0.95rem var(--body); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--text); box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%); }
+.pill { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); color: var(--text); }
+.pill[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+button:focus-visible { outline: 3px solid var(--frost); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- desktop battle */
+.stage { display: grid; gap: 14px; }
+.stage-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+h2 { margin: 0; font: 400 clamp(1.5rem, 3.4vw, 2.1rem)/1.1 var(--display); letter-spacing: 0.01em; }
+.stage-head p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+
+.board { position: relative; border-radius: 20px; overflow: hidden; border: 4px solid #6b4a22;
+  box-shadow: 0 0 0 2px #2a1a08, 0 0 0 6px rgb(255 197 77 / 18%), 0 30px 70px rgb(0 0 0 / 55%); line-height: 0; }
+.board canvas.live { display: block; width: 100%; height: auto; }
+
+/* Overlaid HUD plaques (Kingdom Rush style: the map stays full-bleed). */
+.hud { position: absolute; inset: 12px 12px auto; display: flex; justify-content: space-between; align-items: start; gap: 10px; pointer-events: none; line-height: 1.2; }
+.plaques { display: flex; flex-wrap: wrap; gap: 8px; }
+.plaque { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 6px; border-radius: 12px;
+  background: linear-gradient(180deg, #4a3320, #2d1e12); border: 2px solid #8a6230; box-shadow: inset 0 1px 0 rgb(255 255 255 / 15%), 0 3px 0 #170e06;
+  font: 400 1.15rem var(--display); color: #fff3d6; font-variant-numeric: tabular-nums; }
+.plaque i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; font-style: normal; font-size: 1rem; }
+.i-heart { background: radial-gradient(circle at 35% 30%, #ff9aa5, var(--heart)); }
+.i-gold { background: radial-gradient(circle at 35% 30%, #fff0b3, var(--gold) 55%, var(--gold-deep)); border-radius: 50% !important; }
+.i-wave { background: #5b3a8f; }
+.pips { display: inline-flex; gap: 3px; }
+.pips b { width: 9px; height: 9px; border-radius: 50%; background: #5a4630; }
+.pips b.on { background: var(--gold); }
+.pips b.now { background: var(--heart); box-shadow: 0 0 8px var(--heart); }
+.pips b.skull { width: 16px; height: 16px; margin-top: -3px; display: grid; place-items: center; background: #3a1418; border: 2px solid var(--heart); font-size: 0.55rem; color: var(--heart); }
+
+.boss { position: absolute; left: 50%; top: 64px; width: min(46%, 420px); transform: translateX(-50%); display: grid; gap: 4px; justify-items: center; pointer-events: none; line-height: 1.1; }
+.boss-name { font: 400 1.05rem var(--display); color: #ffd7ef; text-shadow: 0 2px 0 #3a0a26, 0 0 12px rgb(255 80 180 / 60%); letter-spacing: 0.04em; }
+.boss-bar { position: relative; width: 100%; height: 16px; border-radius: 10px; background: #2a0e1f; border: 2px solid #ffd166; box-shadow: 0 3px 0 #170710; overflow: hidden; }
+.boss-bar span { position: absolute; inset: 0; transform-origin: left; background: linear-gradient(180deg, #ff7ac8, #c23a8f); }
+.boss-hp { font: 800 0.72rem var(--body); color: #ffd7ef; font-variant-numeric: tabular-nums; }
+
+.speed { display: flex; gap: 6px; pointer-events: auto; }
+.round { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 2px solid #8a6230; background: linear-gradient(180deg, #4a3320, #2d1e12);
+  color: #fff3d6; font: 400 1rem var(--display); box-shadow: 0 3px 0 #170e06; }
+
+/* Early-call flag at the cave: countdown ring + shrinking bonus. */
+.flag { position: absolute; width: 0; height: 0; line-height: 1.1; }
+.flag-btn { position: absolute; left: 0; top: 0; transform: translate(-10%, -50%); display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: conic-gradient(var(--gold) calc(var(--p, 1) * 360deg), rgb(0 0 0 / 45%) 0); box-shadow: 0 4px 0 #170e06, 0 0 24px rgb(255 197 77 / 45%); }
+.flag-btn::before { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #c23a3a, #6b1218); border: 2px solid #ffd166; }
+.flag-btn span { position: relative; display: grid; justify-items: center; font: 400 0.95rem var(--display); color: #fff; }
+.flag-btn small { font: 900 0.68rem var(--body); color: var(--gold); }
+
+/* Radial build menu around the tapped tile. */
+.radial { position: absolute; width: 0; height: 0; line-height: 1.1; }
+.radial .opt { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 2px; width: 62px; padding: 6px 0 4px; border-radius: 16px;
+  border: 2px solid #8a6230; background: linear-gradient(180deg, #4a3320, #2d1e12); box-shadow: 0 4px 0 #170e06, 0 10px 18px rgb(0 0 0 / 40%); color: #fff3d6; cursor: pointer; }
+.radial .opt canvas { width: 40px; height: 40px; }
+.radial .opt b { display: inline-flex; align-items: center; gap: 3px; font: 400 0.82rem var(--display); color: var(--gold); }
+.radial .opt.poor { filter: grayscale(0.7) brightness(0.75); }
+.radial .opt.poor b { color: var(--heart); }
+.radial .opt.pick { border-color: var(--gold); box-shadow: 0 4px 0 #170e06, 0 0 0 3px rgb(255 197 77 / 45%), 0 0 22px rgb(255 197 77 / 50%); }
+.coin { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff0b3, var(--gold) 55%, var(--gold-deep)); }
+
+.powers { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 8px; line-height: 1.1; }
+.power { position: relative; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; border: 3px solid #8a6230; background: radial-gradient(circle at 40% 35%, #3b2c55, #1c1530); box-shadow: 0 4px 0 #170e06; font-size: 1.4rem; }
+.power::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: conic-gradient(transparent calc(var(--cd) * 360deg), rgb(0 0 0 / 55%) 0); }
+.power.ready { border-color: var(--gold); box-shadow: 0 4px 0 #170e06, 0 0 18px rgb(255 197 77 / 55%); }
+.power em { position: absolute; bottom: -6px; z-index: 1; padding: 1px 6px; border-radius: 6px; background: #170e06; font: 400 0.7rem var(--display); font-style: normal; color: #fff3d6; }
+
+.hero-card { position: absolute; left: 12px; bottom: 12px; display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 16px; line-height: 1.15;
+  background: linear-gradient(180deg, #4a3320, #2d1e12); border: 2px solid #8a6230; box-shadow: 0 3px 0 #170e06; }
+.hero-face { width: 46px; height: 46px; border-radius: 12px; background: radial-gradient(circle at 50% 38%, #ffd9b3 0 28%, transparent 29%), radial-gradient(circle at 50% 30%, #3e7fd1 0 42%, transparent 43%), linear-gradient(180deg, #2a5ea3, #173a6b); border: 2px solid var(--gold); }
+.hero-card strong { display: block; font: 400 1rem var(--display); color: #fff3d6; }
+.hero-card span { font: 800 0.72rem var(--body); color: var(--muted); }
+.xp { display: block; width: 110px; height: 6px; margin-top: 4px; border-radius: 4px; background: #170e06; overflow: hidden; }
+.xp::before { content: ''; display: block; width: 64%; height: 100%; background: linear-gradient(90deg, #7fe3f0, #3e9bf5); }
+
+/* Numbered callouts tie each proposal to the notes. */
+.tag { position: absolute; z-index: 3; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--frost); color: #0a2a30;
+  font: 900 0.8rem var(--body); box-shadow: 0 0 0 3px rgb(18 15 29 / 70%); line-height: 1; }
+
+/* ---------------------------------------------------------------- phone + campaign */
+.duo { display: grid; gap: 28px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .duo { grid-template-columns: minmax(0, 330px) minmax(0, 1fr); } }
+.phone { position: relative; width: min(100%, 330px); margin-inline: auto; aspect-ratio: 9 / 19; border-radius: 42px; padding: 12px; background: #0b0913; border: 2px solid #3d3560; box-shadow: 0 30px 60px rgb(0 0 0 / 55%); }
+.screen { position: relative; display: grid; grid-template-rows: auto 1fr auto; height: 100%; border-radius: 32px; overflow: hidden; background: #e9dcc0; line-height: 1.2; }
+.p-hud { display: flex; justify-content: space-between; gap: 6px; padding: 30px 10px 8px; background: linear-gradient(180deg, #2d1e12, #4a3320); }
+.p-hud .plaque { height: 32px; font-size: 0.95rem; padding: 0 10px 0 4px; }
+.p-hud .plaque i { width: 22px; height: 22px; font-size: 0.8rem; }
+.p-board { position: relative; min-height: 0; overflow: hidden; display: grid; place-items: center; background: #8dc68f; }
+.p-board canvas.live { display: block; max-width: 100%; max-height: 100%; }
+.p-overlay { position: absolute; inset: 0; }
+.p-bar { display: flex; align-items: center; gap: 8px; padding: 10px 10px 18px; background: linear-gradient(180deg, #4a3320, #2d1e12); }
+.call { flex: 1; min-height: 46px; border-radius: 14px; border: 2px solid #9a5a05; background: linear-gradient(180deg, #ffd166, #f59e0b 55%, #d97706); box-shadow: inset 0 1px 0 rgb(255 255 255 / 55%), 0 4px 0 #8a4f05;
+  font: 400 1rem var(--display); color: #2a1400; line-height: 1.05; }
+.call small { display: block; font: 900 0.7rem var(--body); }
+.p-board .radial .opt { width: 50px; padding: 4px 0 2px; border-radius: 12px; }
+.p-board .radial .opt canvas { width: 32px; height: 32px; }
+.p-board .flag-btn { width: 50px; height: 50px; transform: translate(-50%, -20%); }
+
+.campaign { display: grid; gap: 14px; }
+.levels { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); margin: 0; padding: 0; list-style: none; }
+.lv { display: grid; gap: 8px; padding: 8px 8px 12px; border-radius: 16px; background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--line); line-height: 1.25; }
+.lv .map { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 3 / 2; max-width: 100%; }
+.lv canvas { display: block; width: 100%; height: 100%; }
+.lv.locked canvas { filter: grayscale(0.85) brightness(0.65); }
+.lv-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-inline: 4px; }
+.lv-num { font: 900 0.72rem var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+.lv-name { font: 400 1.15rem var(--display); }
+.stars { color: var(--gold); letter-spacing: 2px; font-size: 0.95rem; }
+.stars .off { color: #4a4166; }
+.badges { display: flex; gap: 6px; padding-inline: 4px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; font: 800 0.72rem var(--body); border: 1px solid var(--line); color: var(--muted); }
+.badge.won { border-color: var(--gold); color: var(--gold); }
+.idea { position: absolute; right: 8px; top: 8px; padding: 3px 8px; border-radius: 8px; background: rgb(18 15 29 / 82%); font: 800 0.7rem var(--body); color: var(--frost); }
+
+/* ---------------------------------------------------------------- notes */
+.notes { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.col { padding: 20px; border-radius: 18px; background: var(--panel); border: 1px solid var(--line); }
+.col h3 { margin: 0 0 12px; font: 400 1.35rem var(--display); }
+.col ol, .col ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.col li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; min-width: 0; }
+.col li .tag { position: static; box-shadow: none; }
+.col li .tick { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #24452f; color: #7fe39a; font-weight: 900; font-size: 0.8rem; }
+.col strong { display: block; }
+.col p { margin: 2px 0 0; color: var(--muted); font-size: 0.92rem; }
+.src { color: var(--gold); font-weight: 800; }
+footer { color: var(--muted); font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media (max-width: 640px) {
+  .boss { top: 104px; width: 70%; }
+  .powers .power { width: 44px; height: 44px; font-size: 1.1rem; }
+  .hero-card { display: none; }
+  .radial .opt { width: 50px; }
+  .radial .opt canvas { width: 30px; height: 30px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Mockup · next iteration</p>
+      <h1>Bastion</h1>
+      <p class="lede">A live mockup running the real engine: the redesigned board, units, lighting and particles from this pass, under the next round of interface and gameplay proposals.</p>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Time of day">
+        <button type="button" data-mode="light" aria-pressed="false">Day</button>
+        <button type="button" data-mode="dark" aria-pressed="true">Dusk</button>
+      </div>
+      <button type="button" class="pill" id="sound" aria-pressed="false" data-on="Sound on" data-off="Play sound"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Play sound</span></button>
+    </div>
+  </header>
+
+  <section class="stage" aria-labelledby="desk-title">
+    <div class="stage-head">
+      <h2 id="desk-title">Volcano at dusk · desktop</h2>
+      <p>Final wave. A Molten Brute is on the road; the player taps a free tile to build.</p>
+    </div>
+    <div class="board" id="desk-board">
+      <canvas class="live" id="desk-canvas" aria-label="Live battle on the Volcano map"></canvas>
+
+      <div class="hud">
+        <div class="plaques">
+          <span class="plaque"><i class="i-heart">♥</i>18</span>
+          <span class="plaque"><i class="i-gold"></i><span id="hud-gold">412</span></span>
+          <span class="plaque"><i class="i-wave">⚑</i>9/9 <span class="pips" aria-hidden="true"><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="on"></b><b class="skull now">☠</b></span></span>
+          <span class="plaque">✦ <span id="hud-score">0</span></span>
+        </div>
+        <div class="speed"><span class="round">II</span><span class="round">×2</span></div>
+      </div>
+      <span class="tag" style="left: 12px; top: 58px">1</span>
+
+      <div class="boss" aria-hidden="true">
+        <span class="boss-name">Molten Brute</span>
+        <span class="boss-bar"><span id="boss-fill"></span></span>
+        <span class="boss-hp" id="boss-hp"></span>
+      </div>
+      <span class="tag" style="left: calc(50% + min(23%, 210px) + 6px); top: 70px">2</span>
+
+      <div class="flag" id="desk-flag">
+        <button type="button" class="flag-btn" id="flag-ring" aria-label="Call the next wave early"><span>☠<small id="flag-bonus">+22</small></span></button>
+        <span class="tag" style="left: 62px; top: -40px">3</span>
+      </div>
+
+      <div class="radial" id="desk-radial">
+        <button type="button" class="opt" style="left: 0; top: -78px"><canvas data-tower="arrow"></canvas><b><span class="coin"></span>50</b></button>
+        <button type="button" class="opt" style="left: -78px; top: 0"><canvas data-tower="cannon"></canvas><b><span class="coin"></span>85</b></button>
+        <button type="button" class="opt" style="left: 78px; top: 0"><canvas data-tower="frost"></canvas><b><span class="coin"></span>70</b></button>
+        <button type="button" class="opt pick" style="left: 0; top: 78px"><canvas data-tower="laser"></canvas><b><span class="coin"></span>130</b></button>
+        <span class="tag" style="left: 44px; top: -110px">4</span>
+      </div>
+
+      <div class="hero-card">
+        <span class="hero-face" aria-hidden="true"></span>
+        <span><strong>Captain Elda</strong><span>Hero · level 4 · rally</span><span class="xp"></span></span>
+        <span class="tag" style="position: static; margin-left: 4px">5</span>
+      </div>
+
+      <div class="powers">
+        <span class="tag" style="position: static; align-self: center">6</span>
+        <span class="power ready" style="--cd: 1">❄<em>Ready</em></span>
+        <span class="power" style="--cd: 0.4">☄<em>23s</em></span>
+        <span class="power ready" style="--cd: 1">⚡<em>Ready</em></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="duo">
+    <div class="stage" aria-labelledby="phone-title">
+      <h2 id="phone-title">Lagoon · phone</h2>
+      <div class="phone">
+        <div class="screen">
+          <div class="p-hud">
+            <span class="plaque"><i class="i-heart">♥</i>20</span>
+            <span class="plaque"><i class="i-gold"></i>236</span>
+            <span class="plaque"><i class="i-wave">⚑</i>5/8</span>
+          </div>
+          <div class="p-board" id="phone-board">
+            <canvas class="live" id="phone-canvas" aria-label="Live battle on the Lagoon map, rotated for portrait"></canvas>
+            <div class="p-overlay">
+              <div class="flag" id="phone-flag"><span class="flag-btn" style="--p: 0.62"><span>☠<small>+14</small></span></span></div>
+              <div class="radial" id="phone-radial">
+                <button type="button" class="opt" style="left: 0; top: -60px"><canvas data-tower="arrow"></canvas><b><span class="coin"></span>50</b></button>
+                <button type="button" class="opt" style="left: -60px; top: 0"><canvas data-tower="cannon"></canvas><b><span class="coin"></span>85</b></button>
+                <button type="button" class="opt pick" style="left: 60px; top: 0"><canvas data-tower="frost"></canvas><b><span class="coin"></span>70</b></button>
+                <button type="button" class="opt poor" style="left: 0; top: 60px"><canvas data-tower="laser"></canvas><b><span class="coin"></span>130</b></button>
+              </div>
+            </div>
+          </div>
+          <div class="p-bar">
+            <span class="round">II</span>
+            <button type="button" class="call">Call next wave<small>+14 gold early bonus</small></button>
+            <span class="round">×2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="campaign" aria-labelledby="camp-title">
+      <div class="stage-head">
+        <h2 id="camp-title">Campaign · one idea per level</h2>
+        <p>Cards show the real painted maps. 3 stars unlock Heroic and Iron challenges.</p>
+      </div>
+      <ul class="levels">
+        <li class="lv"><div class="map"><canvas data-level="0" data-showcase="1"></canvas><span class="idea">Teaches: runners</span></div><div class="lv-row"><span><span class="lv-num">Level 1</span><br><span class="lv-name">The Meadow</span></span><span class="stars">★★★</span></div><div class="badges"><span class="badge won">⚔ Heroic</span><span class="badge won">⛨ Iron</span></div></li>
+        <li class="lv"><div class="map"><canvas data-level="1"></canvas><span class="idea">Teaches: armour</span></div><div class="lv-row"><span><span class="lv-num">Level 2</span><br><span class="lv-name">The Canyon</span></span><span class="stars">★★★</span></div><div class="badges"><span class="badge won">⚔ Heroic</span><span class="badge">⛨ Iron</span></div></li>
+        <li class="lv"><div class="map"><canvas data-level="2"></canvas><span class="idea">Teaches: healers</span></div><div class="lv-row"><span><span class="lv-num">Level 3</span><br><span class="lv-name">The Lagoon</span></span><span class="stars">★★<span class="off">★</span></span></div><div class="badges"><span class="badge">⚔ Heroic</span><span class="badge">⛨ Iron</span></div></li>
+        <li class="lv"><div class="map"><canvas data-level="3"></canvas><span class="idea">Twist: long switchbacks</span></div><div class="lv-row"><span><span class="lv-num">Level 4</span><br><span class="lv-name">The Volcano</span></span><span class="stars">★<span class="off">★★</span></span></div><div class="badges"><span class="badge">⚔ Heroic</span><span class="badge">⛨ Iron</span></div></li>
+        <li class="lv"><div class="map"><canvas data-level="4"></canvas><span class="idea">Proposed: split path</span></div><div class="lv-row"><span><span class="lv-num">Level 5</span><br><span class="lv-name">The Fortress</span></span><span class="stars"><span class="off">★★★</span></span></div><div class="badges"><span class="badge">⚔ Heroic</span><span class="badge">⛨ Iron</span></div></li>
+        <li class="lv locked"><div class="map"><canvas data-level="5"></canvas><span class="idea">Climax: boss gauntlet</span></div><div class="lv-row"><span><span class="lv-num">Level 6</span><br><span class="lv-name">The Abyss</span></span><span class="stars"><span class="off">★★★</span></span></div><div class="badges"><span class="badge">Locked</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="notes" aria-label="Design notes">
+    <div class="col">
+      <h3>Shipped in this pass</h3>
+      <ul>
+        <li><span class="tick">✓</span><span><strong>Painted biomes with day and dusk</strong><p>Seeded terrain, worn roads, themed props, cave and gate, per-biome ambient particles, night lighting with lantern glows. <span class="src">Kingdom Rush, Defense Grid</span></p></span></li>
+        <li><span class="tick">✓</span><span><strong>Silhouettes that read the role</strong><p>Stone towers that change at each upgrade against round, animated enemies; arcing cannon balls, fletched arrows, frost shards. <span class="src">Defense Grid, PvZ</span></p></span></li>
+        <li><span class="tick">✓</span><span><strong>Juice and sound</strong><p>Debris, smoke, coins, shake, outlined damage numbers; procedural sound effects and a music bed per biome, with toggles. <span class="src">Juice it or Lose it</span></p></span></li>
+        <li><span class="tick">✓</span><span><strong>Early call and telegraphs</strong><p>Call the next wave for a bonus that decays over 18 s; spawn banner, road chevrons, wave pips with a final-wave skull. <span class="src">Kingdom Rush, PvZ</span></p></span></li>
+        <li><span class="tick">✓</span><span><strong>Paced waves</strong><p>Build-up, spike and breather in each 3-wave act; each newcomer arrives alone first with a one-line tip. <span class="src">Nintendo 4-step, Schell</span></p></span></li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Proposed next</h3>
+      <ol>
+        <li><span class="tag">1</span><span><strong>HUD overlaid on the map</strong><p>Wooden plaques in the corners free the side panel, so the board grows to the full width on every screen.</p></span></li>
+        <li><span class="tag">2</span><span><strong>Boss bar</strong><p>Name and health at the top whenever a boss is on the road, with its own horn and slow motion on the kill.</p></span></li>
+        <li><span class="tag">3</span><span><strong>Early-call flag on the map</strong><p>The countdown ring sits on the cave itself; tapping it calls the wave and shows the bonus shrinking live.</p></span></li>
+        <li><span class="tag">4</span><span><strong>Radial build menu</strong><p>Tap a tile, pick from four portraits around it; unaffordable towers grey out. One tap fewer than the side shop and easier with a thumb.</p></span></li>
+        <li><span class="tag">5</span><span><strong>A hero with a rally point</strong><p>One controllable unit that blocks the road and levels up across the campaign, so the player stays busy between builds.</p></span></li>
+        <li><span class="tag">6</span><span><strong>Powers as round cooldown dials</strong><p>Readable at a glance in the corner; calling a wave early also shortens their cooldowns.</p></span></li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>Built from the Bastion engine (src/core) with no images: every map, unit and sound is generated in code. Click "Play sound" to hear the dusk music bed and combat sounds.</footer>
+</div>
+
+<script>/*__SCRIPT__*/</script>
