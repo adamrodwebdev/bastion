@@ -187,6 +187,8 @@ export default {
     lastWave: 'Gelombang terakhir',
     waveRunning: 'Gelombang berlangsung…',
     nextWave: 'Gelombang berikutnya',
+    callFlag: 'Panggil gelombang berikutnya sekarang: +{n} emas',
+    buildMenu: 'Bangun menara di petak ini',
   },
   coop: {
     whoPlays: 'Siapa yang main di layar?',

@@ -2,41 +2,6 @@
   <section class="game" :class="{ 'is-paused': paused, 'is-coop': coop }" aria-labelledby="game-title">
     <h1 id="game-title" class="sr-only">Bastion — {{ training ? $t('training.lessons.' + training + '.title') : $t('briefing.level', { n: levelNumber }) }}</h1>
 
-    <!-- HUD ------------------------------------------------------------ -->
-    <div class="hud">
-      <div class="hud-stats">
-        <div class="stat" :class="{ 'is-hit': livesHit }">
-          <AppIcon name="heart" class="stat-icon stat-icon--lives" />
-          <span class="stat-label">{{ $t('hud.lives') }}</span>
-          <span class="stat-value">{{ hud.lives }}</span>
-        </div>
-        <div v-for="p in hud.players" :key="p.id" class="stat" :class="coop ? 'stat--p' + p.id : ''">
-          <AppIcon name="coin" class="coin-icon" />
-          <span class="stat-label">{{ coop ? playerName(p.id) : $t('hud.gold') }}</span>
-          <span class="stat-value">{{ p.gold }}</span>
-        </div>
-        <div class="stat">
-          <AppIcon name="wave" class="stat-icon" />
-          <span class="stat-label">{{ $t('hud.wave') }}</span>
-          <span class="stat-value">{{ hud.wave }}/{{ hud.total }}</span>
-        </div>
-      </div>
-      <div class="hud-controls">
-        <button type="button" class="icon-btn" data-tutorial="pause" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :title="paused ? $t('hud.resume') : $t('hud.pause')" :disabled="!!end" @click="togglePause">
-          <AppIcon :name="paused ? 'play' : 'pause'" />
-        </button>
-        <button type="button" class="icon-btn icon-btn--text" data-tutorial="speed" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">×{{ speed }}</button>
-        <button v-if="!training" type="button" class="icon-btn" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
-          <AppIcon name="save" />
-        </button>
-      </div>
-    </div>
-
-    <div v-if="boss" class="boss-bar" role="status">
-      <span class="boss-name"><AppIcon name="skull" /> {{ $t('chapters.c' + level.chapter + '.boss') }}</span>
-      <span class="boss-track"><span class="boss-fill" :style="{ width: boss.ratio * 100 + '%' }"></span></span>
-    </div>
-
     <CoachBubble v-if="coachText && !end" :text="coachText" :next="coachNext" @dismiss="dismissCoach" @next="ackCoach" />
     <div v-if="spot && coachText && !end" class="spotlight" :style="spot" aria-hidden="true"></div>
 
@@ -44,21 +9,108 @@
       <!-- Board ------------------------------------------------------- -->
       <div ref="boardWrap" class="board-wrap">
         <div class="board-frame">
-          <canvas
-            ref="canvas"
-            class="board"
-            :class="{ 'is-aiming': !!aiming }"
-            tabindex="0"
-            role="application"
-            :aria-label="$t('hud.board')"
-            aria-describedby="board-help"
-            @pointerdown="onPointerDown"
-            @pointermove="onPointerMove"
-            @pointerleave="hover = null"
-            @keydown="onKeyDown"
-          ></canvas>
-          <p id="board-help" class="sr-only">{{ $t('hud.keys') }}</p>
-          <p class="sr-only" aria-live="polite">{{ announce }}</p>
+          <!-- HUD: a strip above the map on phones, plaques on the map's corners on larger screens -->
+          <div class="hud">
+            <div class="hud-stats">
+              <div class="stat" :class="{ 'is-hit': livesHit }">
+                <AppIcon name="heart" class="stat-icon stat-icon--lives" />
+                <span class="stat-label">{{ $t('hud.lives') }}</span>
+                <span class="stat-value">{{ hud.lives }}</span>
+              </div>
+              <div v-for="p in hud.players" :key="p.id" class="stat" :class="coop ? 'stat--p' + p.id : ''">
+                <AppIcon name="coin" class="coin-icon" />
+                <span class="stat-label">{{ coop ? playerName(p.id) : $t('hud.gold') }}</span>
+                <span class="stat-value">{{ p.gold }}</span>
+              </div>
+              <div class="stat">
+                <AppIcon name="wave" class="stat-icon" />
+                <span class="stat-label">{{ $t('hud.wave') }}</span>
+                <span class="stat-value">{{ hud.wave }}/{{ hud.total }}</span>
+              </div>
+            </div>
+            <div class="hud-controls">
+              <button type="button" class="icon-btn" data-tutorial="pause" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :title="paused ? $t('hud.resume') : $t('hud.pause')" :disabled="!!end" @click="togglePause">
+                <AppIcon :name="paused ? 'play' : 'pause'" />
+              </button>
+              <button type="button" class="icon-btn icon-btn--text" data-tutorial="speed" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">×{{ speed }}</button>
+              <button v-if="!training" type="button" class="icon-btn" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
+                <AppIcon name="save" />
+              </button>
+            </div>
+          </div>
+
+          <div class="board-stage">
+            <canvas
+              ref="canvas"
+              class="board"
+              :class="{ 'is-aiming': !!aiming }"
+              tabindex="0"
+              role="application"
+              :aria-label="$t('hud.board')"
+              aria-describedby="board-help"
+              @pointerdown="onPointerDown"
+              @pointermove="onPointerMove"
+              @pointerleave="hover = null"
+              @keydown="onKeyDown"
+            ></canvas>
+            <p id="board-help" class="sr-only">{{ $t('hud.keys') }}</p>
+            <p class="sr-only" aria-live="polite">{{ announce }}</p>
+
+            <!-- Interface laid on the map, placed from grid cells (see cellPx) -->
+            <div class="board-ui">
+              <div v-if="boss" class="boss-bar" role="status">
+                <span class="boss-name"><AppIcon name="skull" /> {{ $t('chapters.c' + level.chapter + '.boss') }}</span>
+                <span class="boss-track"><span class="boss-fill" :style="{ width: boss.ratio * 100 + '%' }"></span></span>
+              </div>
+
+              <button
+                v-for="f in flags"
+                :key="f.key"
+                type="button"
+                class="call-flag"
+                :class="{ 'is-early': hud.state === 'running' }"
+                :style="f.style"
+                :aria-label="hud.state === 'running' ? $t('hud.callFlag', { n: hud.bonus }) : $t('hud.startFirst')"
+                :title="hud.state === 'running' ? $t('hud.callFlag', { n: hud.bonus }) : $t('hud.startFirst')"
+                @click="startWave"
+              >
+                <span class="call-flag-ring" :style="{ '--p': hud.ratio }" aria-hidden="true"></span>
+                <span class="call-flag-face" aria-hidden="true">
+                  <AppIcon name="horn" />
+                  <small v-if="hud.bonus">+{{ hud.bonus }}</small>
+                </span>
+              </button>
+
+              <div
+                v-if="radial"
+                class="radial"
+                :class="'radial--' + radial.mode"
+                :style="radial.style"
+                role="group"
+                :aria-label="$t('hud.buildMenu')"
+              >
+                <button
+                  v-for="item in radial.items"
+                  :key="item.type"
+                  type="button"
+                  class="radial-opt"
+                  :class="{ 'is-poor': !item.affordable }"
+                  :style="item.style"
+                  :aria-label="$t('towers.' + item.type + '.name') + ', ' + item.cost + ' ' + $t('hud.gold')"
+                  :title="$t('towers.' + item.type + '.desc')"
+                  @click="pickTower(item.type)"
+                  @pointerenter="radialHover = item.type"
+                  @pointerleave="radialHover = null"
+                  @focus="radialHover = item.type"
+                  @blur="radialHover = null"
+                >
+                  <SpriteIcon :type="item.type" :px="radial.icon" />
+                  <span class="radial-cost"><AppIcon name="coin" class="coin-icon" />{{ item.cost }}</span>
+                  <kbd v-if="item.key" class="radial-key" aria-hidden="true">{{ item.key }}</kbd>
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div v-if="paused && !end" class="board-overlay board-overlay--soft">
             <div class="pause-card card">
@@ -160,7 +212,10 @@ export default {
   data() {
     return {
       tick: 0,
-      hud: { lives: 0, players: [], wave: 0, total: 0, state: 'prepare', canStart: true, countdown: 0, bonus: 0, done: false },
+      hud: { lives: 0, players: [], wave: 0, total: 0, state: 'prepare', canStart: true, countdown: 0, bonus: 0, ratio: 1, done: false },
+      // Size of the board in CSS pixels, for the interface laid on the map.
+      board: { w: 0, h: 0, tile: 1, rotated: false, cols: 16, rows: 9 },
+      radialHover: null,
       levelNumber: 1,
       coop: false,
       activePlayer: 1,
@@ -260,6 +315,84 @@ export default {
       this.tick;
       if (!this.engine.game) return [];
       return this.engine.game.waves.preview().map((g) => ({ ...g, color: EnemyFactory.get(g.type).stats.color }));
+    },
+    /**
+     * Radial build menu around the selected free tile, with the towers of this level.
+     * The ring grows with the number of towers; its centre is pushed inside the board
+     * so no button leaves the map. When the ring cannot fit (many towers on a small
+     * board), the same buttons line up in a tray along the edge away from the tile.
+     * @returns {{mode:'ring'|'tray', style:object, icon:number, items:Array<object>}|null}
+     */
+    radial() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const { w, h, tile } = this.board;
+      const g = this.engine.game;
+      const c = this.selectedCell;
+      if (!g || !c || this.end || this.paused || this.armedType || this.aiming || this.selectedTowerId) return null;
+      if (!g.map.isBuildable(c.col, c.row)) return null;
+      const items = this.shopItems;
+      const n = items.length;
+      if (!n) return null;
+      const size = n > 6 ? 50 : 56; // buttons stay above the 44 px tap target
+      const reach = Math.max(52, tile * 1.1, (size + 6) / (2 * Math.sin(Math.PI / Math.max(2, n))));
+      const span = reach + size / 2 + 4;
+      const p = this.cellPx(c.col, c.row);
+      if (2 * span <= w && 2 * span <= h) {
+        const fit = (v, max) => Math.min(max - span, Math.max(span, v));
+        return {
+          mode: 'ring',
+          style: { left: `${fit(p.x, w)}px`, top: `${fit(p.y, h)}px`, '--size': `${size}px` },
+          icon: size - 24,
+          items: items.map((item, i) => {
+            const a = -Math.PI / 2 + (i / n) * Math.PI * 2; // clockwise from the top, in shop order
+            const x = (Math.cos(a) * reach).toFixed(1);
+            const y = (Math.sin(a) * reach).toFixed(1);
+            return { ...item, style: { '--x': `${x}px`, '--y': `${y}px`, animationDelay: `${i * 0.02}s` } };
+          }),
+        };
+      }
+      return {
+        mode: 'tray',
+        style: p.y > h / 2 ? { top: '8px' } : { bottom: '8px' },
+        icon: 28,
+        items: items.map((item) => ({ ...item, style: {} })),
+      };
+    },
+    /**
+     * Call flags: one on each road the next wave will take, on its first tile.
+     * Shown whenever the next wave can be launched (before the first one, and
+     * during the countdown, when calling it early pays a bonus).
+     */
+    flags() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const { w, h, cols, rows } = this.board;
+      const g = this.engine.game;
+      if (!g || this.end || !this.hud.canStart || !w) return [];
+      const m = 30; // half a flag plus a margin
+      const seen = new Set();
+      const flags = [];
+      for (const { index } of this.nextRoutes()) {
+        const path = g.map.paths[index];
+        if (!path) continue;
+        // First point of the road inside the board, a little way in.
+        let d = 0;
+        let pt = path.pointAt(0);
+        while (d < path.length && (pt.x < 0.5 || pt.y < 0.5 || pt.x > cols - 0.5 || pt.y > rows - 0.5)) {
+          d += 0.25;
+          pt = path.pointAt(d);
+        }
+        pt = path.pointAt(d + 0.35);
+        const px = this.worldPx(pt.x, pt.y);
+        const left = Math.round(Math.min(w - m, Math.max(m, px.x)));
+        const top = Math.round(Math.min(h - m, Math.max(m, px.y)));
+        const key = `${left},${top}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        flags.push({ key, style: { left: `${left}px`, top: `${top}px` } });
+      }
+      return flags;
     },
     boss() {
       // eslint-disable-next-line no-unused-expressions
@@ -501,6 +634,43 @@ export default {
       if (key === this.engine.size) return;
       this.engine.size = key;
       r.resize(width, maxHeight);
+      const map = this.engine.game.map;
+      this.board = {
+        w: parseFloat(r.canvas.style.width),
+        h: parseFloat(r.canvas.style.height),
+        tile: r.cssTile,
+        rotated: r.rotated,
+        cols: map.cols,
+        rows: map.rows,
+      };
+    },
+
+    /** World point (tiles) → CSS pixels inside the board (handles the rotated phone board). */
+    worldPx(x, y) {
+      const { tile, rotated, rows } = this.board;
+      return rotated ? { x: (rows - y) * tile, y: x * tile } : { x: x * tile, y: y * tile };
+    },
+
+    /** Centre of a grid cell in CSS pixels inside the board. */
+    cellPx(col, row) {
+      return this.worldPx(col + 0.5, row + 0.5);
+    },
+
+    /**
+     * Roads (and flight lanes) the next wave will take, cached per wave.
+     * @returns {Array<{index:number, air:boolean}>}
+     */
+    nextRoutes() {
+      const g = this.engine.game;
+      const next = g.waves.waveIndex + 1;
+      if (this._routes && this._routes.wave === next) return this._routes.list;
+      const list = [];
+      for (const group of g.waves.wave(next) || []) {
+        const route = { index: group.path, air: Boolean(group.air) };
+        if (!list.some((r) => r.index === route.index && r.air === route.air)) list.push(route);
+      }
+      this._routes = { wave: next, list };
+      return list;
     },
 
     // ------------------------------------------------------------- frame
@@ -512,7 +682,8 @@ export default {
         selectedCell: this.selectedCell,
         selectedTower: this.selectedTower,
         hoverCell: this.hover,
-        previewType: this.armedType ? TowerFactory.get(this.armedType) : null,
+        previewType: this.armedType || this.radialHover ? TowerFactory.get(this.armedType || this.radialHover) : null,
+        telegraph: game.canStartWave && !this.end ? this.nextRoutes() : null,
         upgradePreview: this.upgradePreview,
         aim: power && this.aimPoint ? { ...this.aimPoint, radius: power.constructor.radius } : null,
         cursors,
@@ -537,6 +708,7 @@ export default {
       h.canStart = g.canStartWave;
       h.countdown = g.countdown === null ? 0 : Math.ceil(g.countdown);
       h.bonus = g.earlyBonus;
+      h.ratio = g.countdown === null ? 1 : Math.max(0, Math.min(1, g.countdown / Game.WAVE_GAP));
       h.done = !g.waves.hasMoreWaves;
       this.tick++;
       if (!g.isOver) services.audio?.intensity(g.enemies.some((e) => e.boss) ? 3 : g.state === 'running' ? 2 : 1);
@@ -653,8 +825,11 @@ export default {
         this.sync();
         return;
       }
+      const same = this.selectedCell && this.selectedCell.col === col && this.selectedCell.row === row;
       this.selectedTowerId = null;
-      this.selectedCell = { col, row };
+      this.radialHover = null;
+      // Tapping the open tile again closes its build menu.
+      this.selectedCell = same && !this.armedType ? null : { col, row };
       if (this.armedType && game.map.isBuildable(col, row)) this.build(this.armedType, owner);
       this.sync();
     },
@@ -763,6 +938,7 @@ export default {
     },
 
     clearSelection() {
+      this.radialHover = null;
       this.selectedCell = null;
       this.selectedTowerId = null;
       this.armedType = null;

@@ -2597,6 +2597,281 @@ kbd {
   }
 }
 
+/* ---------- Interface on the map: HUD, boss bar, call flags, radial menu ----------
+   Phones: the HUD is an ink strip above the map. Larger screens: plaques on the map's
+   corners, so the board gets the height the HUD row used to take. */
+.game .board-frame {
+  max-width: 100%;
+  background: var(--c-ink);
+}
+
+.game .board-frame .hud {
+  padding: 6px;
+  line-height: 1.2;
+  background: var(--c-ink);
+}
+
+.game .board-frame .hud-stats {
+  flex-wrap: wrap;
+}
+
+.board-stage {
+  position: relative;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  line-height: 0;
+}
+
+.board-ui {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.board-ui button {
+  pointer-events: auto;
+}
+
+/* Pause and end screens cover the HUD plaques too. */
+.game .board-frame .board-overlay {
+  z-index: 2;
+}
+
+.game .board-ui .boss-bar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: min(70%, 440px);
+  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--c-ink) 88%, transparent);
+  box-shadow: var(--shadow);
+}
+
+@media (min-width: 768px), (orientation: landscape) and (max-height: 540px) {
+  .game .board-frame .hud {
+    position: absolute;
+    inset: 8px 8px auto;
+    z-index: 1;
+    padding: 0;
+    background: none;
+    pointer-events: none;
+  }
+
+  .game .board-frame .hud-controls {
+    pointer-events: auto;
+  }
+
+  .game .board-frame .stat {
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow);
+  }
+
+  /* Cooperation: the names are hidden on the map, the players' colours stay. */
+  .game .board-frame .stat--p1 {
+    border-color: var(--p1);
+    box-shadow: inset 4px 0 0 var(--p1), var(--shadow);
+  }
+
+  .game .board-frame .stat--p2 {
+    border-color: var(--p2);
+    box-shadow: inset 4px 0 0 var(--p2), var(--shadow);
+  }
+
+  /* On the map the plaques show an icon and a number; the label stays for screen readers. */
+  .game .board-frame .stat-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .game .board-ui .boss-bar {
+    top: 54px;
+  }
+}
+
+/* Call flag: a war horn on the first tile of each road the next wave takes, inside a
+   ring that empties with the countdown (the early bonus shrinks with it). */
+.call-flag {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  animation: flag-beckon 1.4s ease-in-out infinite;
+}
+
+.call-flag-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--c-gold) calc(var(--p, 1) * 1turn), rgb(30 26 43 / 0.55) 0);
+  box-shadow: var(--shadow), 0 0 16px color-mix(in srgb, var(--c-gold) 55%, transparent);
+}
+
+.call-flag-face {
+  position: absolute;
+  inset: 5px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1px;
+  border-radius: 50%;
+  border: 2px solid var(--c-gold);
+  background: radial-gradient(
+    circle at 40% 35%,
+    color-mix(in srgb, var(--c-madder) 75%, #fff),
+    var(--c-madder) 60%,
+    color-mix(in srgb, var(--c-madder) 70%, #000)
+  );
+  color: #f6f3ea;
+  line-height: 1;
+}
+
+.call-flag .app-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.call-flag small {
+  font: 800 0.7rem/1 var(--font-body);
+  color: #ffe7a3;
+  font-variant-numeric: tabular-nums;
+}
+
+.call-flag.is-early {
+  animation-duration: 0.9s;
+}
+
+.call-flag:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+@keyframes flag-beckon {
+  50% {
+    transform: translate(-50%, -50%) scale(1.07);
+  }
+}
+
+/* Radial build menu: the level's towers around the tapped tile, in shop order. */
+.radial {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.radial-opt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  width: var(--size, 56px);
+  min-height: var(--size, 56px);
+  padding: 3px 0 4px;
+  border: 2px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)));
+  animation: radial-pop 0.18s ease-out both;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.radial-opt:hover,
+.radial-opt:focus-visible {
+  border-color: var(--c-gold);
+  box-shadow: var(--shadow), 0 0 0 3px color-mix(in srgb, var(--c-gold) 40%, transparent);
+}
+
+.radial-opt:focus-visible {
+  outline: none;
+}
+
+.radial-opt.is-poor {
+  filter: grayscale(0.7);
+  opacity: 0.75;
+}
+
+.radial-opt.is-poor .radial-cost {
+  color: var(--danger);
+}
+
+.radial-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.radial-cost .app-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.radial-key {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  padding: 0 4px;
+  background: var(--surface-2);
+  font-size: 0.6rem;
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .radial-key {
+    display: block;
+  }
+}
+
+@keyframes radial-pop {
+  from {
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+}
+
+/* Many towers on a small board: the same buttons in a tray along one edge. */
+.radial--tray {
+  left: 8px;
+  right: 8px;
+  width: auto;
+  height: auto;
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  overflow-x: auto;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--c-ink) 85%, transparent);
+  box-shadow: var(--shadow);
+}
+
+.radial--tray .radial-opt {
+  position: relative;
+  flex: none;
+  width: 52px;
+  min-height: 52px;
+  transform: none;
+  animation: none;
+}
+
 /* ---------- Training and guide ---------- */
 .spotlight {
   position: fixed;

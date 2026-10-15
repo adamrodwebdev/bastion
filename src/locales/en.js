@@ -189,6 +189,8 @@ export default {
     lastWave: 'Last wave',
     waveRunning: 'Wave in progress…',
     nextWave: 'Next wave',
+    callFlag: 'Call the next wave now: +{n} gold',
+    buildMenu: 'Build a tower on this tile',
   },
   coop: {
     whoPlays: 'Who is playing on screen?',
