@@ -1,98 +1,102 @@
 <template>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="brief-title" @keydown.esc="$actions.closeBriefing()">
-    <div class="modal-card briefing" :class="'theme-' + level.theme">
-      <header class="modal-head">
-        <div>
-          <p class="eyebrow">{{ $t('campaign.chapter', { n: level.chapter }) }} · {{ $t('chapters.c' + level.chapter + '.name') }}</p>
-          <h2 id="brief-title" class="modal-title">
-            {{ $t('briefing.level', { n: level.number }) }}
-            <span v-if="level.boss" class="badge badge-danger"><AppIcon name="skull" /> {{ $t('briefing.boss') }}</span>
-          </h2>
-        </div>
-        <button ref="close" type="button" class="icon-btn" :aria-label="$t('app.close')" @click="$actions.closeBriefing()">
-          <AppIcon name="close" />
-        </button>
-      </header>
-
-      <div v-if="storyOn" class="speech">
-        <PixelPortrait :id="speaker" height="5.5rem" decorative />
-        <div class="speech-body">
-          <p class="speech-name">{{ $t('characters.' + speaker + '.name') }}</p>
-          <p class="speech-text">« {{ $t('story.lines.l' + level.number) }} »</p>
-        </div>
-      </div>
-
-      <section v-if="news.length" class="brief-section">
-        <h3 class="brief-h">{{ $t('briefing.new') }}</h3>
-        <ul class="news" role="list">
-          <li v-for="n in news" :key="n.kind + n.id" class="news-item">
-            <SpriteIcon v-if="n.kind === 'enemy'" kind="enemy" :type="n.id" :px="40" />
-            <SpriteIcon v-else :type="n.id" :px="40" />
-            <span>
-              <strong>{{ n.kind === 'enemy' ? $t('enemies.' + n.id + '.name') : $t('towers.' + n.id + '.name') }}</strong>
-              <span class="news-desc">{{ n.kind === 'enemy' ? $t('enemies.' + n.id + '.desc') : $t('towers.' + n.id + '.desc') }}</span>
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <section class="brief-section">
-        <h3 class="brief-h">{{ $t('briefing.enemies') }}</h3>
-        <ul class="chips" role="list">
-          <li v-for="e in enemies" :key="e.type" class="chip" :title="$t('enemies.' + e.type + '.desc')">
-            <SpriteIcon kind="enemy" :type="e.type" :px="22" />
-            {{ $t('enemies.' + e.type + '.name') }}
-            <AppIcon v-if="e.flying" name="wing" />
-            <AppIcon v-if="e.stealth" name="eye" />
-          </li>
-        </ul>
-        <p class="brief-meta">
-          {{ $t('briefing.meta', { waves: level.waveCount, roads: level.roads }) }}
-        </p>
-      </section>
-
-      <section class="brief-section">
-        <h3 class="brief-h">{{ $t('briefing.challenges') }}</h3>
-        <ul class="challenges" role="list">
-          <li v-for="c in challenges" :key="c.id" class="challenge" :class="{ 'is-done': c.done }">
-            <AppIcon :name="c.done ? 'check' : c.icon" />
-            <span>
-              <span class="challenge-family">{{ $t('achievements.families.' + c.family) }}</span>
-              <strong>{{ $t('achievements.list.' + c.id + '.name') }}</strong>
-              <span class="challenge-desc">{{ $t('achievements.list.' + c.id + '.desc', c.params) }}</span>
-            </span>
-          </li>
-        </ul>
-      </section>
-
-      <section v-if="unlockedPowers.length" class="brief-section">
-        <h3 class="brief-h">{{ $t('briefing.powers', { n: loadout.length, max: slots }) }}</h3>
-        <div class="loadout">
-          <button
-            v-for="p in unlockedPowers"
-            :key="p.id"
-            type="button"
-            class="loadout-item"
-            :class="{ 'is-on': loadout.includes(p.id) }"
-            :aria-pressed="loadout.includes(p.id) ? 'true' : 'false'"
-            :title="$t('powers.' + p.id + '.desc')"
-            @click="togglePower(p.id)"
-          >
-            <span class="power-glyph" aria-hidden="true">{{ p.icon }}</span>
-            <span>{{ $t('powers.' + p.id + '.name') }}</span>
+    <div class="scroll">
+      <span class="scroll-rod" aria-hidden="true"></span>
+      <div class="modal-card briefing" :class="'theme-' + level.theme">
+        <header class="modal-head">
+          <div>
+            <p class="eyebrow">{{ $t('campaign.chapter', { n: level.chapter }) }} · {{ $t('chapters.c' + level.chapter + '.name') }}</p>
+            <h2 id="brief-title" class="modal-title">
+              {{ $t('briefing.level', { n: level.number }) }}
+              <span v-if="level.boss" class="badge badge-danger"><AppIcon name="skull" /> {{ $t('briefing.boss') }}</span>
+            </h2>
+          </div>
+          <button ref="close" type="button" class="btn-close" :aria-label="$t('app.close')" @click="$actions.closeBriefing()">
+            <AppIcon name="close" />
           </button>
-        </div>
-      </section>
+        </header>
 
-      <footer class="modal-foot">
-        <DifficultyPicker compact />
-        <div class="record">
-          <StarRow :value="bestStars" />
+        <div v-if="storyOn" class="speech">
+          <PixelPortrait :id="speaker" height="5.5rem" decorative />
+          <div class="speech-body">
+            <p class="speech-name">{{ $t('characters.' + speaker + '.name') }}</p>
+            <p class="speech-text">« {{ $t('story.lines.l' + level.number) }} »</p>
+          </div>
         </div>
-        <button type="button" class="btn btn-primary btn-lg" @click="start">
-          <AppIcon name="play" /> {{ $store.track === 'coop' ? $t('briefing.startCoop') : $t('briefing.start') }}
-        </button>
-      </footer>
+
+        <section v-if="news.length" class="brief-section">
+          <h3 class="brief-h">{{ $t('briefing.new') }}</h3>
+          <ul class="news" role="list">
+            <li v-for="n in news" :key="n.kind + n.id" class="news-item">
+              <SpriteIcon v-if="n.kind === 'enemy'" kind="enemy" :type="n.id" :px="40" />
+              <SpriteIcon v-else :type="n.id" :px="40" />
+              <span>
+                <strong>{{ n.kind === 'enemy' ? $t('enemies.' + n.id + '.name') : $t('towers.' + n.id + '.name') }}</strong>
+                <span class="news-desc">{{ n.kind === 'enemy' ? $t('enemies.' + n.id + '.desc') : $t('towers.' + n.id + '.desc') }}</span>
+              </span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="brief-section">
+          <h3 class="brief-h">{{ $t('briefing.enemies') }}</h3>
+          <ul class="chips" role="list">
+            <li v-for="e in enemies" :key="e.type" class="chip" :title="$t('enemies.' + e.type + '.desc')">
+              <SpriteIcon kind="enemy" :type="e.type" :px="22" />
+              {{ $t('enemies.' + e.type + '.name') }}
+              <AppIcon v-if="e.flying" name="wing" />
+              <AppIcon v-if="e.stealth" name="eye" />
+            </li>
+          </ul>
+          <p class="brief-meta">
+            {{ $t('briefing.meta', { waves: level.waveCount, roads: level.roads }) }}
+          </p>
+        </section>
+
+        <section class="brief-section">
+          <h3 class="brief-h">{{ $t('briefing.challenges') }}</h3>
+          <ul class="challenges" role="list">
+            <li v-for="c in challenges" :key="c.id" class="challenge" :class="{ 'is-done': c.done }">
+              <AppIcon :name="c.done ? 'check' : c.icon" />
+              <span>
+                <span class="challenge-family">{{ $t('achievements.families.' + c.family) }}</span>
+                <strong>{{ $t('achievements.list.' + c.id + '.name') }}</strong>
+                <span class="challenge-desc">{{ $t('achievements.list.' + c.id + '.desc', c.params) }}</span>
+              </span>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="unlockedPowers.length" class="brief-section">
+          <h3 class="brief-h">{{ $t('briefing.powers', { n: loadout.length, max: slots }) }}</h3>
+          <div class="loadout">
+            <button
+              v-for="p in unlockedPowers"
+              :key="p.id"
+              type="button"
+              class="loadout-item"
+              :class="{ 'is-on': loadout.includes(p.id) }"
+              :aria-pressed="loadout.includes(p.id) ? 'true' : 'false'"
+              :title="$t('powers.' + p.id + '.desc')"
+              @click="togglePower(p.id)"
+            >
+              <span class="power-glyph" aria-hidden="true">{{ p.icon }}</span>
+              <span>{{ $t('powers.' + p.id + '.name') }}</span>
+            </button>
+          </div>
+        </section>
+
+        <footer class="modal-foot">
+          <DifficultyPicker compact />
+          <div class="record">
+            <StarRow :value="bestStars" />
+          </div>
+          <button type="button" class="btn btn-primary btn-lg" @click="start">
+            <AppIcon name="play" /> {{ $store.track === 'coop' ? $t('briefing.startCoop') : $t('briefing.start') }}
+          </button>
+        </footer>
+      </div>
+      <span class="scroll-rod" aria-hidden="true"></span>
     </div>
   </div>
 </template>

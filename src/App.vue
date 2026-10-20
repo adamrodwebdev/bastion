@@ -47,7 +47,7 @@
   </header>
 
   <main id="main" class="app-main" :class="'view-' + $store.view" tabindex="-1">
-    <Transition name="screen" mode="out-in">
+    <Transition :css="false" mode="out-in" @leave="onLeave" @enter="onEnter">
       <HomeScreen v-if="$store.view === 'home'" />
       <CampaignScreen v-else-if="$store.view === 'campaign'" />
       <GameScreen v-else-if="$store.view === 'game'" :key="$store.game.key" />
@@ -68,6 +68,7 @@
   <StoryPanel v-if="$store.story" :beat-id="$store.story.id" />
   <div v-if="$store.adBusy" class="ad-veil" role="status">{{ $t('app.adBreak') }}</div>
   <ToastStack />
+  <ScreenWipe ref="wipe" />
 </template>
 
 <script>
@@ -77,6 +78,7 @@
 import { defineAsyncComponent } from 'vue';
 import AppIcon from './components/AppIcon.vue';
 import HomeScreen from './components/HomeScreen.vue';
+import ScreenWipe from './components/ScreenWipe.vue';
 import ToastStack from './components/ToastStack.vue';
 
 // Every screen but the home one is loaded on demand: the first page stays light
@@ -102,10 +104,20 @@ function prefetchScreens() {
   else setTimeout(run, 2500);
 }
 import { services } from './services/index.js';
+import { scrollToTop } from './store.js';
+
+/**
+ * A short fade of a screen, for reduced motion (resolves at once where nothing can animate).
+ * A screen that fades out stays hidden until it is removed (fill).
+ */
+function fade(el, from, to, duration, fill = 'none') {
+  if (!el || el.nodeType !== 1 || typeof el.animate !== 'function') return Promise.resolve();
+  return el.animate([{ opacity: from }, { opacity: to }], { duration, easing: 'ease', fill }).finished.catch(() => {});
+}
 
 export default {
   name: 'App',
-  components: { AppIcon, HomeScreen, ToastStack, ...lazy },
+  components: { AppIcon, HomeScreen, ScreenWipe, ToastStack, ...lazy },
   computed: {
     languages() {
       return services.i18n.available;
@@ -136,6 +148,28 @@ export default {
     },
     toggleTheme() {
       services.theme.toggle();
+    },
+    /** The old screen goes: the banner drops over it (it fades out with reduced motion). */
+    onLeave(el, done) {
+      if (services.motion.reduced) {
+        fade(el, 1, 0, 100, 'forwards').then(done);
+        return;
+      }
+      this.$refs.wipe.cover().then(() => {
+        done();
+        scrollToTop();
+        // The new screen is in place under the banner by the next frame: lift it.
+        this.$nextTick(() => requestAnimationFrame(() => this.$refs.wipe?.reveal()));
+      });
+    },
+    /** The new screen comes: already there under the banner, or a short fade in. */
+    onEnter(el, done) {
+      if (!services.motion.reduced) {
+        done();
+        return;
+      }
+      scrollToTop();
+      fade(el, 0, 1, 150).then(done);
     },
   },
 };

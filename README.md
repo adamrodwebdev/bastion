@@ -91,7 +91,7 @@ Playgama diffuse aussi le jeu sur ses sites partenaires. Sa version passe par le
 Le code est séparé en trois parties :
 
 - **`src/core/`** : le moteur du jeu (les règles, les tours, les ennemis, les vagues, l'histoire, les succès…). Il ne dépend pas de Vue, ce qui permet de le tester tout seul.
-- **`src/services/`** : les outils partagés (sauvegarde, traduction, thème clair ou sombre, sons, publicités).
+- **`src/services/`** : les outils partagés (sauvegarde, traduction, thème jour ou nuit, animations, textures de l'interface, sons, vibrations, publicités).
 - **`src/components/`** : l'interface, faite avec Vue.
 
 Chaque fichier commence par un commentaire qui explique son rôle. Les détails techniques sont dans les commentaires du code.
@@ -114,6 +114,8 @@ Chaque fichier commence par un commentaire qui explique son rôle. Les détails 
 | Les leçons guidées | `src/core/tutorial/Training.js` |
 | Le mode Duel | `src/core/modes/DuelMatch.js` |
 | Les couleurs et la mise en page | `src/styles/main.css` |
+| Les matières de l'interface (parchemin, bois, fer, toile) | `src/core/rendering/Textures.js` (dessin) et la partie « materials » de `src/styles/main.css` |
+| La bannière entre deux écrans | `src/components/ScreenWipe.vue` |
 | Le dessin du plateau (terrain, bâtiments, personnages, particules) | `src/core/rendering/` |
 
 Après un changement d'équilibrage, lancez `npm test` pour voir si les niveaux restent gagnables. Après un changement de texte, lancez `npm run check:i18n`.

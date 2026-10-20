@@ -680,6 +680,9 @@ export default {
     particlesDesc: 'Débris, fumée, braises et météo (neige, pluie, feuilles…). À couper sur un appareil lent.',
     haptics: 'Vibrations',
     hapticsDesc: 'Une courte vibration quand vous construisez, améliorez ou perdez une vie (téléphones compatibles).',
+    motion: 'Animations',
+    motionDesc: 'Bannières entre les écrans, panneaux et effets de combat animés. Désactivées : de courts fondus seulement.',
+    motionSystem: 'Votre appareil demande moins d’animations : de courts fondus seulement.',
     players: 'Noms des joueurs',
     keys: 'Clavier',
     keyList: {

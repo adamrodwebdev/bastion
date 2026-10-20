@@ -59,14 +59,13 @@ export const actions = {
   },
 
   go(view) {
+    const same = store.view === view;
     store.view = view;
     store.briefing = null;
     if (view !== 'game') store.savedGame = services.saves.loadGame();
-    if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-      // Portal builds without a page scrollbar scroll inside the main area.
-      document.querySelector('.app-main')?.scrollTo?.(0, 0);
-    }
+    // A new screen is brought to the top under the banner that hides the change
+    // (App.vue); the same screen again goes back to the top at once.
+    if (same) scrollToTop();
   },
 
   /** Sound on or off (header button), kept in the settings. */
@@ -177,6 +176,13 @@ export const actions = {
     }
   },
 };
+
+/** Back to the top of the page (portal builds without a page scrollbar scroll inside the main area). */
+export function scrollToTop() {
+  if (typeof window === 'undefined') return;
+  window.scrollTo(0, 0);
+  document.querySelector('.app-main')?.scrollTo?.(0, 0);
+}
 
 /** Translation helper; reading store.locale makes templates re-render on language change. */
 export function t(key, params) {

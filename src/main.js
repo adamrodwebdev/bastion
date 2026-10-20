@@ -11,10 +11,16 @@ import './styles/main.css';
 // Build target on the root element: portal-specific layout rules (see main.css).
 document.documentElement.dataset.target = typeof __TARGET__ === 'string' ? __TARGET__ : 'web';
 
+// Parchment, wood, iron and cloth are painted (in a worker) while the saves and
+// the language load. The first screen waits for them a little, never long, so
+// they do not pop in just after it appears.
+const textures = services.textures.paint();
+const texturesOrTimeout = () => Promise.race([textures, new Promise((resolve) => setTimeout(resolve, 150))]);
+
 // Playgama first starts its SDK and loads the saves from it; then the player's
 // language is loaded (one small file), then the app starts.
 const ready = services.preparePortal().catch(() => {});
-ready.then(() => services.bootstrap()).then(() => {
+ready.then(() => services.bootstrap()).then(texturesOrTimeout).then(() => {
   actions.init();
   const app = createApp(App);
   app.config.globalProperties.$t = t;

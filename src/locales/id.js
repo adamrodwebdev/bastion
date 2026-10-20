@@ -678,6 +678,9 @@ export default {
     particlesDesc: 'Serpihan, asap, bara, dan cuaca (salju, hujan, daun…). Matikan di perangkat yang lambat.',
     haptics: 'Getaran',
     hapticsDesc: 'Getaran singkat saat kamu membangun, meningkatkan, atau kehilangan nyawa (ponsel yang mendukung).',
+    motion: 'Animasi',
+    motionDesc: 'Spanduk antarlayar, panel bergerak, dan efek pertempuran. Mati: hanya pudar singkat.',
+    motionSystem: 'Perangkatmu meminta lebih sedikit gerakan: hanya pudar singkat.',
     players: 'Nama pemain',
     keys: 'Keyboard',
     keyList: {

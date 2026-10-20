@@ -26,7 +26,7 @@
         </template>
         <template v-else>{{ $t('shop.pickHint') }}</template>
       </p>
-      <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="$emit('close')"><AppIcon name="close" /></button>
+      <button type="button" class="btn-close btn-close--sm" :aria-label="$t('tower.deselect')" @click="$emit('close')"><AppIcon name="close" /></button>
     </div>
   </section>
 </template>
