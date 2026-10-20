@@ -1,5 +1,10 @@
 <template>
-  <section class="game" :class="{ 'is-paused': paused, 'is-coop': coop }" aria-labelledby="game-title">
+  <section
+    class="game"
+    :class="['layout-' + layout, { 'is-paused': paused, 'is-coop': coop, 'sheet-open': sheetOpen && !end, 'sheet-top': sheetTop }]"
+    :style="stageH ? { '--stage-h': stageH + 'px', '--stage-ground': ground } : null"
+    aria-labelledby="game-title"
+  >
     <h1 id="game-title" class="sr-only">Bastion — {{ training ? $t('training.lessons.' + training + '.title') : $t('briefing.level', { n: levelNumber }) }}</h1>
 
     <CoachBubble v-if="coachText && !end" :text="coachText" :next="coachNext" @dismiss="dismissCoach" @next="ackCoach" />
@@ -8,24 +13,24 @@
     <div class="game-layout">
       <!-- Board ------------------------------------------------------- -->
       <div ref="boardWrap" class="board-wrap">
-        <div class="board-frame">
+        <div ref="frame" class="board-frame">
           <!-- HUD: a strip above the map on phones, plaques on the map's corners on larger screens -->
           <div class="hud">
             <div class="hud-stats">
               <div class="stat" :class="{ 'is-hit': livesHit }">
                 <AppIcon name="heart" class="stat-icon stat-icon--lives" />
                 <span class="stat-label">{{ $t('hud.lives') }}</span>
-                <span class="stat-value">{{ hud.lives }}</span>
+                <span :key="'l' + hud.lives" class="stat-value is-bump">{{ hud.lives }}</span>
               </div>
               <div v-for="p in hud.players" :key="p.id" class="stat" :class="coop ? 'stat--p' + p.id : ''">
                 <AppIcon name="coin" class="coin-icon" />
                 <span class="stat-label">{{ coop ? playerName(p.id) : $t('hud.gold') }}</span>
-                <span class="stat-value">{{ p.gold }}</span>
+                <span :key="'g' + p.gold" class="stat-value is-bump">{{ p.gold }}</span>
               </div>
               <div class="stat">
                 <AppIcon name="wave" class="stat-icon" />
                 <span class="stat-label">{{ $t('hud.wave') }}</span>
-                <span class="stat-value">{{ hud.wave }}/{{ hud.total }}</span>
+                <span :key="'w' + hud.wave" class="stat-value is-bump">{{ hud.wave }}/{{ hud.total }}</span>
               </div>
             </div>
             <div class="hud-controls">
@@ -33,13 +38,23 @@
                 <AppIcon :name="paused ? 'play' : 'pause'" />
               </button>
               <button type="button" class="icon-btn icon-btn--text" data-tutorial="speed" :aria-label="$t('hud.speed', { n: speed })" :title="$t('hud.speed', { n: speed })" :disabled="!!end" @click="cycleSpeed">×{{ speed }}</button>
-              <button v-if="!training" type="button" class="icon-btn" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
+              <button
+                type="button"
+                class="icon-btn hud-sound"
+                :aria-label="$store.muted ? $t('app.unmute') : $t('app.mute')"
+                :title="$store.muted ? $t('app.unmute') : $t('app.mute')"
+                :aria-pressed="$store.muted ? 'true' : 'false'"
+                @click="$actions.toggleMute()"
+              >
+                <AppIcon :name="$store.muted ? 'mute' : 'sound'" />
+              </button>
+              <button v-if="!training" type="button" class="icon-btn hud-save" :aria-label="$t('hud.save')" :title="$t('hud.save')" :disabled="!!end" @click="saveAndQuit">
                 <AppIcon name="save" />
               </button>
             </div>
           </div>
 
-          <div class="board-stage">
+          <div ref="stage" class="board-stage">
             <canvas
               ref="canvas"
               class="board"
@@ -95,6 +110,7 @@
                   type="button"
                   class="radial-opt"
                   :class="{ 'is-poor': !item.affordable }"
+                  :data-tutorial="'shop-' + item.type"
                   :style="item.style"
                   :aria-label="$t('towers.' + item.type + '.name') + ', ' + item.cost + ' ' + $t('hud.gold')"
                   :title="$t('towers.' + item.type + '.desc')"
@@ -160,16 +176,18 @@
           </button>
         </div>
         <PowerBar :powers="powerList" :enabled="hud.state === 'running' && !paused" :aiming="aiming" @activate="onPower" />
-        <TowerPanel
-          v-if="towerInfo"
-          :info="towerInfo"
-          @upgrade="upgrade"
-          @sell="sell"
-          @targeting="setTargeting"
-          @close="clearSelection"
-          @preview="upgradePreview = $event"
-        />
-        <TowerShop v-else :items="shopItems" :armed-type="armedType" :cell-state="cellState" :disabled="!!end" @pick="pickTower" />
+        <Transition name="swap" mode="out-in">
+          <TowerPanel
+            v-if="towerInfo"
+            :info="towerInfo"
+            @upgrade="upgrade"
+            @sell="sell"
+            @targeting="setTargeting"
+            @close="clearSelection"
+            @preview="upgradePreview = $event"
+          />
+          <TowerShop v-else :items="shopItems" :armed-type="armedType" :cell-state="cellState" :disabled="!!end" @pick="pickTower" @close="clearSelection" />
+        </Transition>
         <button type="button" class="btn btn-ghost btn-menu" @click="quit"><AppIcon name="back" /> {{ $t('hud.menu') }}</button>
       </aside>
     </div>
@@ -236,6 +254,10 @@ export default {
       coachCell: null,
       spot: null,
       spotTarget: null,
+      layout: 'wide',
+      stageH: 0,
+      sheetTop: false,
+      ground: '',
       training: null,
       announce: '',
     };
@@ -251,6 +273,11 @@ export default {
       return this.engine.game.towers.find((t) => t.id === this.selectedTowerId) || null;
     },
     towerInfo() {
+      // Read the refresh counter here too: `selectedTower` keeps returning the
+      // same (non-reactive) tower object, so on its own it would never tell
+      // this panel that the gold, the level or the price have changed.
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
       const t = this.selectedTower;
       if (!t) return null;
       const s = t.stats;
@@ -279,6 +306,10 @@ export default {
         targeting: t.targeting.constructor.id,
         mine: !this.coop || t.owner === owner,
       };
+    },
+    /** Phones: the tower panel slides in as a sheet (building goes through the radial menu on the map). */
+    sheetOpen() {
+      return Boolean(this.towerInfo);
     },
     shopItems() {
       // eslint-disable-next-line no-unused-expressions
@@ -416,6 +447,9 @@ export default {
     '$store.theme'(mode) {
       if (this.engine.renderer) this.engine.renderer.setMode(mode);
     },
+    selectedCell() {
+      this.placeSheet();
+    },
     /** The portal pauses the game (Playgama overlay or ad): the level stops; the player resumes it. */
     '$store.portalPaused'(paused) {
       if (paused && !this.paused && !this.end) this.togglePause();
@@ -497,6 +531,7 @@ export default {
 
       this.engine.game = markRaw(game);
       this.engine.renderer = markRaw(renderer);
+      this.ground = renderer.landscape.groundDark;
       this.engine.loop = markRaw(loop);
       this.bindGameEvents(game);
 
@@ -626,20 +661,57 @@ export default {
       clearTimeout(this._hitTimer);
     },
 
+    /**
+     * Size of the screen used to lay the board out.
+     * Phones show and hide their address bar while the page scrolls, which only
+     * changes the height: on touch screens the first height is kept so the board
+     * never resizes on its own. A new width (rotation, window resized) takes a
+     * fresh measurement.
+     */
+    viewport() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const v = this._viewport;
+      const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+      if (!v || !touch || w !== v.w) this._viewport = { w, h };
+      return this._viewport;
+    },
+
     resize() {
       const wrap = this.$refs.boardWrap;
       const r = this.engine.renderer;
       if (!wrap || !r) return;
-      const width = wrap.clientWidth;
-      const portrait = window.innerHeight > window.innerWidth;
-      const top = wrap.getBoundingClientRect().top + window.scrollY;
-      const reserve = 70;
-      const maxHeight = portrait ? window.innerHeight * 0.52 : Math.max(200, window.innerHeight - top - reserve);
-      const key = `${width}x${Math.round(maxHeight)}`;
+      const vp = this.viewport();
+      const portrait = vp.h > vp.w;
+      // Portrait phones (and tablets held upright): the map takes 80 % of the screen height.
+      const phone = portrait && vp.w < 900;
+      const landscapePhone = !portrait && vp.h <= 540;
+      const layout = phone ? 'phone' : landscapePhone ? 'landscape' : 'wide';
+      if (layout !== this.layout) {
+        // Let the new layout reach the page first: the board is measured in it.
+        this.layout = layout;
+        this.$nextTick(() => this.resize());
+        return;
+      }
+      let maxWidth;
+      let maxHeight;
+      if (phone || landscapePhone) {
+        this.stageH = Math.round(vp.h * 0.8);
+        const frame = this.$refs.frame;
+        const border = frame ? frame.offsetWidth - frame.clientWidth : 0;
+        maxWidth = (phone ? vp.w : wrap.clientWidth) - border;
+        maxHeight = this.stageH;
+      } else {
+        this.stageH = 0;
+        const top = wrap.getBoundingClientRect().top + window.scrollY;
+        maxWidth = wrap.clientWidth;
+        maxHeight = portrait ? vp.h * 0.52 : Math.max(200, vp.h - top - 70);
+      }
+      const key = `${layout}:${Math.round(maxWidth)}x${Math.round(maxHeight)}`;
       if (key === this.engine.size) return;
       this.engine.size = key;
       // The board turns only on screens held upright: never on a wide desktop window.
-      r.resize(width, maxHeight, portrait);
+      r.resize(maxWidth, maxHeight, portrait);
       const map = this.engine.game.map;
       this.board = {
         w: parseFloat(r.canvas.style.width),
@@ -649,6 +721,17 @@ export default {
         cols: map.cols,
         rows: map.rows,
       };
+      this.$nextTick(() => this.placeSheet());
+    },
+
+    /** Phones: the tower panel goes to the top when the tower is in the lower part of the screen, so it never hides it. */
+    placeSheet() {
+      const c = this.selectedCell;
+      const canvas = this.$refs.canvas;
+      if (this.layout !== 'phone' || !c || !canvas || !this.board.w) return;
+      const p = this.cellPx(c.col, c.row);
+      const y = canvas.getBoundingClientRect().top + p.y;
+      this.sheetTop = y > window.innerHeight * 0.55;
     },
 
     /** World point (tiles) → CSS pixels inside the board (handles the rotated phone board). */

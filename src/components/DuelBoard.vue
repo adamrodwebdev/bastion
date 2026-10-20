@@ -20,11 +20,12 @@
     </div>
 
     <div class="duel-controls">
-      <div v-if="selectedTower" class="duel-tower">
-        <span>{{ $t('towers.' + selectedTower.type + '.name') }} · {{ $t('tower.level', { n: selectedTower.level }) }}</span>
-        <button v-if="selectedTower.canUpgrade" type="button" class="btn btn-primary btn-sm" :disabled="hud.gold < selectedTower.upgradePrice" @click="upgrade">
-          {{ $t('tower.upgrade') }} · {{ selectedTower.upgradePrice }}
+      <div v-if="towerView" class="duel-tower">
+        <span>{{ $t('towers.' + towerView.type + '.name') }} · {{ $t('tower.level', { n: towerView.level }) }}</span>
+        <button v-if="towerView.canUpgrade" type="button" class="btn btn-primary btn-sm" :disabled="!towerView.affordable" @click="upgrade">
+          {{ $t('tower.upgrade') }} · {{ towerView.upgradePrice }}
         </button>
+        <span v-else class="badge">{{ $t('tower.max') }}</span>
         <button type="button" class="btn btn-secondary btn-sm" @click="sell">{{ $t('tower.sell') }}</button>
         <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="clear"><AppIcon name="close" /></button>
       </div>
@@ -119,6 +120,14 @@ export default {
       // eslint-disable-next-line no-unused-expressions
       this.tick;
       return this.towerId ? this.game.towers.find((t) => t.id === this.towerId) || null : null;
+    },
+    /** Fresh copy of what the panel shows, rebuilt on every refresh (the tower object itself never changes identity). */
+    towerView() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const t = this.selectedTower;
+      if (!t) return null;
+      return { type: t.type, level: t.level, canUpgrade: t.canUpgrade, upgradePrice: t.upgradePrice, affordable: this.game.gold >= t.upgradePrice };
     },
   },
   created() {

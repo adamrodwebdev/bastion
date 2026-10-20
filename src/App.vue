@@ -47,16 +47,18 @@
   </header>
 
   <main id="main" class="app-main" :class="'view-' + $store.view" tabindex="-1">
-    <HomeScreen v-if="$store.view === 'home'" />
-    <CampaignScreen v-else-if="$store.view === 'campaign'" />
-    <GameScreen v-else-if="$store.view === 'game'" :key="$store.game.key" />
-    <WorkshopScreen v-else-if="$store.view === 'workshop'" />
-    <AchievementsScreen v-else-if="$store.view === 'achievements'" />
-    <ChronicleScreen v-else-if="$store.view === 'chronicle'" />
-    <SettingsScreen v-else-if="$store.view === 'settings'" />
-    <MultiplayerScreen v-else-if="$store.view === 'multiplayer'" />
-    <DuelScreen v-else-if="$store.view === 'duel'" :key="$store.duel.key" />
-    <LearnScreen v-else-if="$store.view === 'learn'" />
+    <Transition name="screen" mode="out-in">
+      <HomeScreen v-if="$store.view === 'home'" />
+      <CampaignScreen v-else-if="$store.view === 'campaign'" />
+      <GameScreen v-else-if="$store.view === 'game'" :key="$store.game.key" />
+      <WorkshopScreen v-else-if="$store.view === 'workshop'" />
+      <AchievementsScreen v-else-if="$store.view === 'achievements'" />
+      <ChronicleScreen v-else-if="$store.view === 'chronicle'" />
+      <SettingsScreen v-else-if="$store.view === 'settings'" />
+      <MultiplayerScreen v-else-if="$store.view === 'multiplayer'" />
+      <DuelScreen v-else-if="$store.view === 'duel'" :key="$store.duel.key" />
+      <LearnScreen v-else-if="$store.view === 'learn'" />
+    </Transition>
   </main>
 
   <footer v-if="!inPlay" class="app-footer">

@@ -39,8 +39,11 @@
   --success: var(--c-moss);
   --focus: #b8860b;
   --overlay: rgb(30 26 43 / 0.6);
-  --shadow: 0 4px 0 rgb(30 26 43 / 0.16);
-  --shadow-lg: 0 12px 36px rgb(30 26 43 / 0.28);
+  --line: rgb(30 26 43 / 0.14);
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  --shadow: 0 1px 2px rgb(30 26 43 / 0.12), 0 8px 20px -12px rgb(30 26 43 / 0.4);
+  --shadow-lg: 0 2px 6px rgb(30 26 43 / 0.12), 0 24px 48px -18px rgb(30 26 43 / 0.5);
+  --edge: var(--c-woad-strong);
   --p1: #3e8ed0;
   --p2: #e0662a;
   --gold-coin: #e3a21a;
@@ -48,10 +51,19 @@
 
   --font-display: 'Cinzel', 'Trajan Pro', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
-  --radius: 8px;
-  --radius-lg: 14px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
   --header-h: 56px;
   --tap: 44px;
+
+  /* Motion: things that answer the player move fast and settle softly. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 0.75, 0.2);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --t-fast: 140ms;
+  --t: 220ms;
+  --t-slow: 360ms;
   color-scheme: light;
 }
 
@@ -72,8 +84,11 @@
   --success: #8db86a;
   --focus: #e9c35f;
   --overlay: rgb(8 6 14 / 0.72);
-  --shadow: 0 4px 0 rgb(0 0 0 / 0.35);
-  --shadow-lg: 0 14px 40px rgb(0 0 0 / 0.55);
+  --line: rgb(236 230 214 / 0.12);
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 24px -12px rgb(0 0 0 / 0.7);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.4), 0 28px 56px -20px rgb(0 0 0 / 0.8);
+  --edge: #34507f;
   color-scheme: dark;
 }
 
@@ -105,7 +120,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--bg);
+  background: radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 70%) no-repeat, var(--bg);
   color: var(--text);
   font: 16px/1.5 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -202,9 +217,17 @@ button:disabled {
   gap: 10px;
   height: var(--header-h);
   padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
-  background: var(--c-ink);
+  background: rgb(30 26 43 / 0.94);
   color: #f3eedf;
-  border-bottom: 3px solid var(--c-gold);
+  border-bottom: 2px solid var(--c-gold);
+  box-shadow: 0 6px 18px -10px rgb(30 26 43 / 0.6);
+}
+
+@supports (backdrop-filter: blur(1px)) {
+  .app-header {
+    background: rgb(30 26 43 / 0.82);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
 }
 
 .app-header--compact {
@@ -227,6 +250,11 @@ button:disabled {
   width: 28px;
   height: 28px;
   color: var(--c-gold);
+  transition: transform var(--t) var(--ease-spring);
+}
+
+.brand:hover .brand-logo {
+  transform: translateY(-2px) rotate(-4deg);
 }
 
 .brand-logo path:last-child {
@@ -297,17 +325,19 @@ button:disabled {
   width: var(--tap);
   height: var(--tap);
   padding: 0;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--text);
-  transition: transform 0.12s ease, background-color 0.2s ease;
+  box-shadow: var(--highlight), 0 2px 6px -3px rgb(30 26 43 / 0.35);
+  transition: transform var(--t-fast) var(--ease-out), background-color var(--t) ease, color var(--t) ease;
 }
 
 .app-header .icon-btn {
-  border-color: rgb(255 255 255 / 0.25);
+  border-color: rgb(255 255 255 / 0.2);
   background: transparent;
   color: inherit;
+  box-shadow: none;
 }
 
 .icon-btn:hover:not(:disabled) {
@@ -395,9 +425,9 @@ button:disabled {
 /* ------------------------------------------------------------------ primitives */
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--highlight), var(--shadow);
 }
 
 .btn {
@@ -412,15 +442,23 @@ button:disabled {
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
-  transition: transform 0.12s ease, background-color 0.2s ease, opacity 0.2s;
+  transition:
+    transform var(--t-fast) var(--ease-out),
+    box-shadow var(--t-fast) var(--ease-out),
+    background-color var(--t) ease,
+    border-color var(--t) ease,
+    color var(--t) ease,
+    opacity var(--t) ease,
+    filter var(--t) ease;
 }
 
 .btn:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(2px);
 }
 
 .btn:disabled {
   opacity: 0.5;
+  filter: saturate(0.4);
 }
 
 .btn-lg {
@@ -438,21 +476,30 @@ button:disabled {
 .btn-primary {
   background: var(--action);
   color: var(--action-text);
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow);
+  border-color: transparent;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 3px 0 var(--edge), 0 8px 18px -10px rgb(30 26 43 / 0.6);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--action-hover);
 }
 
+.btn-primary:active:not(:disabled) {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 0 var(--edge);
+}
+
 .btn-secondary {
   background: var(--surface-2);
-  border-color: var(--border-strong);
+  border: 1px solid var(--line);
+  box-shadow: var(--highlight), 0 3px 0 var(--surface-3), 0 6px 14px -10px rgb(30 26 43 / 0.5);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--surface-3);
+  border-color: var(--border);
+}
+
+.btn-secondary:active:not(:disabled) {
+  box-shadow: var(--highlight), 0 1px 0 var(--surface-3);
 }
 
 .btn-ghost {
@@ -504,7 +551,7 @@ button:disabled {
   padding: 3px 10px;
   border-radius: 999px;
   background: var(--surface-2);
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   font-size: 0.85rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -651,6 +698,11 @@ kbd {
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color var(--t) var(--ease-out), color var(--t) ease, box-shadow var(--t) var(--ease-out), transform var(--t-fast) var(--ease-out);
+}
+
+.segmented-option:active {
+  transform: scale(0.97);
 }
 
 .segmented-option input {
@@ -666,7 +718,7 @@ kbd {
 .segmented-option.is-active {
   background: var(--surface-2);
   color: var(--text);
-  box-shadow: var(--shadow);
+  box-shadow: var(--highlight), 0 2px 8px -3px rgb(30 26 43 / 0.35);
 }
 
 .segmented-hint {
@@ -806,16 +858,22 @@ kbd {
   gap: 4px;
   min-height: 96px;
   padding: 12px 6px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--highlight), var(--shadow);
   text-align: center;
-  transition: transform 0.12s;
+  transition: transform var(--t) var(--ease-out), box-shadow var(--t) var(--ease-out), border-color var(--t) ease;
 }
 
 .tile:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: var(--border);
+  box-shadow: var(--highlight), var(--shadow-lg);
+}
+
+.tile:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .tile > .app-icon {
@@ -892,15 +950,22 @@ kbd {
   gap: 2px;
   min-height: 64px;
   padding: 8px 10px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: linear-gradient(var(--t1), var(--t1)) top / 100% 6px no-repeat, var(--surface);
   text-align: left;
+  transition: border-color var(--t) ease, box-shadow var(--t) var(--ease-out), transform var(--t-fast) var(--ease-out), background-size var(--t-slow) var(--ease-out);
+}
+
+.chapter-tab:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .chapter-tab.is-active {
   border-color: var(--border-strong);
-  box-shadow: var(--shadow);
+  background-size: 100% 100%, auto;
+  background-image: linear-gradient(color-mix(in srgb, var(--t1) 55%, var(--surface)), color-mix(in srgb, var(--t1) 55%, var(--surface)));
+  box-shadow: var(--highlight), var(--shadow);
 }
 
 .chapter-tab.is-locked {
@@ -969,17 +1034,22 @@ kbd {
   display: grid;
   width: 100%;
   padding: 6px;
-  border: 2px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--highlight), var(--shadow);
   text-align: left;
-  transition: transform 0.12s, border-color 0.2s;
+  transition: transform var(--t) var(--ease-out), border-color var(--t) ease, box-shadow var(--t) var(--ease-out);
 }
 
 .level-card:hover:not(:disabled) {
-  transform: translateY(-2px);
-  border-color: var(--border-strong);
+  transform: translateY(-3px);
+  border-color: var(--border);
+  box-shadow: var(--highlight), var(--shadow-lg);
+}
+
+.level-card:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .level-card.is-next {
@@ -1080,10 +1150,11 @@ kbd {
   max-height: calc(100dvh - 24px);
   overflow: auto;
   padding: 16px 18px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--surface);
-  border: 2px solid var(--border-strong);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line);
+  box-shadow: var(--highlight), var(--shadow-lg);
+  animation: card-in var(--t-slow) var(--ease-out);
 }
 
 .briefing {
@@ -1311,8 +1382,9 @@ kbd {
   height: 38px;
   padding: 0 11px;
   border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  box-shadow: var(--highlight), 0 2px 6px -3px rgb(30 26 43 / 0.3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1454,10 +1526,10 @@ kbd {
 .board-frame {
   position: relative;
   line-height: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 3px solid var(--c-ink);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-gold) 55%, transparent), var(--shadow-lg);
 }
 
 .board {
@@ -1594,11 +1666,11 @@ kbd {
 }
 
 .panel {
-  padding: 10px;
+  padding: 12px;
   border-radius: var(--radius-lg);
   background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--line);
+  box-shadow: var(--highlight), var(--shadow);
 }
 
 .panel-title {
@@ -1622,23 +1694,32 @@ kbd {
   column-gap: 6px;
   min-height: 54px;
   padding: 6px 8px 6px 6px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: var(--surface-2);
+  box-shadow: var(--highlight), 0 2px 0 var(--surface-3);
   text-align: left;
+  transition: transform var(--t-fast) var(--ease-out), border-color var(--t) ease, background-color var(--t) ease, box-shadow var(--t) var(--ease-out), opacity var(--t) ease, filter var(--t) ease;
 }
 
 .shop-item:hover:not(:disabled) {
-  border-color: var(--border-strong);
+  border-color: var(--border);
+}
+
+.shop-item:active:not(:disabled) {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: var(--highlight);
 }
 
 .shop-item.is-armed {
   border-color: var(--action);
   background: color-mix(in srgb, var(--action) 14%, var(--surface));
+  box-shadow: 0 0 0 2px var(--action), 0 6px 16px -8px var(--action);
 }
 
 .shop-item.is-poor {
   opacity: 0.55;
+  filter: grayscale(0.7);
 }
 
 .shop-item .sprite-icon {
@@ -1783,14 +1864,22 @@ kbd {
   gap: 6px;
   min-height: 52px;
   padding: 4px 6px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: var(--surface-2);
+  box-shadow: var(--highlight), 0 2px 0 var(--surface-3);
   text-align: left;
+  transition: transform var(--t-fast) var(--ease-out), border-color var(--t) ease, background-color var(--t) ease, opacity var(--t) ease, box-shadow var(--t) ease;
+}
+
+.power-btn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .power-btn.is-ready:not(:disabled) {
   border-color: var(--c-gold);
+  box-shadow: 0 0 0 1px var(--c-gold), 0 4px 14px -6px color-mix(in srgb, var(--c-gold) 80%, transparent);
+  animation: ready-glow 0.9s var(--ease-out);
 }
 
 .power-btn.is-active,
@@ -1882,7 +1971,42 @@ kbd {
   width: min(100%, 420px);
   padding: 18px;
   text-align: center;
-  animation: pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+  animation: card-in 0.45s var(--ease-spring);
+}
+
+/* End of a level: the card lands, then the stars are stamped one after the other. */
+.end-card > * {
+  animation: rise-in 0.4s var(--ease-out) both;
+  animation-delay: 0.12s;
+}
+
+.end-card > :nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.end-card > :nth-child(n + 4) {
+  animation-delay: 0.55s;
+}
+
+.end-card .star-row--lg span {
+  display: inline-block;
+  animation: stamp 0.5s var(--ease-spring) both;
+}
+
+.end-card .star-row--lg span:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.end-card .star-row--lg span:nth-child(2) {
+  animation-delay: 0.48s;
+}
+
+.end-card .star-row--lg span:nth-child(3) {
+  animation-delay: 0.66s;
+}
+
+.end-card .star-on {
+  text-shadow: 0 2px 0 var(--c-gold-ink), 0 0 18px color-mix(in srgb, var(--c-gold) 60%, transparent);
 }
 
 @keyframes pop {
@@ -2521,7 +2645,7 @@ kbd {
 
 .toast {
   padding: 10px 16px;
-  border-radius: var(--radius);
+  border-radius: 12px;
   background: var(--c-ink);
   color: #f3eedf;
   font-weight: 700;
@@ -2543,15 +2667,26 @@ kbd {
   background: var(--c-woad);
 }
 
-.toast-enter-active,
-.toast-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+.toast-enter-active {
+  transition: opacity var(--t) ease, transform var(--t-slow) var(--ease-spring);
 }
 
-.toast-enter-from,
+.toast-leave-active {
+  transition: opacity var(--t) ease, transform var(--t) var(--ease-in);
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateY(14px) scale(0.96);
+}
+
 .toast-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: scale(0.96);
+}
+
+.in-game .toast-enter-from {
+  transform: translateY(-14px) scale(0.96);
 }
 
 /* ------------------------------------------------------------------ responsive */
@@ -2920,6 +3055,7 @@ kbd {
 /* ---------- Training and guide ---------- */
 .spotlight {
   position: fixed;
+  transition: top 0.1s linear, left 0.1s linear, width 0.1s linear, height 0.1s linear;
   z-index: 55;
   border: 3px solid #ffd166;
   border-radius: 12px;
@@ -3441,6 +3577,497 @@ kbd {
   }
 }
 
+/* ------------------------------------------------------------------ motion
+   Movement answers what the player does: screens change, panels open, numbers
+   change, a power comes back. Only the home screen has an entrance of its own.
+   Everything is switched off under prefers-reduced-motion (end of file). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+}
+
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: scale(2.4) rotate(-14deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes bump {
+  from {
+    transform: scale(1.3);
+  }
+}
+
+@keyframes ready-glow {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-gold) 80%, transparent);
+  }
+  45% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--c-gold) 0%, transparent);
+  }
+}
+
+@keyframes level-up {
+  0% {
+    transform: scale(0.6);
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  55% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 12px var(--c-gold));
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes coach-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Screens */
+.screen-enter-active {
+  transition: opacity var(--t) ease, transform var(--t-slow) var(--ease-out);
+}
+
+.screen-leave-active {
+  transition: opacity var(--t-fast) ease, transform var(--t-fast) var(--ease-in);
+}
+
+.screen-enter-from {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.screen-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+/* Boards measure themselves when they appear: they only fade. */
+.screen-enter-from.game,
+.screen-leave-to.game,
+.screen-enter-from.duel,
+.screen-leave-to.duel {
+  transform: none;
+}
+
+/* Shop ⇄ tower panel */
+.swap-enter-active,
+.swap-leave-active {
+  transition: opacity var(--t-fast) ease, transform var(--t) var(--ease-out);
+}
+
+.swap-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+
+.swap-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.layout-phone .swap-enter-active {
+  transition: transform var(--t-slow) var(--ease-out);
+}
+
+.layout-phone .swap-leave-active {
+  transition: transform var(--t-fast) var(--ease-in);
+}
+
+/* Numbers in the HUD bump when they change. */
+.stat-value {
+  display: inline-block;
+}
+
+.stat-value.is-bump {
+  animation: bump 0.34s var(--ease-spring);
+}
+
+/* Upgrades: the tower jumps, the new pip lights up. */
+.tower-sprite {
+  display: inline-grid;
+  animation: level-up 0.55s var(--ease-spring);
+}
+
+.pips span {
+  transition: background-color var(--t) ease, transform var(--t-slow) var(--ease-spring);
+}
+
+.pips span.on {
+  transform: scaleY(1.15);
+}
+
+.coach {
+  animation: coach-in var(--t-slow) var(--ease-out);
+}
+
+/* Home: one entrance. The panorama and the title are there at once (they are the
+   first thing painted), the menu follows. */
+.home-menu > * {
+  animation: rise-in 0.55s var(--ease-out) both;
+}
+
+.home-menu > :nth-child(1) {
+  animation-delay: 0.12s;
+}
+
+.home-menu > :nth-child(2) {
+  animation-delay: 0.17s;
+}
+
+.home-menu > :nth-child(3) {
+  animation-delay: 0.22s;
+}
+
+.home-menu > :nth-child(n + 4) {
+  animation-delay: 0.27s;
+}
+
+/* Campaign: the levels of a chapter come in one after the other. */
+.level-grid > li {
+  animation: rise-in 0.4s var(--ease-out) both;
+  animation-delay: calc(min(var(--i, 0), 14) * 22ms);
+}
+
+.chapter-head {
+  animation: rise-in var(--t-slow) var(--ease-out);
+}
+
+/* ==========================================================================
+   Phones in play: the map takes 80 % of the screen height and keeps that size
+   (the height is measured once, see GameScreen.viewport()). Building goes
+   through the radial menu on the map; the tower panel slides in as a sheet.
+   ========================================================================== */
+.sheet-head,
+.hud-sound {
+  display: none;
+}
+
+.in-game:has(.layout-phone) .app-header,
+.in-game:has(.layout-phone) .app-footer {
+  display: none;
+}
+
+/* Also inside the Playgama shell, whose game view keeps a side padding otherwise. */
+.in-game:has(.layout-phone) .app-main,
+:root[data-target='playgama'].in-game:has(.layout-phone) .app-main {
+  max-width: none;
+  padding: 0;
+}
+
+.in-game:has(.layout-phone) .toast-stack {
+  top: 58px;
+}
+
+.layout-phone.game {
+  position: relative;
+  gap: 0;
+}
+
+.layout-phone .game-layout {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'stage stage stage'
+    'switch switch switch'
+    'powers wave wave'
+    'next next menu';
+  align-items: center;
+  gap: 8px;
+  padding: 0 max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+}
+
+.layout-phone .board-wrap,
+.layout-phone .wave-bar,
+.layout-phone .sidebar {
+  display: contents;
+}
+
+/* HUD strip on top, then the map centred in a stage of fixed height. */
+.layout-phone .board-frame {
+  grid-area: stage;
+  display: grid;
+  grid-template-rows: auto var(--stage-h);
+  justify-items: center;
+  align-items: center;
+  justify-self: start;
+  /* The whole width of the main area, over the layout's side padding (not 100vw,
+     which also counts a desktop scrollbar and would overflow). */
+  width: calc(100% + max(8px, env(safe-area-inset-left)) + max(8px, env(safe-area-inset-right)));
+  max-width: none;
+  margin: 0 0 0 calc(-1 * max(8px, env(safe-area-inset-left)));
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(var(--c-ink), var(--c-ink)) top / 100% 52px no-repeat, var(--stage-ground, var(--c-ink));
+  box-shadow: none;
+}
+
+.layout-phone .board-frame .hud {
+  justify-self: stretch;
+  align-self: stretch;
+  height: 52px;
+  padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+}
+
+.layout-phone .hud-stats {
+  flex-wrap: nowrap;
+}
+
+.layout-phone .hud-sound {
+  display: inline-grid;
+}
+
+.layout-phone .hud-save {
+  display: none;
+}
+
+.layout-phone .player-switch {
+  grid-area: switch;
+}
+
+.layout-phone .power-bar {
+  grid-area: powers;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.layout-phone .power-grid {
+  display: flex;
+  gap: 6px;
+}
+
+.layout-phone .power-btn {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.layout-phone .power-label,
+.layout-phone .power-key,
+.layout-phone .power-hint {
+  display: none;
+}
+
+.layout-phone .btn-wave {
+  grid-area: wave;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.layout-phone .btn-wave kbd,
+.layout-phone .next-wave-label {
+  display: none;
+}
+
+.layout-phone .next-wave {
+  grid-area: next;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.layout-phone .next-wave-list {
+  flex-wrap: nowrap;
+}
+
+.layout-phone .next-wave-list .chip {
+  white-space: nowrap;
+}
+
+.layout-phone .btn-menu {
+  grid-area: menu;
+  min-height: 36px;
+  padding: 0 6px;
+}
+
+.layout-phone .p2-card {
+  grid-column: 1 / -1;
+}
+
+/* The radial menu builds on phones: the shop panel would only repeat it. */
+.layout-phone .shop {
+  display: none;
+}
+
+/* The tutorial floats over the map instead of pushing it. */
+.layout-phone .coach {
+  position: absolute;
+  z-index: 30;
+  top: 58px;
+  left: 8px;
+  right: 8px;
+}
+
+/* The board takes the focus for keyboard play; on touch screens the ring is only noise. */
+@media (pointer: coarse) {
+  .board-frame:has(.board:focus-visible) {
+    outline: none;
+  }
+}
+
+/* The sheet */
+.layout-phone .tower-panel {
+  position: fixed;
+  z-index: 45;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 62svh;
+  overflow-y: auto;
+  padding: 10px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -18px 40px rgb(20 16 32 / 0.32);
+  transform: translateY(calc(100% + 24px));
+  transition: transform var(--t-slow) var(--ease-out);
+}
+
+.layout-phone.sheet-open .tower-panel {
+  transform: none;
+}
+
+.layout-phone.sheet-top .tower-panel {
+  top: 0;
+  bottom: auto;
+  padding-top: max(12px, env(safe-area-inset-top));
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 22px 22px;
+  box-shadow: 0 18px 40px rgb(20 16 32 / 0.32);
+  transform: translateY(calc(-100% - 24px));
+}
+
+.layout-phone.sheet-top.sheet-open .tower-panel {
+  transform: none;
+}
+
+/* Grab handle, so the panel reads as a sheet. */
+.layout-phone .tower-panel::before {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 4px;
+  margin: 0 auto 8px;
+  border-radius: 99px;
+  background: var(--border);
+}
+
+.layout-phone.sheet-top .tower-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.layout-phone.sheet-top .tower-panel::before {
+  order: 2;
+  margin: 8px auto 0;
+}
+
+.layout-phone .tower-panel .stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.layout-phone .tower-panel-head {
+  margin-bottom: 8px;
+}
+
+.layout-phone .swap-enter-from,
+.layout-phone .swap-leave-to {
+  transform: translateY(calc(100% + 24px));
+  opacity: 1;
+}
+
+.layout-phone.sheet-top .swap-enter-from,
+.layout-phone.sheet-top .swap-leave-to {
+  transform: translateY(calc(-100% - 24px));
+}
+
+/* Tablets held upright: the map keeps its frame instead of running edge to edge. */
+@media (min-width: 600px) {
+  .layout-phone .board-frame {
+    justify-self: center;
+    width: max-content;
+    margin: 4px auto 0;
+    border: 3px solid var(--c-ink);
+    border-radius: var(--radius-lg);
+    background: var(--c-ink);
+    grid-template-rows: auto auto;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-gold) 55%, transparent), var(--shadow-lg);
+  }
+
+  .layout-phone .tower-panel {
+    left: 50%;
+    right: auto;
+    width: min(640px, 100%);
+    translate: -50% 0;
+  }
+}
+
+/* ---------- Phones in landscape: map on the left (HUD plaques on it), controls on the right ---------- */
+.in-game:has(.layout-landscape) .app-main {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.layout-landscape.game {
+  gap: 6px;
+}
+
+.layout-landscape .game-layout {
+  grid-template-columns: minmax(0, 1fr) 248px;
+  align-items: start;
+  gap: 10px;
+}
+
+.layout-landscape .board-wrap {
+  gap: 6px;
+}
+
+.layout-landscape .board-frame {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: var(--stage-h);
+  background: var(--stage-ground, var(--c-ink));
+}
+
+.layout-landscape .btn-wave {
+  min-height: 40px;
+}
+
+.layout-landscape .sidebar {
+  max-height: calc(100svh - 24px);
+  overflow-y: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .spotlight {
     animation: none;
@@ -3450,6 +4077,7 @@ kbd {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }

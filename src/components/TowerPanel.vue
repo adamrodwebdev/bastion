@@ -1,7 +1,7 @@
 <template>
   <section class="panel tower-panel" :aria-label="$t('towers.' + info.type + '.name')">
     <div class="tower-panel-head">
-      <SpriteIcon :type="info.type" :level="Math.min(info.level, 3)" :elite="info.elite" :px="48" />
+      <span :key="info.id + '-' + info.level" class="tower-sprite"><SpriteIcon :type="info.type" :level="Math.min(info.level, 3)" :elite="info.elite" :px="48" /></span>
       <div>
         <h2 class="panel-title">{{ $t('towers.' + info.type + '.name') }}</h2>
         <p class="tower-level">

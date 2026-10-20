@@ -1,5 +1,9 @@
 <template>
   <section class="panel shop" :aria-label="$t('shop.title')">
+    <div class="sheet-head">
+      <h2 class="panel-title">{{ $t('shop.title') }}</h2>
+      <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="$emit('close')"><AppIcon name="close" /></button>
+    </div>
     <div class="shop-grid">
       <button
         v-for="item in items"
@@ -44,7 +48,7 @@ export default {
     cellState: { type: String, default: 'none' }, // 'none' | 'buildable' | 'blocked'
     disabled: { type: Boolean, default: false },
   },
-  emits: ['pick'],
+  emits: ['pick', 'close'],
   computed: {
     hint() {
       if (this.armedType) return this.$t('shop.armed', { tower: this.$t('towers.' + this.armedType + '.name') });
