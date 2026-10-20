@@ -7,9 +7,11 @@
  * Only the https addresses listed in SDK_URLS are accepted; the portal build's
  * CSP only allows these domains for scripts anyway.
  */
+// Each portal build keeps only its own address (__TARGET__ is replaced at build time):
+// no other portal's SDK is ever named in it.
 export const SDK_URLS = Object.freeze({
-  crazygames: 'https://sdk.crazygames.com/crazygames-sdk-v3.js',
-  poki: 'https://game-cdn.poki.com/scripts/v2/poki-sdk.js',
+  ...(__TARGET__ === 'crazygames' ? { crazygames: 'https://sdk.crazygames.com/crazygames-sdk-v3.js' } : {}),
+  ...(__TARGET__ === 'poki' ? { poki: 'https://game-cdn.poki.com/scripts/v2/poki-sdk.js' } : {}),
 })
 
 const loading = new Map()

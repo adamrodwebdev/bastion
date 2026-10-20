@@ -7,6 +7,14 @@ import { AdPolicy } from './AdPolicy.js'
 import { loadScript, SDK_URLS } from './loadScript.js'
 
 /**
+ * Ads stay off until CrazyGames moves the game to Full Launch: in Basic Launch the
+ * portal refuses every ad, and an offer that cannot work (a rewarded button that
+ * does nothing) is a reason for rejection. The Full Launch build turns them on:
+ * `VITE_CRAZYGAMES_ADS=on npm run build:crazygames`.
+ */
+const ADS = import.meta.env.VITE_CRAZYGAMES_ADS === 'on'
+
+/**
  * CrazyGames (SDK v3): "midgame" interstitials, "rewarded" videos,
  * gameplay events and synced save data (`data` module).
  * Documentation: https://docs.crazygames.com/sdk/intro/
@@ -22,7 +30,8 @@ export class CrazyGamesAdService extends AdService {
 
   async init() {
     try {
-      await loadScript(SDK_URLS.crazygames)
+      // The CrazyGames build loads the SDK in the <head>; load it here only if it is missing.
+      if (!globalThis.CrazyGames?.SDK) await loadScript(SDK_URLS.crazygames)
       const sdk = globalThis.CrazyGames?.SDK
       if (!sdk) return
       // Timeout: if the portal does not answer, the game starts anyway.
@@ -38,7 +47,7 @@ export class CrazyGamesAdService extends AdService {
   }
 
   get rewardedAvailable() {
-    return this.#sdk !== null
+    return ADS && this.#sdk !== null
   }
 
   get portalMuted() {
@@ -110,10 +119,10 @@ export class CrazyGamesAdService extends AdService {
   }
 
   _showInterstitial(pause) {
-    return this.#request('midgame', pause)
+    return ADS ? this.#request('midgame', pause) : Promise.resolve(false)
   }
 
   _showRewarded(pause) {
-    return this.#request('rewarded', pause)
+    return ADS ? this.#request('rewarded', pause) : Promise.resolve(false)
   }
 }

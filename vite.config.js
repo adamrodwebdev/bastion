@@ -19,6 +19,9 @@ import { buildCsp } from './build/csp.js';
 
 const PORTALS = ['crazygames', 'poki', 'playgama'];
 
+/** CrazyGames HTML5 SDK v3, loaded in the <head> before the game code (their documentation). */
+export const CRAZYGAMES_SDK = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
+
 /** Playgama Bridge SDK v2: the only external file the Playgama build may load. */
 export const PLAYGAMA_BRIDGE = 'https://bridge.playgama.com/v2/stable/playgama-bridge.js';
 
@@ -114,6 +117,27 @@ function playgamaPlugin() {
   };
 }
 
+/**
+ * CrazyGames: SDK v3 first in the <head>, before the game code, as its documentation
+ * asks (the game then awaits its init). The portal's page has its own social and
+ * search tags: ours (pointing to our site) and the home-screen icon are removed.
+ */
+function crazygamesPlugin() {
+  return {
+    name: 'bastion-crazygames',
+    apply: 'build',
+    enforce: 'post',
+    transformIndexHtml(html) {
+      return {
+        html: html
+          .replace(/ *<meta (property|name)="(og:[^"]*|twitter:[^"]*|keywords|robots)"[^>]*>\n?/g, '')
+          .replace(/ *<link rel="apple-touch-icon"[^>]*>\n?/g, ''),
+        tags: [{ tag: 'script', attrs: { src: CRAZYGAMES_SDK }, injectTo: 'head-prepend' }],
+      };
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   /** Target platform: our site ('web') or a portal (mode of the same name). */
   const target = PORTALS.includes(mode) ? mode : 'web';
@@ -127,6 +151,7 @@ export default defineConfig(({ mode }) => {
       ...(target === 'playgama' ? [] : [cspPlugin(target)]),
       ...(portal ? [portalPlugin()] : []),
       ...(target === 'playgama' ? [playgamaPlugin()] : []),
+      ...(target === 'crazygames' ? [crazygamesPlugin()] : []),
     ],
     build: {
       outDir: portal ? `dist-${target}` : 'dist',
