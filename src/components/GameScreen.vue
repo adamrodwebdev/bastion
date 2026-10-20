@@ -1,7 +1,7 @@
 <template>
   <section
     class="game"
-    :class="['layout-' + layout, { 'is-paused': paused, 'is-coop': coop, 'sheet-open': sheetOpen && !end, 'sheet-top': sheetTop }]"
+    :class="['layout-' + layout, { 'is-paused': paused, 'is-coop': coop, 'is-touch': touchLayout, 'overlay-top': overlaySide === 'top', 'overlay-bottom': overlaySide === 'bottom' }]"
     :style="stageH ? { '--stage-h': stageH + 'px', '--stage-ground': ground } : null"
     aria-labelledby="game-title"
   >
@@ -79,12 +79,13 @@
               </div>
 
               <button
-                v-for="f in flags"
+                v-for="(f, i) in flags"
                 :key="f.key"
                 type="button"
                 class="call-flag"
                 :class="{ 'is-early': hud.state === 'running' }"
                 :style="f.style"
+                :data-tutorial="touchLayout && i === 0 ? 'wave' : null"
                 :aria-label="hud.state === 'running' ? $t('hud.callFlag', { n: hud.bonus }) : $t('hud.startFirst')"
                 :title="hud.state === 'running' ? $t('hud.callFlag', { n: hud.bonus }) : $t('hud.startFirst')"
                 @click="startWave"
@@ -95,6 +96,40 @@
                   <small v-if="hud.bonus">+{{ hud.bonus }}</small>
                 </span>
               </button>
+
+              <!-- Touch screens: the next wave on a chip by the flag (no wave button there) -->
+              <button
+                v-if="waveChip"
+                type="button"
+                class="wave-chip"
+                :class="{ 'is-left': waveChip.left }"
+                :style="waveChip.style"
+                data-tutorial="next-wave"
+                :aria-label="$t('hud.nextWaveAria')"
+                :aria-expanded="waveCard ? 'true' : 'false'"
+                @click="waveCard = !waveCard"
+              >
+                <span v-for="g in nextWave.slice(0, 2)" :key="g.type" class="wave-chip-group"><SpriteIcon kind="enemy" :type="g.type" :px="22" />×{{ g.count }}</span>
+                <span v-if="nextWave.length > 2" class="wave-chip-more">+{{ nextWave.length - 2 }}</span>
+              </button>
+              <div v-if="waveCard && waveChip" class="wave-card" :style="waveChip.cardStyle" role="dialog" :aria-label="$t('hud.nextWave')">
+                <div class="wave-card-head">
+                  <strong>{{ $t('hud.waveOf', { n: hud.wave + 1, total: hud.total }) }}</strong>
+                  <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="waveCard = false"><AppIcon name="close" /></button>
+                </div>
+                <ul class="wave-card-list" role="list">
+                  <li v-for="g in nextWave" :key="g.type"><SpriteIcon kind="enemy" :type="g.type" :px="30" />{{ g.count }} × {{ $t('enemies.' + g.type + '.name') }}</li>
+                </ul>
+                <p class="wave-card-hint">{{ $t('hud.flagHint') }}</p>
+              </div>
+
+              <!-- Touch build: the tower previewed on its tile -->
+              <span v-if="trayGhost" class="tray-ghost" :style="trayGhost" aria-hidden="true"><SpriteIcon :type="trayPick" :px="Math.round(board.tile * 1.25)" /></span>
+
+              <div v-if="touchLayout && aiming" class="aim-chip" role="status">
+                <span class="aim-chip-text"><strong>{{ $t('powers.' + aiming + '.name') }}</strong> · {{ $t('powers.aimTouch') }}</span>
+                <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('powers.cancelAim')" @click="aiming = null"><AppIcon name="close" /></button>
+              </div>
 
               <div
                 v-if="radial"
@@ -128,6 +163,35 @@
             </div>
           </div>
 
+          <!-- Phones held upright: the build tray and the tower panel lie on the map, on the side away from the tile -->
+          <div v-if="layout === 'phone' && !end" class="stage-overlays">
+            <Transition :name="'sheet-' + (overlaySide || 'bottom')">
+              <BuildTray
+                v-if="tray"
+                key="tray"
+                :class="'overlay--' + tray.placement"
+                :items="shopItems"
+                :pick="trayPick"
+                :placement="tray.placement"
+                :shake="trayShake"
+                :shake-key="trayShakeK"
+                @pick="pickTower"
+                @close="clearSelection"
+              />
+              <TowerPanel
+                v-else-if="towerInfo"
+                key="panel"
+                compact
+                :class="'overlay--' + sheetSide"
+                :info="towerInfo"
+                @upgrade="upgrade"
+                @sell="sell"
+                @targeting="setTargeting"
+                @close="clearSelection"
+              />
+            </Transition>
+          </div>
+
           <div v-if="paused && !end" class="board-overlay board-overlay--soft">
             <div class="pause-card card">
               <h2 class="pause-title">{{ $t('hud.paused') }}</h2>
@@ -141,7 +205,7 @@
           <EndPanel v-if="end" :result="end" @next="nextLevel" @retry="restart" @levels="toLevels" @revive="revive" @double="doubleCrowns" />
         </div>
 
-        <div class="wave-bar">
+        <div v-if="!touchLayout" class="wave-bar">
           <button type="button" class="btn btn-primary btn-wave" :class="{ 'is-pulsing': hud.canStart && hud.state === 'prepare' }" :disabled="!hud.canStart" data-tutorial="wave" @click="startWave">
             <span v-if="hud.state === 'prepare'">{{ $t('hud.startFirst') }}</span>
             <span v-else-if="hud.canStart" class="btn-stack">
@@ -176,7 +240,23 @@
           </button>
         </div>
         <PowerBar :powers="powerList" :enabled="hud.state === 'running' && !paused" :aiming="aiming" @activate="onPower" />
-        <Transition name="swap" mode="out-in">
+        <!-- Phones on their side: the same touch tray and compact panel, in the side column -->
+        <Transition v-if="layout === 'landscape'" name="swap" mode="out-in">
+          <TowerPanel v-if="towerInfo" key="panel" compact :info="towerInfo" @upgrade="upgrade" @sell="sell" @targeting="setTargeting" @close="clearSelection" />
+          <BuildTray
+            v-else-if="tray"
+            key="tray"
+            :items="shopItems"
+            :pick="trayPick"
+            placement="side"
+            :shake="trayShake"
+            :shake-key="trayShakeK"
+            @pick="pickTower"
+            @close="clearSelection"
+          />
+          <p v-else key="hint" class="panel side-hint">{{ $t('shop.selectCell') }}</p>
+        </Transition>
+        <Transition v-else-if="!touchLayout" name="swap" mode="out-in">
           <TowerPanel
             v-if="towerInfo"
             :info="towerInfo"
@@ -188,7 +268,7 @@
           />
           <TowerShop v-else :items="shopItems" :armed-type="armedType" :cell-state="cellState" :disabled="!!end" @pick="pickTower" @close="clearSelection" />
         </Transition>
-        <button type="button" class="btn btn-ghost btn-menu" @click="quit"><AppIcon name="back" /> {{ $t('hud.menu') }}</button>
+        <button v-if="!touchLayout" type="button" class="btn btn-ghost btn-menu" @click="quit"><AppIcon name="back" /> {{ $t('hud.menu') }}</button>
       </aside>
     </div>
   </section>
@@ -219,6 +299,7 @@ import TowerPanel from './TowerPanel.vue';
 import PowerBar from './PowerBar.vue';
 import EndPanel from './EndPanel.vue';
 import CoachBubble from './CoachBubble.vue';
+import BuildTray from './BuildTray.vue';
 
 const SPEEDS = [1, 2, 3];
 const TOWER_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -226,7 +307,7 @@ const POWER_KEYS = ['q', 'w', 'e', 'r', 't'];
 
 export default {
   name: 'GameScreen',
-  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble, SpriteIcon },
+  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble, SpriteIcon, BuildTray },
   data() {
     return {
       tick: 0,
@@ -256,8 +337,13 @@ export default {
       spotTarget: null,
       layout: 'wide',
       stageH: 0,
-      sheetTop: false,
       ground: '',
+      // Touch build tray: the tower shown by a first tap (a second tap builds it).
+      trayPick: null,
+      trayShake: null,
+      trayShakeK: 0,
+      // Touch screens: details of the next wave, opened from the chip by the flag.
+      waveCard: false,
       training: null,
       announce: '',
     };
@@ -307,9 +393,53 @@ export default {
         mine: !this.coop || t.owner === owner,
       };
     },
-    /** Phones: the tower panel slides in as a sheet (building goes through the radial menu on the map). */
-    sheetOpen() {
-      return Boolean(this.towerInfo);
+    /**
+     * Phones, in either orientation: everything is played with the finger on one
+     * screen that never scrolls. Building goes through a tray (no radial menu),
+     * waves through the flag on the map, and the powers sit in a strip of icons.
+     */
+    touchLayout() {
+      return this.layout !== 'wide';
+    },
+    /** The touch build tray, open on the free tile the player tapped. */
+    tray() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const g = this.engine.game;
+      const c = this.selectedCell;
+      if (!this.touchLayout || !g || !c || this.end || this.paused || this.aiming || this.selectedTowerId) return null;
+      if (!g.map.isBuildable(c.col, c.row)) return null;
+      return { placement: this.layout === 'landscape' ? 'side' : this.sideAwayFrom(c) };
+    },
+    /** Phones held upright: the tower panel lies on the half of the map away from its tower. */
+    sheetSide() {
+      return this.selectedCell ? this.sideAwayFrom(this.selectedCell) : 'bottom';
+    },
+    /** Which edge of the map a tray or panel covers (phones held upright), or null. */
+    overlaySide() {
+      if (this.layout !== 'phone' || this.end) return null;
+      if (this.tray) return this.tray.placement;
+      return this.towerInfo ? this.sheetSide : null;
+    },
+    /** The tower previewed by a first tap in the tray, drawn faintly on its tile. */
+    trayGhost() {
+      if (!this.tray || !this.trayPick || !this.selectedCell) return null;
+      const p = this.cellPx(this.selectedCell.col, this.selectedCell.row);
+      return { left: `${p.x}px`, top: `${p.y}px` };
+    },
+    /** Touch screens: the next wave's enemies on a chip by the first flag. */
+    waveChip() {
+      const f = this.flags[0];
+      if (!this.touchLayout || !f || !this.nextWave.length) return null;
+      const chipW = 40 + Math.min(2, this.nextWave.length) * 46;
+      const left = f.x + 30 + chipW > this.board.w;
+      const cardLeft = Math.round(Math.max(8, Math.min(this.board.w - 248, f.x - 40)));
+      const cardTop = Math.round(Math.min(this.board.h - 190, f.y + 34));
+      return {
+        left,
+        style: { left: `${left ? f.x - 30 : f.x + 30}px`, top: `${f.y}px` },
+        cardStyle: { left: `${cardLeft}px`, top: `${Math.max(8, cardTop)}px` },
+      };
     },
     shopItems() {
       // eslint-disable-next-line no-unused-expressions
@@ -360,6 +490,8 @@ export default {
       const { w, h, tile } = this.board;
       const g = this.engine.game;
       const c = this.selectedCell;
+      // Fingers build from the tray instead (see `tray`).
+      if (this.touchLayout) return null;
       if (!g || !c || this.end || this.paused || this.armedType || this.aiming || this.selectedTowerId) return null;
       if (!g.map.isBuildable(c.col, c.row)) return null;
       const items = this.shopItems;
@@ -421,7 +553,7 @@ export default {
         const key = `${left},${top}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        flags.push({ key, style: { left: `${left}px`, top: `${top}px` } });
+        flags.push({ key, x: left, y: top, style: { left: `${left}px`, top: `${top}px` } });
       }
       return flags;
     },
@@ -447,8 +579,12 @@ export default {
     '$store.theme'(mode) {
       if (this.engine.renderer) this.engine.renderer.setMode(mode);
     },
-    selectedCell() {
-      this.placeSheet();
+    /** Phones: the page stops scrolling while the game is on screen (the player stays on the board). */
+    touchLayout: {
+      handler(on) {
+        document.documentElement.classList.toggle('play-locked', on);
+      },
+      immediate: true,
     },
     /** The portal pauses the game (Playgama overlay or ad): the level stops; the player resumes it. */
     '$store.portalPaused'(paused) {
@@ -484,6 +620,7 @@ export default {
     this.autosave();
     this.$store.savedGame = services.saves.loadGame();
     this.teardown();
+    document.documentElement.classList.remove('play-locked');
     window.removeEventListener('pagehide', this._onPageHide);
     document.removeEventListener('visibilitychange', this._onVisibility);
     window.removeEventListener('resize', this._onResize);
@@ -561,13 +698,18 @@ export default {
     bindGameEvents(game) {
       const t = (k, p) => this.$t(k, p);
       const audio = services.audio;
+      // Short vibrations on the phones that allow them (the setting can turn them off).
+      const buzz = (ms) => services.haptics?.pulse(ms);
       game.on('waveStart', ({ wave, total, early, bonus }) => {
         this.$actions.toast(early ? t('toast.early', { n: wave, bonus }) : t('toast.waveStart', { n: wave, total }));
         this.announce = t('toast.waveStart', { n: wave, total });
+        this.waveCard = false;
         audio?.sfx('horn');
+        buzz(22);
         this.autosave();
       });
       game.on('leak', () => {
+        buzz(35);
         if (game.lives <= game.maxLives * 0.3) audio?.surge(3, 3);
         this.livesHit = false;
         requestAnimationFrame(() => (this.livesHit = true));
@@ -577,13 +719,23 @@ export default {
       });
       game.on('kill', (e) => audio?.sfx(e.boss ? 'bossDown' : 'kill'));
       game.on('hit', ({ kind }) => audio?.sfx('hit-' + kind));
-      game.on('build', () => audio?.sfx('build'));
-      game.on('upgrade', () => audio?.sfx('upgrade'));
-      game.on('sell', () => audio?.sfx('sell'));
+      game.on('build', () => {
+        audio?.sfx('build');
+        buzz(12);
+      });
+      game.on('upgrade', () => {
+        audio?.sfx('upgrade');
+        buzz(16);
+      });
+      game.on('sell', () => {
+        audio?.sfx('sell');
+        buzz(10);
+      });
       game.on('heal', () => audio?.sfx('heal'));
       game.on('power', ({ id }) => {
         this.$actions.toast(t('toast.power', { power: t('powers.' + id + '.name') }), 'power');
         audio?.sfx('power-' + id);
+        buzz(20);
       });
       game.on('won', ({ stars, score }) => this.finish(true, stars, score));
       game.on('lost', ({ score }) => this.finish(false, 0, score));
@@ -659,6 +811,7 @@ export default {
       if (observer) observer.disconnect();
       if (game) game.removeAllListeners();
       clearTimeout(this._hitTimer);
+      clearTimeout(this._shakeTimer);
     },
 
     /**
@@ -696,7 +849,14 @@ export default {
       let maxWidth;
       let maxHeight;
       if (phone || landscapePhone) {
-        this.stageH = Math.round(vp.h * 0.8);
+        if (!this.stageH) {
+          // First pass: give the map's stage a height, so the rest of the screen can be measured around it.
+          this.stageH = Math.round(vp.h * 0.6);
+          this.$nextTick(() => this.resize());
+          return;
+        }
+        // No scrolling on phones: the stage takes exactly what the HUD, the power strip and the margins leave.
+        this.stageH = Math.max(140, Math.floor(vp.h - this.chromeAroundStage()));
         const frame = this.$refs.frame;
         const border = frame ? frame.offsetWidth - frame.clientWidth : 0;
         maxWidth = (phone ? vp.w : wrap.clientWidth) - border;
@@ -721,17 +881,24 @@ export default {
         cols: map.cols,
         rows: map.rows,
       };
-      this.$nextTick(() => this.placeSheet());
     },
 
-    /** Phones: the tower panel goes to the top when the tower is in the lower part of the screen, so it never hides it. */
-    placeSheet() {
-      const c = this.selectedCell;
-      const canvas = this.$refs.canvas;
-      if (this.layout !== 'phone' || !c || !canvas || !this.board.w) return;
-      const p = this.cellPx(c.col, c.row);
-      const y = canvas.getBoundingClientRect().top + p.y;
-      this.sheetTop = y > window.innerHeight * 0.55;
+    /**
+     * Height the screen needs besides the map's stage (HUD strip, power strip,
+     * margins, the co-op switch): measured on the page, so it follows the CSS.
+     * The stage row has a fixed height (--stage-h), so the rest does not depend on it.
+     */
+    chromeAroundStage() {
+      const section = this.$el;
+      const main = section.closest('.app-main');
+      const top = section.getBoundingClientRect().top + (main ? main.scrollTop : 0) + window.scrollY;
+      const below = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      return top + section.offsetHeight + below - this.stageH;
+    },
+
+    /** The half of the map away from a tile: trays and panels go there so they never hide it. */
+    sideAwayFrom(cell) {
+      return this.cellPx(cell.col, cell.row).y > this.board.h * 0.55 ? 'top' : 'bottom';
     },
 
     /** World point (tiles) → CSS pixels inside the board (handles the rotated phone board). */
@@ -771,7 +938,7 @@ export default {
         selectedCell: this.selectedCell,
         selectedTower: this.selectedTower,
         hoverCell: this.hover,
-        previewType: this.armedType || this.radialHover ? TowerFactory.get(this.armedType || this.radialHover) : null,
+        previewType: this.armedType || this.radialHover || this.trayPick ? TowerFactory.get(this.armedType || this.radialHover || this.trayPick) : null,
         telegraph: game.canStartWave && !this.end ? this.nextRoutes() : null,
         upgradePreview: this.upgradePreview,
         aim: power && this.aimPoint ? { ...this.aimPoint, radius: power.constructor.radius } : null,
@@ -821,7 +988,12 @@ export default {
     },
 
     coachMessage(step) {
-      if (step.raw) return this.$t(step.key);
+      // Touch screens have their own wording where the controls differ (flag, tray): `<key>Touch`.
+      const say = (key, params) => {
+        const touch = this.touchLayout ? this.$t(key + 'Touch', params) : null;
+        return touch && touch !== key + 'Touch' ? touch : this.$t(key, params);
+      };
+      if (step.raw) return say(step.key);
       const p = { ...step.params };
       if (p.type) p.tower = this.$t('towers.' + p.type + '.name');
       if (p.type) p.desc = this.$t('towers.' + p.type + '.desc');
@@ -829,7 +1001,7 @@ export default {
         p.desc = this.$t('powers.' + p.power + '.desc');
         p.power = this.$t('powers.' + p.power + '.name');
       }
-      return this.$t('tutorial.' + step.key, p);
+      return say('tutorial.' + step.key, p);
     },
 
     dismissCoach() {
@@ -852,10 +1024,11 @@ export default {
         return;
       }
       const r = el.getBoundingClientRect();
-      // On phones the shop or the powers can sit below the fold: bring them in once.
+      // Larger screens: the shop or the powers can sit below the fold, bring them in once.
+      // (Phones never scroll: everything is already on screen.)
       if (target !== this.spotTarget) {
         this.spotTarget = target;
-        if (r.top < 0 || r.bottom > window.innerHeight) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        if (!this.touchLayout && (r.top < 0 || r.bottom > window.innerHeight)) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }
       const pad = 6;
       this.spot = { left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` };
@@ -917,6 +1090,8 @@ export default {
       const same = this.selectedCell && this.selectedCell.col === col && this.selectedCell.row === row;
       this.selectedTowerId = null;
       this.radialHover = null;
+      this.trayPick = null;
+      this.waveCard = false;
       // Tapping the open tile again closes its build menu.
       this.selectedCell = same && !this.armedType ? null : { col, row };
       if (this.armedType && game.map.isBuildable(col, row)) this.build(this.armedType, owner);
@@ -1031,8 +1206,18 @@ export default {
       this.selectedCell = null;
       this.selectedTowerId = null;
       this.armedType = null;
+      this.trayPick = null;
+      this.waveCard = false;
       this.upgradePreview = false;
       this.aiming = null;
+    },
+
+    /** Touch tray: the card of a tower the player cannot afford shakes. */
+    shakeTray(type) {
+      this.trayShake = type;
+      this.trayShakeK++;
+      clearTimeout(this._shakeTimer);
+      this._shakeTimer = setTimeout(() => (this.trayShake = null), 420);
     },
 
     // ------------------------------------------------------------- actions
@@ -1043,6 +1228,17 @@ export default {
       if (!game.canAfford(type, owner)) {
         this.$actions.toast(this.$t('toast.noGold'), 'warn');
         services.audio?.sfx('error');
+        if (this.tray) this.shakeTray(type);
+        return;
+      }
+      if (this.tray) {
+        // Touch tray: a first tap shows the tower's range on its tile, a second one builds it.
+        if (this.trayPick !== type) {
+          this.trayPick = type;
+          services.haptics?.pulse(6);
+          return;
+        }
+        this.build(type, owner);
         return;
       }
       if (c && game.map.isBuildable(c.col, c.row)) this.build(type, owner);
@@ -1057,6 +1253,7 @@ export default {
       // Keep the tower armed while the player can afford another one (fast building).
       if (!game.canAfford(type, owner)) this.armedType = null;
       this.selectedCell = null;
+      this.trayPick = null;
       this.sync();
     },
 
@@ -1086,13 +1283,26 @@ export default {
     onPower(id, owner = this.owner()) {
       const game = this.engine.game;
       const p = game.powers.get(id);
-      if (!p || !p.isReady || game.state !== 'running') return;
+      if (!p || this.paused || this.end) return;
+      // A power that cannot be used yet says why (the button stays tappable).
+      if (game.state !== 'running') {
+        this.$actions.toast(this.$t('powers.onlyDuringWave'));
+        return;
+      }
+      if (!p.isReady) {
+        const s = Math.ceil(p.remaining);
+        this.$actions.toast(this.$t(p.state === 'active' ? 'powers.active' : 'powers.cooldown', { s }));
+        return;
+      }
       if (p.targeted) {
         this.aiming = this.aiming === id ? null : id;
         this.armedType = null;
         this.selectedTowerId = null;
+        this.trayPick = null;
         this.aimPoint = this.selectedCell ? { x: this.selectedCell.col + 0.5, y: this.selectedCell.row + 0.5 } : null;
-        if (this.aiming) this.$actions.toast(this.$t('powers.aimHelp'));
+        // Touch screens show a chip with a cancel button on the map instead of a toast.
+        if (this.touchLayout) this.selectedCell = null;
+        else if (this.aiming) this.$actions.toast(this.$t('powers.aimHelp'));
         return;
       }
       if (game.activatePower(id, null, owner)) this.sync();

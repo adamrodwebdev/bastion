@@ -14,6 +14,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 
 - **Version Playgama** (`npm run package:playgama`) avec le Playgama Bridge SDK v2 : publicités entre deux niveaux et vidéos facultatives, sauvegardes sur la plateforme, langue de la plateforme à chaque lancement, son et pause de la plateforme (y compris pendant les publicités qu'elle lance), messages de niveau. Aucune publicité n'est proposée quand un bloqueur est détecté. Le paquet contrôle les exigences de Playgama et de ses partenaires, et trois couvertures sont peintes par le moteur du jeu (`marketing/playgama/`).
 - **Bouton son** dans l'en-tête, sur tous les écrans : coupe la musique et les bruitages, et s'en souvient.
+- Réglage **Vibrations** (écran Réglages, partie « Son », sur les téléphones qui le permettent) : une courte vibration quand on construit, améliore ou vend une tour, lance une vague, utilise un pouvoir ou perd une vie.
+- Le coût d'une construction ou d'une amélioration s'élève au-dessus de la tour (« −60 »), comme le gain d'une vente.
 - **Refonte graphique complète**, toujours dessinée par le code (aucune image à télécharger) :
   - terrain peint pour chacun des 10 chapitres : herbe texturée, routes pavées, eau animée, arbres et rochers propres au décor ;
   - les 10 tours sont de vrais bâtiments, en bois au niveau 1, en pierre ensuite, avec des ornements dorés pour l'élite ; leurs parties bougent (l'archer vise, le canon recule, la catapulte lance, le cristal de givre flotte, les braseros brûlent, les drapeaux flottent) ;
@@ -31,7 +33,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
   - le guide du défenseur : règles, types de dégâts, fiches des tours, des ennemis et des pouvoirs, commandes à deux.
 - Sur l'accueil, une carte « Nouveau dans le royaume ? » propose la première leçon tant que le joueur n'a pas commencé.
 - Réglages **Sang** et **Particules** (écran Réglages, partie « Affichage »). Le sang est désactivé par défaut dans les versions CrazyGames et Poki.
-- **Menu de construction radial** : toucher une case libre affiche autour d'elle les tours du niveau (de 2 à 10), dans l'ordre de la boutique, avec leur prix et l'aperçu de portée au survol. Les tours trop chères sont grisées. Toucher à nouveau la case ferme le menu. Sur un petit plateau qui ne peut pas contenir l'anneau, les tours s'alignent dans un bandeau le long d'un bord. La boutique reste disponible.
+- **Menu de construction radial** (grands écrans ; sur téléphone, le tiroir de construction le remplace) : toucher ou cliquer une case libre affiche autour d'elle les tours du niveau (de 2 à 10), dans l'ordre de la boutique, avec leur prix et l'aperçu de portée au survol. Les tours trop chères sont grisées. Toucher à nouveau la case ferme le menu. Sur un petit plateau qui ne peut pas contenir l'anneau, les tours s'alignent dans un bandeau le long d'un bord. La boutique reste disponible.
 - **Drapeau d'appel** sur la première case de chaque route que prendra la prochaine vague : il lance la vague, et son anneau se vide avec le compte à rebours en affichant le bonus d'or de l'appel anticipé.
 - **Chevrons sur les routes** avant chaque vague : ils défilent vers la porte le long des routes (et des couloirs aériens) que prendra la vague suivante. Ils restent immobiles si les animations sont réduites.
 
@@ -47,8 +49,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).
 - **Interface modernisée** : surfaces plus douces, boutons qui s'enfoncent quand on les touche, en-tête translucide.
 - **Animations et transitions** : passage en fondu d'un écran à l'autre, entrée du menu d'accueil, niveaux d'un chapitre qui arrivent les uns après les autres, chiffres du jeu (vies, or, vague) qui réagissent quand ils changent, tour qui bondit quand on l'améliore, pouvoir qui brille quand il est de nouveau prêt, étoiles tamponnées en fin de niveau. Tout est coupé si l'appareil demande moins d'animations.
-- **Jeu sur téléphone et tablette tenus droits** : la carte occupe 80 % de la hauteur de l'écran et ne change plus de taille quand la barre d'adresse du navigateur apparaît ou disparaît. On construit avec le menu radial (la boutique, qui le répétait, n'est plus affichée sur ces écrans) ; le panneau de la tour glisse depuis le bas, ou depuis le haut quand la tour est en bas de l'écran, pour ne jamais la cacher. Sous la carte : les pouvoirs, le bouton de vague, la prochaine vague et Quitter, sans défilement. L'en-tête du site est masqué pendant la partie ; le bouton son passe dans le bandeau du HUD.
-- Sur téléphone à l'horizontale, le plateau prend aussi 80 % de la hauteur et les commandes passent à sa droite.
+- **Jeu sur téléphone, tenu droit ou à l'horizontale : tout au doigt, sur un seul écran qui ne défile jamais.** La carte prend toute la hauteur que laissent le bandeau du HUD et la bande des pouvoirs, et ne change plus de taille quand la barre d'adresse du navigateur apparaît. L'en-tête du site est masqué pendant la partie ; le bouton son passe dans le HUD.
+  - **Tiroir de construction** à la place du menu radial : toucher une case libre ouvre les tours du niveau, posées sur la carte du côté opposé à la case (dans la colonne de droite à l'horizontale). Un premier appui sur une tour montre sa portée et son aperçu sur la case, un second la construit. À partir de cinq tours, la rangée se fait glisser au doigt ; une tour trop chère tremble.
+  - **Panneau de la tour compact**, posé sur la carte sans cacher la tour : améliorer, changer de cible d'un appui, vendre en deux appuis (le second confirme).
+  - **Vagues au drapeau** : plus de bouton de vague ; une pastille à côté du drapeau montre la prochaine vague, et la toucher en donne le détail. Quitter passe dans le menu pause.
+  - **Pouvoirs en simple icône**, dans une bande sous la carte ; un pouvoir indisponible dit pourquoi, et viser un pouvoir affiche une bulle avec un bouton Annuler.
+  - Maître Gontran parle du drapeau et du tiroir, et ses bulles ne déplacent jamais la carte.
 
 ### Corrigé
 

@@ -313,6 +313,8 @@ export class Game extends EventEmitter {
     if (!s.towerTypes.includes(type)) s.towerTypes.push(type);
     s.maxTowerLevel = Math.max(s.maxTowerLevel, 1);
     this.addEffect(new Effect('ring', { x: tower.x, y: tower.y, radius: 0.7, color: T.color, ttl: 0.3 }));
+    // What it cost, rising from the tower (as the refund does when it is sold).
+    this.addEffect(new Effect('text', { x: tower.x, y: tower.y - 0.3, text: `−${price}`, color: '#ffd166', ttl: 0.8 }));
     this.emit('build', tower);
     return tower;
   }
@@ -320,7 +322,9 @@ export class Game extends EventEmitter {
   /** Upgrades a tower (only its owner may do it in cooperation). */
   upgradeTower(tower, owner = tower.owner) {
     if (this.isOver || !tower.canUpgrade || tower.owner !== owner) return false;
-    if (!this._spend(owner, tower.upgradePrice)) return false;
+    const price = tower.upgradePrice;
+    if (!this._spend(owner, price)) return false;
+    this.addEffect(new Effect('text', { x: tower.x, y: tower.y - 0.3, text: `−${price}`, color: '#ffd166', ttl: 0.8 }));
     tower.upgrade();
     tower.onUpgraded(this);
     this.stats.upgrades += 1;

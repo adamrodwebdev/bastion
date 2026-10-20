@@ -1,5 +1,5 @@
 <template>
-  <section class="panel tower-panel" :aria-label="$t('towers.' + info.type + '.name')">
+  <section class="panel tower-panel" :class="{ 'tower-panel--compact': compact }" :aria-label="$t('towers.' + info.type + '.name')">
     <div class="tower-panel-head">
       <span :key="info.id + '-' + info.level" class="tower-sprite"><SpriteIcon :type="info.type" :level="Math.min(info.level, 3)" :elite="info.elite" :px="48" /></span>
       <div>
@@ -21,7 +21,7 @@
 
     <p v-if="!info.mine" class="notice">{{ $t('tower.notYours') }}</p>
 
-    <fieldset v-if="info.canTarget && info.mine" class="segmented segmented--compact segmented--small" data-tutorial="targeting">
+    <fieldset v-if="!compact && info.canTarget && info.mine" class="segmented segmented--compact segmented--small" data-tutorial="targeting">
       <legend>{{ $t('tower.targeting') }}</legend>
       <div class="segmented-track">
         <label v-for="id in targetings" :key="id" class="segmented-option" :class="{ 'is-active': info.targeting === id }">
@@ -50,9 +50,20 @@
         </span>
       </button>
       <span v-else class="badge">{{ info.eliteLocked ? $t('tower.eliteLocked') : $t('tower.max') }}</span>
-      <button type="button" class="btn btn-secondary" @click="$emit('sell')">
+      <button
+        v-if="compact && info.canTarget"
+        type="button"
+        class="btn btn-secondary btn-target"
+        data-tutorial="targeting"
+        :aria-label="$t('tower.targetCycle', { target: $t('tower.targets.' + info.targeting) })"
+        @click="cycleTarget"
+      >
+        <AppIcon name="target" />
+        <span>{{ $t('tower.targets.' + info.targeting) }}</span>
+      </button>
+      <button type="button" class="btn btn-secondary btn-sell" :class="{ 'is-confirm': confirmSell }" @click="onSell">
         <span class="btn-stack">
-          <span>{{ $t('tower.sell') }}</span>
+          <span>{{ confirmSell ? $t('tower.confirmSell') : $t('tower.sell') }}</span>
           <small>+{{ info.sellValue }}</small>
         </span>
       </button>
@@ -63,6 +74,8 @@
 <script>
 /**
  * @file Details of the selected tower: stats, targeting, upgrade, sell.
+ * Compact (phones): one row of actions, the target changes at each tap, and
+ * selling asks for a second tap (it cannot be undone).
  */
 import SpriteIcon from './SpriteIcon.vue';
 import AppIcon from './AppIcon.vue';
@@ -70,10 +83,33 @@ import AppIcon from './AppIcon.vue';
 export default {
   name: 'TowerPanel',
   components: { AppIcon, SpriteIcon },
-  props: { info: { type: Object, required: true } },
+  props: {
+    info: { type: Object, required: true },
+    compact: { type: Boolean, default: false },
+  },
   emits: ['upgrade', 'sell', 'targeting', 'close', 'preview'],
   data() {
-    return { targetings: ['first', 'strongest', 'closest'] };
+    return { targetings: ['first', 'strongest', 'closest'], confirmSell: false };
+  },
+  watch: {
+    'info.id'() {
+      this.confirmSell = false;
+    },
+  },
+  methods: {
+    onSell() {
+      if (this.compact && !this.confirmSell) {
+        this.confirmSell = true;
+        return;
+      }
+      this.confirmSell = false;
+      this.$emit('sell');
+    },
+    cycleTarget() {
+      const i = this.targetings.indexOf(this.info.targeting);
+      this.confirmSell = false;
+      this.$emit('targeting', this.targetings[(i + 1) % this.targetings.length]);
+    },
   },
 };
 </script>
