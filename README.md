@@ -116,6 +116,7 @@ Chaque fichier commence par un commentaire qui explique son rôle. Les détails 
 | Les couleurs et la mise en page | `src/styles/main.css` |
 | Les matières de l'interface (parchemin, bois, fer, toile) | `src/core/rendering/Textures.js` (dessin) et la partie « materials » de `src/styles/main.css` |
 | La bannière entre deux écrans | `src/components/ScreenWipe.vue` |
+| La carte de campagne (place des niveaux, route, terre du chapitre) | `src/core/rendering/mapRoute.js`, `src/core/rendering/ChapterMap.js` et `src/components/CampaignScreen.vue` |
 | Le dessin du plateau (terrain, bâtiments, personnages, particules) | `src/core/rendering/` |
 
 Après un changement d'équilibrage, lancez `npm test` pour voir si les niveaux restent gagnables. Après un changement de texte, lancez `npm run check:i18n`.
