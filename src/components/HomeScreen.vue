@@ -18,11 +18,12 @@
           </span>
           <AppIcon name="back" class="btn-hero-chevron" />
         </button>
-        <button type="button" class="btn btn-lg btn-hero" :class="saved ? 'btn-secondary' : 'btn-primary'" @click="$actions.openCampaign('solo')">
+        <!-- The very first game is one click away: level 1 at once, with Master Gontran -->
+        <button type="button" class="btn btn-lg btn-hero" :class="saved ? 'btn-secondary' : 'btn-primary'" @click="firstGame ? $actions.playFirstLevel() : $actions.openCampaign('solo')">
           <CrestEmblem class="btn-hero-icon" />
           <span class="btn-hero-text">
-            <span class="btn-hero-title">{{ $t('home.campaign') }}</span>
-            <small>{{ $t('home.campaignInfo', { n: nextLevel, stars: stars, max: maxStars }) }}</small>
+            <span class="btn-hero-title">{{ firstGame ? $t('home.play') : $t('home.campaign') }}</span>
+            <small>{{ firstGame ? $t('home.playInfo') : $t('home.campaignInfo', { n: nextLevel, stars: stars, max: maxStars }) }}</small>
           </span>
           <AppIcon name="back" class="btn-hero-chevron" />
         </button>
@@ -125,6 +126,10 @@ export default {
     },
     episodes() {
       return this.saves.progress.episodes.length;
+    },
+    /** No level won and no game to resume: the main button plays level 1 straight away. */
+    firstGame() {
+      return this.saves.campaign('solo').completed === 0 && !this.saved;
     },
     /** Never played: the training is offered first. */
     newPlayer() {

@@ -67,6 +67,7 @@
               @pointermove="onPointerMove"
               @pointerleave="hover = null"
               @keydown="onKeyDown"
+              @contextmenu.prevent="cancelOnBoard"
             ></canvas>
             <p id="board-help" class="sr-only">{{ $t('hud.keys') }}</p>
             <p class="sr-only" aria-live="polite">{{ announce }}</p>
@@ -281,6 +282,8 @@
           />
           <TowerShop v-else :items="shopItems" :armed-type="armedType" :cell-state="cellState" :disabled="!!end" @pick="pickTower" @close="clearSelection" />
         </Transition>
+        <!-- Larger screens: the level's challenges stay in view (optional goals) -->
+        <LevelGoals v-if="!touchLayout && !training" :level="level" :track="coop ? 'coop' : 'solo'" />
         <button v-if="!touchLayout" type="button" class="btn btn-ghost btn-menu" @click="quit"><AppIcon name="back" /> {{ $t('hud.menu') }}</button>
       </aside>
     </div>
@@ -313,14 +316,24 @@ import PowerBar from './PowerBar.vue';
 import EndPanel from './EndPanel.vue';
 import CoachBubble from './CoachBubble.vue';
 import BuildTray from './BuildTray.vue';
+import LevelGoals from './LevelGoals.vue';
 
 const SPEEDS = [1, 2, 3];
 const TOWER_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 const POWER_KEYS = ['q', 'w', 'e', 'r', 't'];
 
+/**
+ * Index of the tower key pressed (1 to 0), read from the key's place on the keyboard:
+ * on French AZERTY keyboards the digits need Shift, yet the unshifted keys still build.
+ */
+function towerKeyIndex(evt) {
+  const digit = /^(?:Digit|Numpad)(\d)$/.exec(evt.code || '')?.[1] ?? evt.key;
+  return TOWER_KEYS.indexOf(digit);
+}
+
 export default {
   name: 'GameScreen',
-  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble, SpriteIcon, BuildTray },
+  components: { AppIcon, TowerShop, TowerPanel, PowerBar, EndPanel, CoachBubble, SpriteIcon, BuildTray, LevelGoals },
   data() {
     return {
       tick: 0,
@@ -1178,7 +1191,7 @@ export default {
         return;
       }
       const key = evt.key.toLowerCase();
-      const ti = TOWER_KEYS.indexOf(evt.key);
+      const ti = towerKeyIndex(evt);
       if (ti >= 0 && this.shopItems[ti]) {
         evt.preventDefault();
         this.selectedCell = cell;
@@ -1199,10 +1212,11 @@ export default {
       const game = this.engine.game;
       if (!game || this.$store.story || evt.target?.tagName === 'INPUT' || evt.target?.tagName === 'SELECT') return;
       const key = evt.key.toLowerCase();
-      if (evt.key === 'Escape') {
-        if (this.aiming) this.aiming = null;
-        else if (this.selectedCell || this.armedType) this.clearSelection();
-        else if (!this.end) this.togglePause();
+      // Escape belongs to the browser and the portals (it leaves fullscreen): never used here.
+      // Backspace cancels an aim or a selection (in co-op it is player 2's sell key).
+      if (evt.key === 'Backspace' && !this.coop) {
+        evt.preventDefault();
+        this.cancelOnBoard();
         return;
       }
       if (this.end) return;
@@ -1236,7 +1250,7 @@ export default {
         this.sync();
         return;
       }
-      const ti = TOWER_KEYS.indexOf(evt.key);
+      const ti = towerKeyIndex(evt);
       const allowed = TowerFactory.catalogue().filter((c) => game.isTowerAllowed(c.type));
       if (ti >= 0 && allowed[ti]) {
         evt.preventDefault();
@@ -1260,6 +1274,12 @@ export default {
       // Arrow keys follow what is on screen, even when the board is rotated.
       if (this.engine.renderer?.rotated) return [d[1], -d[0]];
       return d;
+    },
+
+    /** Right-click on the map, or Backspace: drops the power being aimed, else the selection. */
+    cancelOnBoard() {
+      if (this.aiming) this.aiming = null;
+      else if (this.selectedCell || this.armedType) this.clearSelection();
     },
 
     clearSelection() {

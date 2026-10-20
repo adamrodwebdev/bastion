@@ -122,3 +122,19 @@ export function countAchievements(mask) {
 export function achievementParams(id, level) {
   return ACHIEVEMENTS[id].params?.(level) ?? {};
 }
+
+/**
+ * A level's three challenges as the screens show them: family, icon, text parameters,
+ * and whether the player has already met each one (`mask`: one bit per challenge).
+ * @param {import('../config/Level.js').Level} level
+ * @param {number} [mask]
+ */
+export function levelChallenges(level, mask = 0) {
+  return achievementsFor(level).map((id, i) => ({
+    id,
+    family: ACHIEVEMENTS[id].family,
+    icon: ACHIEVEMENTS[id].icon,
+    params: achievementParams(id, level),
+    done: Boolean(mask & (1 << i)),
+  }));
+}

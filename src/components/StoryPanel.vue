@@ -66,8 +66,8 @@ export default {
       else this.index += 1;
     },
     onKey(e) {
-      if (e.key === 'Escape') this.$actions.closeStory();
-      else if (e.key === 'ArrowRight') this.next();
+      // No Escape: it belongs to the browser and the portals (it leaves fullscreen). Skip closes.
+      if (e.key === 'ArrowRight') this.next();
       else if (e.key === 'ArrowLeft' && this.index > 0) this.index -= 1;
     },
     /** Portraits look towards the centre of the stage. */

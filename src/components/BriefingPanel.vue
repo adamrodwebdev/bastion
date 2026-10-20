@@ -1,5 +1,5 @@
 <template>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="brief-title" @keydown.esc="$actions.closeBriefing()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="brief-title">
     <div class="scroll">
       <span class="scroll-rod" aria-hidden="true"></span>
       <div class="modal-card briefing" :class="'theme-' + level.theme">
@@ -113,7 +113,7 @@ import PixelPortrait from './PixelPortrait.vue';
 import DifficultyPicker from './DifficultyPicker.vue';
 import { services } from '../services/index.js';
 import { LevelCatalog, EnemyFactory, TowerFactory, PowerManager } from '../core/index.js';
-import { achievementsFor, achievementParams, ACHIEVEMENTS } from '../core/progression/Achievements.js';
+import { levelChallenges } from '../core/progression/Achievements.js';
 import { StoryRepository } from '../core/story/StoryRepository.js';
 
 export default {
@@ -148,14 +148,7 @@ export default {
       });
     },
     challenges() {
-      const mask = services.saves.achievementsFor(this.number, this.$store.track);
-      return achievementsFor(this.level).map((id, i) => ({
-        id,
-        family: ACHIEVEMENTS[id].family,
-        icon: ACHIEVEMENTS[id].icon,
-        params: achievementParams(id, this.level),
-        done: Boolean(mask & (1 << i)),
-      }));
+      return levelChallenges(this.level, services.saves.achievementsFor(this.number, this.$store.track));
     },
     unlockedPowers() {
       const ids = services.saves.unlockedPowers(this.$store.track);
