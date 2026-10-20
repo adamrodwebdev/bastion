@@ -6,8 +6,8 @@
         :key="p.id"
         type="button"
         class="power-btn"
-        :class="['is-' + p.state, { 'is-aiming': aiming === p.id }]"
-        :disabled="!p.ready || !enabled"
+        :class="['is-' + p.state, { 'is-aiming': aiming === p.id, 'is-off': !p.ready || !enabled }]"
+        :aria-disabled="!p.ready || !enabled ? 'true' : undefined"
         :aria-pressed="aiming === p.id ? 'true' : undefined"
         :title="$t('powers.' + p.id + '.desc')"
         :data-tutorial="'power-' + p.id"
@@ -36,7 +36,8 @@
 
 <script>
 /**
- * @file Special power buttons with their circular timer.
+ * @file Special power buttons with their circular timer. A power that cannot be
+ * used yet stays tappable (aria-disabled): the game screen then says why.
  */
 export default {
   name: 'PowerBar',

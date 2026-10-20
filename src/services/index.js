@@ -7,6 +7,7 @@ import { SaveManager } from './SaveManager.js';
 import { I18nService } from './I18nService.js';
 import { ThemeService } from './ThemeService.js';
 import { AudioService } from './audio/AudioService.js';
+import { Haptics } from './Haptics.js';
 import { NoAdService } from './ads/AdService.js';
 import { LOADERS, LANGUAGE_NAMES } from '../locales/index.js';
 
@@ -27,6 +28,7 @@ class ServiceContainer {
     this.i18n = new I18nService(LOADERS, LANGUAGE_NAMES, 'en');
     this.theme = new ThemeService();
     this.audio = new AudioService();
+    this.haptics = new Haptics();
     /** Portal SDK (CrazyGames, Poki, Playgama) or a silent stand-in on our own site. */
     this.ads = new NoAdService();
   }
@@ -60,12 +62,14 @@ class ServiceContainer {
     this.theme.setMode(settings.theme);
     this.audio.setVolumes({ sfx: settings.sfx, music: settings.music });
     this.audio.setUserMuted(settings.muted);
+    this.haptics.setEnabled(settings.haptics);
     // Persist user choices.
     this.i18n.on('change', (locale) => this.saves.updateSettings({ locale }));
     this.theme.on('change', () => this.saves.updateSettings({ theme: this.theme.mode }));
     this.saves.on('settings', (s) => {
       this.audio.setVolumes({ sfx: s.sfx, music: s.music });
       this.audio.setUserMuted(s.muted);
+      this.haptics.setEnabled(s.haptics);
     });
 
     // Browsers only allow sound after a user gesture.

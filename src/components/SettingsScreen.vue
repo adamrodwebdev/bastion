@@ -13,6 +13,10 @@
           <span>{{ $t('settings.sfx') }} · {{ Math.round(s.sfx * 100) }} %</span>
           <input id="set-sfx" type="range" min="0" max="1" step="0.05" :value="s.sfx" @input="set('sfx', Number($event.target.value))" @change="test" />
         </label>
+        <label v-if="canVibrate" class="toggle">
+          <input id="set-haptics" type="checkbox" :checked="s.haptics" @change="set('haptics', $event.target.checked)" />
+          <span><strong>{{ $t('settings.haptics') }}</strong><small>{{ $t('settings.hapticsDesc') }}</small></span>
+        </label>
       </section>
 
       <section class="card settings-card">
@@ -83,7 +87,7 @@ export default {
   name: 'SettingsScreen',
   components: { ScreenHeader, DifficultyPicker },
   data() {
-    return { confirmReset: false, keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2'] };
+    return { confirmReset: false, canVibrate: services.haptics.supported, keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2'] };
   },
   computed: {
     s() {
