@@ -3770,7 +3770,9 @@ kbd {
   display: none;
 }
 
-.in-game:has(.layout-phone) .app-main {
+/* Also inside the Playgama shell, whose game view keeps a side padding otherwise. */
+.in-game:has(.layout-phone) .app-main,
+:root[data-target='playgama'].in-game:has(.layout-phone) .app-main {
   max-width: none;
   padding: 0;
 }
@@ -3810,7 +3812,9 @@ kbd {
   justify-items: center;
   align-items: center;
   justify-self: start;
-  width: 100vw;
+  /* The whole width of the main area, over the layout's side padding (not 100vw,
+     which also counts a desktop scrollbar and would overflow). */
+  width: calc(100% + max(8px, env(safe-area-inset-left)) + max(8px, env(safe-area-inset-right)));
   max-width: none;
   margin: 0 0 0 calc(-1 * max(8px, env(safe-area-inset-left)));
   border: 0;
