@@ -36,6 +36,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - Réglages **Sang** et **Particules** (écran Réglages, partie « Affichage »). Le sang est désactivé par défaut dans les versions CrazyGames et Poki.
 - **Menu de construction radial** (grands écrans ; sur téléphone, le tiroir de construction le remplace) : toucher ou cliquer une case libre affiche autour d'elle les tours du niveau (de 2 à 10), dans l'ordre de la boutique, avec leur prix et l'aperçu de portée au survol. Les tours trop chères sont grisées. Toucher à nouveau la case ferme le menu. Sur un petit plateau qui ne peut pas contenir l'anneau, les tours s'alignent dans un bandeau le long d'un bord. La boutique reste disponible.
 - **Drapeau d'appel** sur la première case de chaque route que prendra la prochaine vague : il lance la vague, et son anneau se vide avec le compte à rebours en affichant le bonus d'or de l'appel anticipé.
+- **Version CrazyGames prête à soumettre** (`npm run package:crazygames`) : le SDK v3 se charge dans le `<head>` avant le jeu, le paquet contrôle les exigences mesurables du portail (taille, nombre de fichiers, chemins relatifs, aucun autre portail, aucune requête ni lien sortant, pas de bouton plein écran) et crée l'archive. Couvertures et vidéos d'aperçu (1080p paysage et portrait, 18 s, sans son) sont peintes et filmées par le moteur du jeu (`marketing/crazygames/kit.html`) ; textes de la fiche et contrôle de chaque exigence dans `marketing/crazygames/README.md`.
+- **Défis du niveau à côté de la carte** (grand écran) : les trois défis facultatifs restent en vue pendant la partie, cochés quand ils sont déjà gagnés.
 - **Chevrons sur les routes** avant chaque vague : ils défilent vers la porte le long des routes (et des couloirs aériens) que prendra la vague suivante. Ils restent immobiles si les animations sont réduites.
 
 ### Modifié
@@ -67,10 +69,19 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
   - Maître Gontran parle du drapeau et du tiroir, et ses bulles ne déplacent jamais la carte.
 - **Combat sur grand écran aussi stable que sur téléphone** : Maître Gontran parle sur la carte, du côté opposé à la case en jeu, au lieu de la pousser vers le bas ; la barre de vague garde la même taille à chaque moment (le bouton reste centré, à la largeur de sa plus longue étiquette ; la prochaine vague s'affiche à côté en icônes et nombres, le nom au survol) ; la carte et la colonne de droite tiennent dans la fenêtre, donc la page ne défile plus pendant une partie : une boutique plus longue que la fenêtre défile seule.
 - **Étoiles de fin de niveau** dessinées en or, avec un bord d'encre, une ombre franche et un halo : elles se détachent du parchemin (celle du milieu est plus grande).
+- **Première partie en un clic** : tant qu'aucun niveau n'est gagné, le grand bouton doré de l'écran-titre devient « Jouer » et lance le niveau 1 avec Maître Gontran, sans passer par la carte, le prologue et le briefing ; le prologue s'ouvre au briefing suivant.
+- Écran-titre des écrans bas en largeur (cadres de portail de 907×510 ou 821×462, téléphones à l'horizontale) : le titre et le menu à gauche, le panorama à droite, le bouton principal toujours en vue.
+- Les textes qui s'affichent aussi à la souris ne disent plus « touchez » : « Choisissez une case libre près de la route », « Sélectionne une tour »… (« Touchez » reste sur le tiroir et le drapeau des écrans tactiles).
+- **Échap n'est plus utilisé** (il appartient au navigateur et aux portails, qui s'en servent pour sortir du plein écran) : `P` met en pause, Retour arrière ou un clic droit sur la carte annulent la visée d'un pouvoir ou la sélection, et le clic droit n'ouvre plus le menu du navigateur sur le plateau.
+- Les touches 1 à 0, et celles du duel (W A S D, Z X C…), sont lues par leur place sur le clavier : elles marchent aussi en AZERTY.
+- Les légendes des touches (raccourcis de la boutique, barre d'espace) passent à 12 px, lisibles dans un cadre de portail.
+- Le pied de page de notre site ne s'affiche plus sur les portails (CrazyGames, Poki, Playgama).
 - **Barres de défilement aux couleurs du jeu** (souris et pavé tactile) : une tige dorée dans une rainure de la matière où elle se trouve (fer du cadre, parchemin, bois). Les téléphones gardent leur fine barre d'origine.
 
 ### Corrigé
 
+- Sur CrazyGames, la seconde chance et le doublement des couronnes proposaient une vidéo pendant le *Basic Launch*, où le portail refuse les publicités (le bouton ne faisait rien) : elles restent coupées jusqu'au *Full Launch*.
+- Sur un clavier AZERTY, les touches 1 à 0 ne construisaient rien (il fallait Maj).
 - Sur grand écran, l'annonce d'une vague faisait bouger la fenêtre : le bouton de vague se décalait de côté, la barre grandissait et une barre de défilement apparaissait puis disparaissait, ce qui pouvait redimensionner la carte.
 
 - Le bouton **Améliorer** suit maintenant l'or réel : il se grise quand l'or manque et se réactive dès qu'il suffit. Après un achat, le niveau, le prix suivant et la valeur de revente se mettent à jour (ils restaient bloqués sur ceux du premier affichage). Même correction dans le mode Duel.

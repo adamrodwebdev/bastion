@@ -959,13 +959,14 @@ button:disabled {
   letter-spacing: 0.02em;
 }
 
+/* Key hints stay legible at a pixel ratio of 1 (portal frames): never under 12 px. */
 kbd {
   display: none;
   padding: 0 5px;
   border-radius: 5px;
   border: 1px solid currentColor;
-  font: 600 0.68rem/1.4 var(--font-body);
-  opacity: 0.6;
+  font: 600 0.75rem/1.4 var(--font-body);
+  opacity: 0.7;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1600,6 +1601,61 @@ kbd {
 @media (max-width: 1023px) {
   .app-header--bare .brand {
     visibility: hidden;
+  }
+}
+
+/* Short landscape screens (portal frames such as 907×510 or 821×462, phones on their
+   side): the title and the menu on the left, the panorama on the right, so the main
+   button is in view without scrolling. */
+@media (min-width: 640px) and (max-width: 1023px) and (orientation: landscape) and (max-height: 600px) {
+  .home {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px 28px;
+    max-width: 60rem;
+  }
+
+  .home-main,
+  .home-side {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 10px;
+  }
+
+  .home-main {
+    container-type: inline-size;
+  }
+
+  .hero-title {
+    justify-items: start;
+    font-size: 3rem;
+    font-size: min(4rem, 16cqi);
+  }
+
+  .hero-tagline {
+    justify-self: start;
+    max-width: none;
+    margin-top: 0;
+    font-size: 0.85rem;
+  }
+
+  .home-menu {
+    gap: 8px;
+  }
+
+  .btn-hero {
+    min-height: 60px;
+  }
+
+  .home-wood {
+    min-height: 48px;
+  }
+
+  .tile {
+    min-height: 68px;
+    padding-block: 6px;
   }
 }
 
@@ -2315,6 +2371,26 @@ kbd {
   font-size: 0.88rem;
 }
 
+/* The level's challenges beside the map (larger screens), on parchment like the briefing. */
+.level-goals {
+  padding: 10px 12px 12px;
+  border-radius: var(--radius-lg);
+}
+
+.level-goals .panel-title {
+  margin-bottom: 6px;
+}
+
+.level-goals .challenge {
+  gap: 8px;
+  padding: 6px 8px;
+  line-height: 1.3;
+}
+
+.level-goals .challenge-desc {
+  font-size: 0.8rem;
+}
+
 .loadout {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -2823,7 +2899,8 @@ kbd {
   left: 2px;
   padding: 0 3px;
   background: var(--surface-2);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
   opacity: 0.9;
 }
 
@@ -4138,6 +4215,9 @@ kbd {
   overscroll-behavior: contain;
 }
 
+/* On a portal the page is the portal's: our site's footer is not shown there. */
+:root[data-target='crazygames'] .app-footer,
+:root[data-target='poki'] .app-footer,
 :root[data-target='playgama'] .app-footer {
   display: none;
 }

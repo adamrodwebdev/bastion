@@ -86,11 +86,22 @@ export const actions = {
   },
 
   /**
+   * The very first game: straight into level 1, Master Gontran at the player's side
+   * (the map, the prologue and the briefing come once the player has played).
+   */
+  playFirstLevel() {
+    store.track = 'solo';
+    store.chapter = 1;
+    actions.startLevel(1, { track: 'solo' });
+  },
+
+  /**
    * Opens a level's briefing; reads the chapter's episode first if it has not
-   * been read yet (and the story is enabled).
+   * been read yet (and the story is enabled). The first game skips the prologue,
+   * so it waits for the briefings of chapter 1.
    */
   openBriefing(number) {
-    const beat = StoryRepository.beatBefore(number);
+    const beat = StoryRepository.beatBefore(number) ?? (number <= 10 ? StoryRepository.beat('prologue') : null);
     if (beat && services.saves.settings.story && !services.saves.hasSeen('episodes', beat.id)) {
       actions.showStory(beat.id, () => (store.briefing = number));
       return;

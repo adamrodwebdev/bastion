@@ -96,7 +96,7 @@ export default {
       canVibrate: services.haptics.supported,
       // The system asks for less motion: the setting cannot turn it back on.
       systemCalm: services.motion.systemReduced,
-      keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2'],
+      keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'cancel', 'p2'],
     };
   },
   computed: {

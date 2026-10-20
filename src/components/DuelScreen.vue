@@ -154,29 +154,37 @@ export default {
       if (this.result || e.target?.tagName === 'INPUT') return;
       const k = e.key;
       const low = k.toLowerCase();
-      if (k === 'Escape' || low === 'p') {
+      // P pauses; Escape belongs to the browser and the portals (it leaves fullscreen).
+      if (low === 'p') {
         this.togglePause();
         return;
       }
       if (this.paused) return;
       const b1 = this.$refs.b1;
       const b2 = this.$refs.b2;
-      const moves1 = { w: [0, -1], a: [-1, 0], s: [0, 1], d: [1, 0] };
+      // Keys are read by their place on the keyboard (W A S D is Z Q S D on AZERTY,
+      // where the digits also need Shift), falling back on the character typed.
+      const code = e.code || '';
+      const at = (place, letter) => code === place || (!code && low === letter);
+      const digit = /^Digit(\d)$/.exec(code)?.[1] ?? (/^\d$/.test(k) ? k : null);
+      const moves1 = [['KeyW', 'w', [0, -1]], ['KeyA', 'a', [-1, 0]], ['KeyS', 's', [0, 1]], ['KeyD', 'd', [1, 0]]].find(([place, letter]) => at(place, letter));
       const moves2 = { ArrowUp: [0, -1], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowRight: [1, 0] };
-      if (moves1[low]) b1.move(...moves1[low]);
+      const sends1 = [['KeyZ', 'z'], ['KeyX', 'x'], ['KeyC', 'c']].findIndex(([place, letter]) => at(place, letter));
+      const sends2 = [['KeyB', 'b'], ['KeyN', 'n'], ['KeyM', 'm']].findIndex(([place, letter]) => at(place, letter));
+      if (moves1) b1.move(...moves1[2]);
       else if (moves2[k]) {
         e.preventDefault();
         b2.move(...moves2[k]);
-      } else if (['1', '2', '3', '4', '5'].includes(k)) b1.buildAtCursor(Number(k) - 1);
-      else if (['6', '7', '8', '9', '0'].includes(k)) b2.buildAtCursor(k === '0' ? 4 : Number(k) - 6);
-      else if (e.code && /^Numpad[1-5]$/.test(e.code)) b2.buildAtCursor(Number(e.code.slice(-1)) - 1);
-      else if (low === 'r') b1.upgrade();
-      else if (low === 'f') b1.sell();
-      else if (low === 'l' || e.code === 'NumpadAdd') b2.upgrade();
-      else if (low === 'k' || e.code === 'NumpadSubtract') b2.sell();
-      else if (['z', 'x', 'c'].includes(low)) this.send(1, SEND_TYPES[['z', 'x', 'c'].indexOf(low)]);
-      else if (['b', 'n', 'm'].includes(low)) this.send(2, SEND_TYPES[['b', 'n', 'm'].indexOf(low)]);
-      else if (e.code && /^Numpad[7-9]$/.test(e.code)) this.send(2, SEND_TYPES[Number(e.code.slice(-1)) - 7]);
+      } else if (digit && '12345'.includes(digit)) b1.buildAtCursor(Number(digit) - 1);
+      else if (digit && '67890'.includes(digit)) b2.buildAtCursor(digit === '0' ? 4 : Number(digit) - 6);
+      else if (/^Numpad[1-5]$/.test(code)) b2.buildAtCursor(Number(code.slice(-1)) - 1);
+      else if (at('KeyR', 'r')) b1.upgrade();
+      else if (at('KeyF', 'f')) b1.sell();
+      else if (at('KeyL', 'l') || code === 'NumpadAdd') b2.upgrade();
+      else if (at('KeyK', 'k') || code === 'NumpadSubtract') b2.sell();
+      else if (sends1 >= 0) this.send(1, SEND_TYPES[sends1]);
+      else if (sends2 >= 0) this.send(2, SEND_TYPES[sends2]);
+      else if (/^Numpad[7-9]$/.test(code)) this.send(2, SEND_TYPES[Number(code.slice(-1)) - 7]);
     },
     async again() {
       await this.$actions.betweenLevels();
