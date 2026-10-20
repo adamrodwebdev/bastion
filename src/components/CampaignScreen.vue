@@ -21,7 +21,7 @@
       </button>
     </nav>
 
-    <header class="chapter-head" :class="'theme-' + chapter.theme">
+    <header :key="'head-' + chapter.id" class="chapter-head" :class="'theme-' + chapter.theme">
       <div>
         <p class="eyebrow">{{ $t('campaign.chapter', { n: chapter.id }) }}</p>
         <h2 class="chapter-title">{{ $t('chapters.c' + chapter.id + '.name') }}</h2>
@@ -30,8 +30,8 @@
       <DifficultyPicker compact />
     </header>
 
-    <ol class="level-grid" role="list">
-      <li v-for="l in levels" :key="l.number">
+    <ol :key="$store.chapter" class="level-grid" role="list">
+      <li v-for="(l, i) in levels" :key="l.number" :style="{ '--i': i }">
         <button
           type="button"
           class="level-card"
