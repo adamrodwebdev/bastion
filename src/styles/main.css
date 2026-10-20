@@ -2,11 +2,11 @@
    Bastion — styles
    Same kingdom as Catapulte Mania: "heraldic banner on cut stone". The
    interface is built of heraldic materials (see "materials"): parchment to
-   read, wood to build, gilded iron for the frame and the buttons, cloth for
-   the main actions and the banners, with thick ink edges and hard shadows,
-   over a twilight sky (day) or the night. Woad blue, heraldic gold, madder
-   red. Cinzel for titles only. Mobile-first, day and night themes, no
-   external request: the textures are painted by code.
+   read, wood to build, gilded iron for the frame and the buttons, gilt for
+   the main actions, cloth for the banners, with thick ink edges and hard
+   shadows, over a twilight sky (day) or the night. Woad blue, heraldic gold;
+   madder red only says stop. Cinzel for titles only. Mobile-first, day and
+   night themes, no external request: the textures are painted by code.
    ========================================================================== */
 
 @font-face {
@@ -248,8 +248,9 @@ button:disabled {
      tiles that show a tower;
    - wood, to build: the shop and the build tray, the tower panel, wooden buttons;
    - gilded iron, the frame: the header, round buttons, the HUD plates, messages;
-   - cloth for the main action and the banners: woad, madder or ink;
-   - gilt for what is new, won or about to be paid.
+   - gilt for the main action, and for what is new, won or about to be paid;
+   - cloth for the banners and the choice made: woad, madder or ink.
+   Red (madder) only ever says stop: closing, cancelling, what cannot be undone.
    Thick ink edges and a hard shadow (--drop) that what is pressed sinks into. */
 .mat-parch,
 .card,
@@ -394,7 +395,6 @@ button:disabled {
 
 /* Cloth: woad unless a banner or a button picks its dye. */
 .cloth,
-.btn-primary,
 .btn-danger,
 .toast--power,
 .screen-wipe-cloth {
@@ -743,13 +743,17 @@ button:disabled {
   font-size: 0.85rem;
 }
 
-/* The main action: madder cloth with a gilt edge. */
+/* The main action: gilt, struck with a sheen, its label engraved in it. */
 .btn-primary {
-  --cloth-hi: var(--madder-hi);
-  --cloth-lo: var(--madder-lo);
-  color: var(--cream);
-  text-shadow: 0 2px 0 rgb(30 26 43 / 0.55);
-  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.3), inset 0 -4px 0 rgb(0 0 0 / 0.26), inset 0 0 0 3px rgb(242 196 92 / 0.5), 0 var(--drop) 0 var(--c-ink);
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.3) 44%, transparent 58%), var(--gilt-bg);
+  color: #2b1a05;
+  text-shadow: 0 1px 0 rgb(255 246 214 / 0.7);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.6), inset 0 -4px 0 rgb(90 55 8 / 0.4), inset 0 0 0 2px rgb(255 240 190 / 0.35), 0 var(--drop) 0 var(--c-ink);
+}
+
+/* A coin on gilt: engraved, or it would vanish. */
+.btn-primary .coin-icon {
+  color: var(--gilt-edge);
 }
 
 /* Everything else a player may do: a wooden plank. */
@@ -1884,7 +1888,7 @@ kbd {
   position: absolute;
   inset: -7px;
   border-radius: calc(var(--radius) + 5px);
-  box-shadow: 0 0 0 3px var(--c-gold);
+  box-shadow: 0 0 0 3px var(--gilt-hi);
   opacity: 0;
   pointer-events: none;
   animation: ring-breathe 1.6s ease-in-out infinite;
