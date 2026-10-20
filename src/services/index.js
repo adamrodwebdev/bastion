@@ -8,6 +8,8 @@ import { I18nService } from './I18nService.js';
 import { ThemeService } from './ThemeService.js';
 import { AudioService } from './audio/AudioService.js';
 import { Haptics } from './Haptics.js';
+import { MotionService } from './MotionService.js';
+import { TextureService } from './TextureService.js';
 import { NoAdService } from './ads/AdService.js';
 import { LOADERS, LANGUAGE_NAMES } from '../locales/index.js';
 
@@ -29,6 +31,9 @@ class ServiceContainer {
     this.theme = new ThemeService();
     this.audio = new AudioService();
     this.haptics = new Haptics();
+    this.motion = new MotionService();
+    /** Parchment, wood, iron and cloth of the interface, painted at startup (in a worker where possible). */
+    this.textures = new TextureService();
     /** Portal SDK (CrazyGames, Poki, Playgama) or a silent stand-in on our own site. */
     this.ads = new NoAdService();
   }
@@ -63,6 +68,7 @@ class ServiceContainer {
     this.audio.setVolumes({ sfx: settings.sfx, music: settings.music });
     this.audio.setUserMuted(settings.muted);
     this.haptics.setEnabled(settings.haptics);
+    this.motion.setEnabled(settings.motion);
     // Persist user choices.
     this.i18n.on('change', (locale) => this.saves.updateSettings({ locale }));
     this.theme.on('change', () => this.saves.updateSettings({ theme: this.theme.mode }));
@@ -70,6 +76,7 @@ class ServiceContainer {
       this.audio.setVolumes({ sfx: s.sfx, music: s.music });
       this.audio.setUserMuted(s.muted);
       this.haptics.setEnabled(s.haptics);
+      this.motion.setEnabled(s.motion);
     });
 
     // Browsers only allow sound after a user gesture.

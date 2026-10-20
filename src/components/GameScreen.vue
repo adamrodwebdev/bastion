@@ -115,7 +115,7 @@
               <div v-if="waveCard && waveChip" class="wave-card" :style="waveChip.cardStyle" role="dialog" :aria-label="$t('hud.nextWave')">
                 <div class="wave-card-head">
                   <strong>{{ $t('hud.waveOf', { n: hud.wave + 1, total: hud.total }) }}</strong>
-                  <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="waveCard = false"><AppIcon name="close" /></button>
+                  <button type="button" class="btn-close btn-close--sm" :aria-label="$t('tower.deselect')" @click="waveCard = false"><AppIcon name="close" /></button>
                 </div>
                 <ul class="wave-card-list" role="list">
                   <li v-for="g in nextWave" :key="g.type"><SpriteIcon kind="enemy" :type="g.type" :px="30" />{{ g.count }} × {{ $t('enemies.' + g.type + '.name') }}</li>
@@ -128,7 +128,7 @@
 
               <div v-if="touchLayout && aiming" class="aim-chip" role="status">
                 <span class="aim-chip-text"><strong>{{ $t('powers.' + aiming + '.name') }}</strong> · {{ $t('powers.aimTouch') }}</span>
-                <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('powers.cancelAim')" @click="aiming = null"><AppIcon name="close" /></button>
+                <button type="button" class="btn-close btn-close--sm" :aria-label="$t('powers.cancelAim')" @click="aiming = null"><AppIcon name="close" /></button>
               </div>
 
               <div
@@ -657,7 +657,7 @@ export default {
 
       const renderer = new Renderer(this.$refs.canvas, game.level);
       renderer.setMode(this.$store.theme);
-      renderer.reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      renderer.reducedMotion = services.motion.reduced;
       renderer.setOptions({ gore: services.saves.settings.gore, particles: services.saves.settings.particles });
       renderer.attach(game);
 

@@ -6,7 +6,7 @@
       <p class="coach-text">{{ text }}</p>
       <button v-if="next" ref="next" type="button" class="btn btn-primary btn-sm coach-next" @click="$emit('next')">{{ $t('training.next') }}</button>
     </div>
-    <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tutorial.dismiss')" @click="$emit('dismiss')"><AppIcon name="close" /></button>
+    <button type="button" class="btn-close btn-close--sm" :aria-label="$t('tutorial.dismiss')" @click="$emit('dismiss')"><AppIcon name="close" /></button>
   </div>
 </template>
 

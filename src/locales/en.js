@@ -680,6 +680,9 @@ export default {
     particlesDesc: 'Debris, smoke, embers and weather (snow, rain, leaves…). Turn off on a slow device.',
     haptics: 'Vibration',
     hapticsDesc: 'A short buzz when you build, upgrade or lose a life (phones that support it).',
+    motion: 'Motion',
+    motionDesc: 'Banners between screens, moving panels and battle effects. Off: short fades only.',
+    motionSystem: 'Your device asks for less motion: short fades only.',
     players: 'Player names',
     keys: 'Keyboard',
     keyList: {

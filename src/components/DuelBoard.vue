@@ -27,7 +27,7 @@
         </button>
         <span v-else class="badge">{{ $t('tower.max') }}</span>
         <button type="button" class="btn btn-secondary btn-sm" @click="sell">{{ $t('tower.sell') }}</button>
-        <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="clear"><AppIcon name="close" /></button>
+        <button type="button" class="btn-close btn-close--sm" :aria-label="$t('tower.deselect')" @click="clear"><AppIcon name="close" /></button>
       </div>
       <div v-else class="duel-shop" role="group" :aria-label="$t('shop.title')">
         <button
@@ -137,7 +137,7 @@ export default {
     const r = new Renderer(this.$refs.canvas, this.game.level);
     r.showAirLanes = true;
     r.setMode(this.$store.theme);
-    r.reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    r.reducedMotion = services.motion.reduced;
     r.setOptions({ gore: services.saves.settings.gore, particles: services.saves.settings.particles });
     r.attach(this.game);
     this.r = markRaw(r);

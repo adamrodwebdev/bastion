@@ -42,6 +42,10 @@
           <input id="set-particles" type="checkbox" :checked="s.particles" @change="set('particles', $event.target.checked)" />
           <span><strong>{{ $t('settings.particles') }}</strong><small>{{ $t('settings.particlesDesc') }}</small></span>
         </label>
+        <label class="toggle">
+          <input id="set-motion" type="checkbox" :checked="s.motion && !systemCalm" :disabled="systemCalm" @change="set('motion', $event.target.checked)" />
+          <span><strong>{{ $t('settings.motion') }}</strong><small>{{ systemCalm ? $t('settings.motionSystem') : $t('settings.motionDesc') }}</small></span>
+        </label>
       </section>
 
       <section class="card settings-card">
@@ -87,7 +91,13 @@ export default {
   name: 'SettingsScreen',
   components: { ScreenHeader, DifficultyPicker },
   data() {
-    return { confirmReset: false, canVibrate: services.haptics.supported, keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2'] };
+    return {
+      confirmReset: false,
+      canVibrate: services.haptics.supported,
+      // The system asks for less motion: the setting cannot turn it back on.
+      systemCalm: services.motion.systemReduced,
+      keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2'],
+    };
   },
   computed: {
     s() {

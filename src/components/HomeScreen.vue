@@ -159,7 +159,7 @@ export default {
       if (!this.$refs.hero) return;
       const scene = new HeroScene(canvas);
       scene.night = this.$store.theme === 'dark';
-      scene.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      scene.reduced = services.motion.reduced;
       this.scene = scene;
       this.time = 4;
       const fit = () => {

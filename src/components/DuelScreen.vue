@@ -10,7 +10,7 @@
         <button type="button" class="icon-btn" :aria-label="paused ? $t('hud.resume') : $t('hud.pause')" :disabled="!!result" @click="togglePause">
           <AppIcon :name="paused ? 'play' : 'pause'" />
         </button>
-        <button type="button" class="icon-btn" :aria-label="$t('hud.menu')" @click="quit"><AppIcon name="close" /></button>
+        <button type="button" class="btn-close" :aria-label="$t('hud.menu')" @click="quit"><AppIcon name="close" /></button>
       </div>
     </header>
 

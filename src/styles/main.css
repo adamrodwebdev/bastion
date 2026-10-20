@@ -1,9 +1,12 @@
 /* ==========================================================================
    Bastion — styles
-   Same kingdom as Catapulte Mania, same art direction: "heraldic banner on
-   cut stone". Woad blue for actions, heraldic gold for accents and stars,
-   madder red for danger, limestone surfaces. Cinzel for titles only.
-   Mobile-first, light and dark themes, no external request.
+   Same kingdom as Catapulte Mania: "heraldic banner on cut stone". The
+   interface is built of heraldic materials (see "materials"): parchment to
+   read, wood to build, gilded iron for the frame and the buttons, cloth for
+   the main actions and the banners, with thick ink edges and hard shadows,
+   over a twilight sky (day) or the night. Woad blue, heraldic gold, madder
+   red. Cinzel for titles only. Mobile-first, day and night themes, no
+   external request: the textures are painted by code.
    ========================================================================== */
 
 @font-face {
@@ -22,86 +25,125 @@
   --c-madder: #a3322b;
   --c-moss: #4f6b3a;
 
-  --bg: #d9d5c8;
-  --surface: #e9e6dc;
-  --surface-2: #f4f2eb;
-  --surface-3: #d0ccbf;
-  --text: var(--c-ink);
-  --muted: #4a4458;
-  --border: #9c96a8;
-  --border-strong: #3a3448;
-  --action: var(--c-woad);
-  --action-hover: var(--c-woad-strong);
-  --action-text: #f6f3ea;
+  /* Day: the twilight behind the materials. Text laid straight on it is cream
+     in both themes; each material sets the colours of what lies on it. */
+  --bg: #2b2440;
+  --bg-glow: #4a4778;
+  --surface: #352d4c;
+  --surface-2: #3e3557;
+  --surface-3: #231d35;
+  --text: #f6efe0;
+  --muted: #cdc3d8;
+  --border: #5d5379;
+  --border-strong: #a69bc4;
+  --action: #7699d4;
+  --action-hover: #8fb0e6;
+  --action-text: #10131c;
   --accent: var(--c-gold);
-  --accent-text: var(--c-gold-ink);
-  --danger: var(--c-madder);
-  --success: var(--c-moss);
-  --focus: #b8860b;
-  --overlay: rgb(30 26 43 / 0.6);
-  --line: rgb(30 26 43 / 0.14);
-  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.6);
-  --shadow: 0 1px 2px rgb(30 26 43 / 0.12), 0 8px 20px -12px rgb(30 26 43 / 0.4);
-  --shadow-lg: 0 2px 6px rgb(30 26 43 / 0.12), 0 24px 48px -18px rgb(30 26 43 / 0.5);
-  --edge: var(--c-woad-strong);
+  --accent-text: #f2c45c;
+  --danger: #ff8a7f;
+  --success: #9cc77a;
+  --focus: #f2c45c;
+  --overlay: rgb(14 11 22 / 0.66);
+  --line: rgb(246 239 224 / 0.14);
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 10px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.35), 0 28px 56px -20px rgb(0 0 0 / 0.75);
+  --edge: #34507f;
   --p1: #3e8ed0;
   --p2: #e0662a;
   --gold-coin: #e3a21a;
   --heart: #d9534f;
 
+  /* Heraldic materials. TextureService paints the textures (--tex-*) once the
+     app runs; until then the colours under them show. */
+  --tex-parchment: none;
+  --tex-wood: none;
+  --tex-iron: none;
+  --tex-weave: none;
+  --parch: #efdfb9;
+  --parch-patch: rgb(255 250 236 / 0.6);
+  --parch-edge: #3b2a17;
+  --wood: #6e4223;
+  --iron-hi: #3b3549;
+  --iron-lo: #25202f;
+  --gilt-hi: #fff0b8;
+  --gilt: #e3b24c;
+  --gilt-lo: #a8741c;
+  --gilt-edge: #4a2f08;
+  --gilt-bg: linear-gradient(180deg, var(--gilt-hi), var(--gilt) 48%, var(--gilt-lo));
+  --gilt-shadow: inset 0 1px 0 rgb(255 255 255 / 0.7), inset 0 -2px 0 rgb(90 55 8 / 0.45), 0 2px 0 var(--c-ink);
+  --woad-hi: #4065a3;
+  --woad-lo: #22385f;
+  --madder-hi: #d4513f;
+  --madder-lo: #8f2a21;
+  --madder-glow: #e5604b;
+  --madder-mid: #9c2d24;
+  --madder-deep: #7a1f19;
+  --cream: #fff6e0;
+  --rim-gold: rgb(212 165 55 / 0.55);
+  --hard: 0 4px 0 var(--c-ink);
+  --hard-sm: 0 3px 0 var(--c-ink);
+
   --font-display: 'Cinzel', 'Trajan Pro', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
-  --radius: 10px;
+  --radius: 12px;
   --radius-lg: 16px;
   --radius-xl: 22px;
   --header-h: 56px;
   --tap: 44px;
 
-  /* Motion: things that answer the player move fast and settle softly. */
+  /* Motion: things that answer the player move fast and settle softly; what
+     is pressed sinks into its shadow. Springs overshoot, then settle (below). */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in: cubic-bezier(0.55, 0, 0.75, 0.2);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-soft: var(--ease-out);
+  --spring-bouncy: var(--ease-spring);
+  --t-press: 90ms;
   --t-fast: 140ms;
   --t: 220ms;
   --t-slow: 360ms;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
+/* Real springs where the browser draws linear() curves. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --spring-soft: linear(0, 0.16, 0.46, 0.75, 0.95, 1.06, 1.09, 1.08, 1.06, 1.03, 1.01, 1, 1);
+    --spring-bouncy: linear(0, 0.22, 0.63, 0.96, 1.13, 1.16, 1.11, 1.04, 1, 0.98, 0.98, 0.99, 1);
+  }
+}
+
+/* Night: a darker sky, and the materials catch less light. */
 :root[data-theme='dark'] {
   --bg: #141120;
+  --bg-glow: #26224a;
   --surface: #211c32;
   --surface-2: #2a243e;
   --surface-3: #191527;
-  --text: #ece6d6;
-  --muted: #b8b0c8;
   --border: #4d4664;
   --border-strong: #8a82a6;
-  --action: #5d82c2;
-  --action-hover: #7699d4;
-  --action-text: #10131c;
-  --accent-text: #e9c35f;
-  --danger: #e0665d;
-  --success: #8db86a;
-  --focus: #e9c35f;
   --overlay: rgb(8 6 14 / 0.72);
-  --line: rgb(236 230 214 / 0.12);
-  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.06);
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 24px -12px rgb(0 0 0 / 0.7);
   --shadow-lg: 0 2px 6px rgb(0 0 0 / 0.4), 0 28px 56px -20px rgb(0 0 0 / 0.8);
-  --edge: #34507f;
-  color-scheme: dark;
+  --parch: #cbb68a;
+  --parch-patch: rgb(255 240 210 / 0.26);
+  --parch-edge: #2a1d0f;
+  --wood: #4a2c18;
+  --iron-hi: #2f2a3b;
+  --iron-lo: #1c1826;
 }
 
 /* No-JS fallback: follow the system. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --bg: #141120;
+    --bg-glow: #26224a;
     --surface: #211c32;
     --surface-2: #2a243e;
-    --text: #ece6d6;
-    --muted: #b8b0c8;
-    --border: #4d4664;
-    color-scheme: dark;
+    --parch: #cbb68a;
+    --wood: #4a2c18;
   }
 }
 
@@ -120,7 +162,7 @@ body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  background: radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--surface-2) 70%, transparent), transparent 70%) no-repeat, var(--bg);
+  background: radial-gradient(120% 60% at 50% -10%, var(--bg-glow), transparent 70%) no-repeat, var(--bg);
   color: var(--text);
   font: 16px/1.5 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -199,6 +241,243 @@ button:disabled {
   color: var(--gold-coin);
 }
 
+/* ------------------------------------------------------------------ materials
+   Each material sets the colours of what lies on it (text, muted text, lines,
+   insets, links), so its contents read the same in both themes:
+   - parchment, to read: cards, briefings, the story, Gontran, dialogs, and the
+     tiles that show a tower;
+   - wood, to build: the shop and the build tray, the tower panel, wooden buttons;
+   - gilded iron, the frame: the header, round buttons, the HUD plates, messages;
+   - cloth for the main action and the banners: woad, madder or ink;
+   - gilt for what is new, won or about to be paid.
+   Thick ink edges and a hard shadow (--drop) that what is pressed sinks into. */
+.mat-parch,
+.card,
+.modal-card,
+.story-card,
+.coach,
+.wave-card,
+.level-card,
+.p2-card,
+.chapter-head,
+.build-card,
+.shop-item,
+.radial-opt {
+  --text: #2b2234;
+  --muted: #5b4a35;
+  --line: rgb(59 42 23 / 0.2);
+  --border: rgb(59 42 23 / 0.42);
+  --border-strong: var(--parch-edge);
+  --surface: var(--parch-patch);
+  --surface-2: var(--parch-patch);
+  --surface-3: rgb(120 80 30 / 0.14);
+  --action: var(--c-woad);
+  --action-hover: var(--c-woad-strong);
+  --action-text: #f6f3ea;
+  --accent-text: var(--c-gold-ink);
+  --danger: var(--c-madder);
+  --success: #3f5a2c;
+  --focus: #8a5a00;
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.45);
+  --shadow: 0 2px 0 rgb(59 42 23 / 0.3);
+  --edge: var(--c-woad-strong);
+  color-scheme: light;
+  background: var(--tex-parchment) 0 0 / 320px repeat, var(--parch);
+  color: var(--text);
+}
+
+.mat-parch,
+.card,
+.modal-card,
+.story-card,
+.coach,
+.wave-card,
+.level-card,
+.p2-card,
+.chapter-head {
+  --drop: 4px;
+  border: 2px solid var(--parch-edge);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.3), inset 0 0 38px rgb(150 100 40 / 0.36), 0 var(--drop) 0 var(--c-ink);
+}
+
+.mat-wood,
+.panel,
+.build-tray,
+.radial--tray,
+.chapter-tab,
+.scroll-rod,
+.btn-secondary {
+  --text: #fff3dc;
+  --muted: #ead6b6;
+  --line: rgb(255 243 220 / 0.2);
+  --border: rgb(255 243 220 / 0.34);
+  --border-strong: #fff3dc;
+  --surface: rgb(0 0 0 / 0.16);
+  --surface-2: rgb(255 236 200 / 0.1);
+  --surface-3: rgb(0 0 0 / 0.26);
+  --action: #8fb0e6;
+  --action-hover: #a9c3ee;
+  --action-text: #10131c;
+  --accent-text: #f2c45c;
+  --danger: #ff9187;
+  --success: #a8d38a;
+  --focus: #f2c45c;
+  --highlight: inset 0 1px 0 rgb(255 220 170 / 0.22);
+  --shadow: 0 3px 0 rgb(0 0 0 / 0.35);
+  color-scheme: dark;
+  background: var(--tex-wood) 0 0 / 360px auto repeat, var(--wood);
+  color: var(--text);
+}
+
+.mat-wood,
+.panel,
+.build-tray,
+.radial--tray,
+.chapter-tab,
+.scroll-rod {
+  --drop: 4px;
+  border: 2px solid var(--c-ink);
+  box-shadow: inset 0 1px 0 rgb(255 220 170 / 0.4), inset 0 -3px 0 rgb(0 0 0 / 0.3), 0 var(--drop) 0 var(--c-ink);
+}
+
+/* Buttons and rods are cut from wider boards: no seam crosses their text. */
+.btn-secondary,
+.scroll-rod {
+  background-size: 720px auto;
+}
+
+.mat-iron,
+.app-header,
+.icon-btn,
+.tile,
+.stat,
+.boss-bar,
+.toast,
+.wave-chip,
+.aim-chip,
+.power-btn,
+.duel-board {
+  --text: #f6efe0;
+  --muted: #d3cadc;
+  --line: rgb(246 239 224 / 0.16);
+  --border: rgb(246 239 224 / 0.3);
+  --border-strong: #f6efe0;
+  --surface: rgb(255 255 255 / 0.06);
+  --surface-2: rgb(255 255 255 / 0.1);
+  --surface-3: rgb(0 0 0 / 0.3);
+  --action: #8fb0e6;
+  --action-hover: #a9c3ee;
+  --action-text: #10131c;
+  --accent-text: #f2c45c;
+  --danger: #ff8a7f;
+  --success: #a8d38a;
+  --focus: #f2c45c;
+  --highlight: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  color-scheme: dark;
+  background: var(--tex-iron) 0 0 / 280px repeat, linear-gradient(180deg, var(--iron-hi), var(--iron-lo));
+  color: var(--text);
+}
+
+.mat-iron,
+.icon-btn,
+.tile,
+.stat,
+.boss-bar,
+.toast,
+.wave-chip,
+.aim-chip,
+.power-btn {
+  --drop: 3px;
+  border: 2px solid var(--c-ink);
+  box-shadow: inset 0 0 0 2px var(--rim-gold), inset 0 1px 0 3px rgb(255 255 255 / 0.08), 0 var(--drop) 0 var(--c-ink);
+}
+
+/* Cloth: woad unless a banner or a button picks its dye. */
+.cloth,
+.btn-primary,
+.btn-danger,
+.toast--power,
+.screen-wipe-cloth {
+  background: var(--tex-weave) 0 0 / 48px repeat, linear-gradient(180deg, var(--cloth-hi, var(--woad-hi)), var(--cloth-lo, var(--woad-lo)));
+}
+
+.cloth--madder {
+  --cloth-hi: var(--madder-hi);
+  --cloth-lo: var(--madder-lo);
+}
+
+.cloth--ink {
+  --cloth-hi: #3a3150;
+  --cloth-lo: #120f1c;
+}
+
+.gilt {
+  border: 2px solid var(--gilt-edge);
+  background: var(--gilt-bg);
+  color: #2b1a05;
+  box-shadow: var(--gilt-shadow);
+}
+
+/* Closing or cancelling, everywhere: a madder medal with a cream cross. */
+.btn-close {
+  --drop: 3px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid var(--c-ink);
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, var(--madder-glow), var(--madder-mid) 68%, var(--madder-deep));
+  color: var(--cream);
+  box-shadow: inset 0 0 0 2px rgb(242 196 92 / 0.65), inset 0 1px 0 3px rgb(255 255 255 / 0.18), 0 var(--drop) 0 var(--c-ink);
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), filter var(--t) ease;
+}
+
+/* The finger gets 48 px around the medal (the insets start inside its border). */
+.btn-close::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+
+.btn-close:hover {
+  filter: brightness(1.1);
+}
+
+.btn-close:active {
+  --drop: 1px;
+  transform: translateY(2px);
+}
+
+.btn-close .app-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-close .app-icon path {
+  stroke: currentColor;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+
+.btn-close--sm {
+  width: 34px;
+  height: 34px;
+}
+
+.btn-close--sm::after {
+  inset: -9px;
+}
+
+.btn-close--sm .app-icon {
+  width: 17px;
+  height: 17px;
+}
+
 /* ------------------------------------------------------------------ shell */
 #app {
   display: flex;
@@ -217,17 +496,8 @@ button:disabled {
   gap: 10px;
   height: var(--header-h);
   padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
-  background: rgb(30 26 43 / 0.94);
-  color: #f3eedf;
   border-bottom: 2px solid var(--c-gold);
-  box-shadow: 0 6px 18px -10px rgb(30 26 43 / 0.6);
-}
-
-@supports (backdrop-filter: blur(1px)) {
-  .app-header {
-    background: rgb(30 26 43 / 0.82);
-    backdrop-filter: blur(14px) saturate(1.4);
-  }
+  box-shadow: 0 3px 0 var(--c-ink);
 }
 
 .app-header--compact {
@@ -264,6 +534,7 @@ button:disabled {
 .brand-name {
   font: 700 1.25rem/1 var(--font-display);
   letter-spacing: 0.06em;
+  text-shadow: 0 2px 0 var(--c-ink);
 }
 
 .header-actions {
@@ -278,9 +549,11 @@ button:disabled {
   gap: 4px;
   padding: 0 10px;
   height: 36px;
+  border: 1.5px solid var(--rim-gold);
   border-radius: 999px;
-  background: rgb(255 255 255 / 0.08);
-  color: var(--c-gold);
+  background: rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.25);
+  color: var(--accent-text);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -303,9 +576,10 @@ button:disabled {
   -webkit-appearance: none;
   height: 40px;
   padding: 0 12px 0 32px;
-  border: 1px solid rgb(255 255 255 / 0.25);
+  border: 1.5px solid var(--rim-gold);
   border-radius: 999px;
-  background: transparent;
+  background: rgb(0 0 0 / 0.28);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.25);
   color: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -316,40 +590,28 @@ button:disabled {
 }
 
 .lang-select option {
-  color: #1e1a2b;
+  background-color: var(--iron-lo);
+  color: var(--text);
 }
 
 .icon-btn {
+  position: relative;
   display: inline-grid;
   place-items: center;
   width: var(--tap);
   height: var(--tap);
   padding: 0;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text);
-  box-shadow: var(--highlight), 0 2px 6px -3px rgb(30 26 43 / 0.35);
-  transition: transform var(--t-fast) var(--ease-out), background-color var(--t) ease, color var(--t) ease;
-}
-
-.app-header .icon-btn {
-  border-color: rgb(255 255 255 / 0.2);
-  background: transparent;
-  color: inherit;
-  box-shadow: none;
+  border-radius: 50%;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), filter var(--t) ease;
 }
 
 .icon-btn:hover:not(:disabled) {
-  background: var(--surface-3);
-}
-
-.app-header .icon-btn:hover {
-  background: rgb(255 255 255 / 0.1);
+  filter: brightness(1.18);
 }
 
 .icon-btn:active:not(:disabled) {
-  transform: scale(0.94);
+  --drop: 1px;
+  transform: translateY(2px);
 }
 
 .icon-btn:disabled {
@@ -359,6 +621,14 @@ button:disabled {
 .icon-btn--sm {
   width: 36px;
   height: 36px;
+}
+
+/* Small medals keep a 48 px target for the finger (the insets start inside the border). */
+.icon-btn--sm::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
 }
 
 .icon-btn--text {
@@ -424,36 +694,36 @@ button:disabled {
 
 /* ------------------------------------------------------------------ primitives */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  box-shadow: var(--highlight), var(--shadow);
 }
 
 .btn {
+  --drop: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-height: var(--tap);
   padding: 8px 16px;
-  border: 2px solid transparent;
+  border: 2px solid var(--c-ink);
   border-radius: var(--radius);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1.2;
   text-align: center;
   transition:
-    transform var(--t-fast) var(--ease-out),
-    box-shadow var(--t-fast) var(--ease-out),
-    background-color var(--t) ease,
-    border-color var(--t) ease,
-    color var(--t) ease,
+    transform var(--t-press) var(--ease-out),
+    box-shadow var(--t-press) var(--ease-out),
     opacity var(--t) ease,
     filter var(--t) ease;
 }
 
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
 .btn:active:not(:disabled) {
-  transform: translateY(2px);
+  --drop: 1px;
+  transform: translateY(3px);
 }
 
 .btn:disabled {
@@ -473,48 +743,42 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+/* The main action: madder cloth with a gilt edge. */
 .btn-primary {
-  background: var(--action);
-  color: var(--action-text);
-  border-color: transparent;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 3px 0 var(--edge), 0 8px 18px -10px rgb(30 26 43 / 0.6);
+  --cloth-hi: var(--madder-hi);
+  --cloth-lo: var(--madder-lo);
+  color: var(--cream);
+  text-shadow: 0 2px 0 rgb(30 26 43 / 0.55);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.3), inset 0 -4px 0 rgb(0 0 0 / 0.26), inset 0 0 0 3px rgb(242 196 92 / 0.5), 0 var(--drop) 0 var(--c-ink);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background: var(--action-hover);
-}
-
-.btn-primary:active:not(:disabled) {
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 1px 0 var(--edge);
-}
-
+/* Everything else a player may do: a wooden plank. */
 .btn-secondary {
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  box-shadow: var(--highlight), 0 3px 0 var(--surface-3), 0 6px 14px -10px rgb(30 26 43 / 0.5);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  border-color: var(--border);
-}
-
-.btn-secondary:active:not(:disabled) {
-  box-shadow: var(--highlight), 0 1px 0 var(--surface-3);
+  box-shadow: inset 0 1px 0 rgb(255 220 170 / 0.4), inset 0 -3px 0 rgb(0 0 0 / 0.3), 0 var(--drop) 0 var(--c-ink);
 }
 
 .btn-ghost {
+  border-color: transparent;
   background: transparent;
   color: var(--muted);
 }
 
 .btn-ghost:hover:not(:disabled) {
   color: var(--text);
-  background: var(--surface-2);
+  background: var(--surface-3);
+  filter: none;
 }
 
+.btn-ghost:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* What cannot be undone: a darker madder, with no gilt. */
 .btn-danger {
-  background: var(--danger);
-  color: #fff;
+  --cloth-hi: #8f2a21;
+  --cloth-lo: #571610;
+  color: var(--cream);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 0.18), inset 0 -3px 0 rgb(0 0 0 / 0.3), 0 var(--drop) 0 var(--c-ink);
 }
 
 .btn-danger-text {
@@ -551,7 +815,7 @@ button:disabled {
   padding: 3px 10px;
   border-radius: 999px;
   background: var(--surface-2);
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--border);
   font-size: 0.85rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -559,15 +823,16 @@ button:disabled {
 
 .chip-gold,
 .badge-gold {
-  background: color-mix(in srgb, var(--c-gold) 25%, var(--surface));
-  color: var(--accent-text);
-  border-color: var(--c-gold);
+  border: 2px solid var(--gilt-edge);
+  background: var(--gilt-bg);
+  color: #2b1a05;
+  box-shadow: var(--gilt-shadow);
 }
 
 .badge-danger {
-  background: var(--danger);
-  color: #fff;
-  border-color: transparent;
+  border-color: var(--c-ink);
+  background: linear-gradient(180deg, var(--madder-hi), var(--madder-lo));
+  color: var(--cream);
 }
 
 .badge-success {
@@ -681,8 +946,10 @@ kbd {
   grid-auto-columns: 1fr;
   gap: 4px;
   padding: 4px;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface-3);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.12);
 }
 
 .segmented-option {
@@ -698,11 +965,11 @@ kbd {
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: background-color var(--t) var(--ease-out), color var(--t) ease, box-shadow var(--t) var(--ease-out), transform var(--t-fast) var(--ease-out);
+  transition: color var(--t) ease, box-shadow var(--t) var(--ease-out), transform var(--t-press) var(--ease-out);
 }
 
 .segmented-option:active {
-  transform: scale(0.97);
+  transform: translateY(1px);
 }
 
 .segmented-option input {
@@ -715,10 +982,12 @@ kbd {
   outline: 3px solid var(--focus);
 }
 
+/* The choice made: a woad pennant. */
 .segmented-option.is-active {
-  background: var(--surface-2);
-  color: var(--text);
-  box-shadow: var(--highlight), 0 2px 8px -3px rgb(30 26 43 / 0.35);
+  background: var(--tex-weave) 0 0 / 48px repeat, linear-gradient(180deg, var(--woad-hi), var(--woad-lo));
+  color: var(--cream);
+  text-shadow: 0 1px 0 rgb(30 26 43 / 0.5);
+  box-shadow: 0 0 0 2px var(--c-ink), inset 0 0 0 2px rgb(242 196 92 / 0.45), 0 3px 0 2px var(--c-ink);
 }
 
 .segmented-hint {
@@ -814,6 +1083,7 @@ kbd {
 .hero-title {
   font: 700 clamp(2.6rem, 11vw, 4.2rem) / 1 var(--font-display);
   letter-spacing: 0.08em;
+  text-shadow: 0 3px 0 var(--c-ink);
 }
 
 .hero-title-sub {
@@ -858,28 +1128,26 @@ kbd {
   gap: 4px;
   min-height: 96px;
   padding: 12px 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--highlight), var(--shadow);
+  border-radius: 14px;
   text-align: center;
-  transition: transform var(--t) var(--ease-out), box-shadow var(--t) var(--ease-out), border-color var(--t) ease;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), filter var(--t) ease;
 }
 
 .tile:hover {
-  transform: translateY(-3px);
-  border-color: var(--border);
-  box-shadow: var(--highlight), var(--shadow-lg);
+  --drop: 5px;
+  transform: translateY(-2px);
+  filter: brightness(1.12);
 }
 
 .tile:active {
-  transform: translateY(0) scale(0.98);
+  --drop: 1px;
+  transform: translateY(2px);
 }
 
 .tile > .app-icon {
   width: 28px;
   height: 28px;
-  color: var(--action);
+  color: var(--accent-text);
 }
 
 .tile-title {
@@ -924,6 +1192,7 @@ kbd {
 .screen-title {
   font: 700 1.55rem/1.1 var(--font-display);
   letter-spacing: 0.03em;
+  text-shadow: 0 2px 0 var(--c-ink);
 }
 
 .screen-head-extra {
@@ -949,23 +1218,23 @@ kbd {
   justify-items: start;
   gap: 2px;
   min-height: 64px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
+  padding: 10px 10px 8px;
   border-radius: 12px;
-  background: linear-gradient(var(--t1), var(--t1)) top / 100% 6px no-repeat, var(--surface);
+  background: linear-gradient(var(--t1), var(--t1)) top / 100% 5px no-repeat, var(--tex-wood) 0 0 / 720px auto repeat, var(--wood);
   text-align: left;
-  transition: border-color var(--t) ease, box-shadow var(--t) var(--ease-out), transform var(--t-fast) var(--ease-out), background-size var(--t-slow) var(--ease-out);
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), filter var(--t) ease;
 }
 
 .chapter-tab:active:not(:disabled) {
-  transform: scale(0.97);
+  --drop: 1px;
+  transform: translateY(3px);
 }
 
+/* The chapter on show: a gilt rim, and its colour runs deeper down the plank. */
 .chapter-tab.is-active {
-  border-color: var(--border-strong);
-  background-size: 100% 100%, auto;
-  background-image: linear-gradient(color-mix(in srgb, var(--t1) 55%, var(--surface)), color-mix(in srgb, var(--t1) 55%, var(--surface)));
-  box-shadow: var(--highlight), var(--shadow);
+  background-size: 100% 9px, 720px auto;
+  box-shadow: inset 0 0 0 2px var(--c-gold), inset 0 1px 0 3px rgb(255 220 170 / 0.3), 0 var(--drop) 0 var(--c-ink);
+  filter: brightness(1.12);
 }
 
 .chapter-tab.is-locked {
@@ -1004,11 +1273,10 @@ kbd {
   align-items: end;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 22px;
   margin-bottom: 14px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(120deg, color-mix(in srgb, var(--t1) 60%, var(--surface)), var(--surface));
-  border: 1px solid var(--border);
+  background: linear-gradient(var(--t2), var(--t2)) left / 8px 100% no-repeat, var(--tex-parchment) 0 0 / 320px repeat, var(--parch);
 }
 
 .chapter-title {
@@ -1034,31 +1302,29 @@ kbd {
   display: grid;
   width: 100%;
   padding: 6px;
-  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--highlight), var(--shadow);
   text-align: left;
-  transition: transform var(--t) var(--ease-out), border-color var(--t) ease, box-shadow var(--t) var(--ease-out);
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out);
 }
 
 .level-card:hover:not(:disabled) {
-  transform: translateY(-3px);
-  border-color: var(--border);
-  box-shadow: var(--highlight), var(--shadow-lg);
+  --drop: 6px;
+  transform: translateY(-2px);
 }
 
 .level-card:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  --drop: 1px;
+  transform: translateY(3px);
 }
 
+/* The next level to play: a gilt rim. */
 .level-card.is-next {
-  border-color: var(--c-gold);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-gold) 40%, transparent), var(--shadow);
+  border-color: var(--gilt-edge);
+  box-shadow: 0 0 0 3px var(--c-gold), inset 0 0 38px rgb(150 100 40 / 0.36), 0 calc(var(--drop) + 3px) 0 var(--c-ink);
 }
 
 .level-card.is-boss {
-  border-color: var(--danger);
+  border-color: var(--c-madder);
 }
 
 .level-card.is-locked {
@@ -1151,14 +1417,38 @@ kbd {
   overflow: auto;
   padding: 16px 18px;
   border-radius: var(--radius-xl);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--highlight), var(--shadow-lg);
-  animation: card-in var(--t-slow) var(--ease-out);
+  animation: card-in var(--t-slow) var(--spring-soft) backwards;
 }
 
-.briefing {
-  background: linear-gradient(var(--t1), var(--t1)) top / 100% 8px no-repeat, var(--surface);
+/* The briefing is a scroll: parchment between two wooden rods, unrolled from the top. */
+.scroll {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(100%, 720px);
+  max-height: calc(100dvh - 24px);
+  animation: unroll 380ms var(--ease-out) backwards;
+}
+
+.scroll > .modal-card {
+  width: auto;
+  max-height: none;
+  min-height: 0;
+  margin: -4px 8px;
+  border-radius: 4px;
+  animation: none;
+}
+
+.scroll-rod {
+  position: relative;
+  z-index: 1;
+  height: 22px;
+  border-radius: 11px;
+}
+
+@keyframes unroll {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
 }
 
 .modal-head {
@@ -1187,8 +1477,9 @@ kbd {
   gap: 10px;
   margin: 14px -18px -16px;
   padding: 12px 18px;
-  background: var(--surface-2);
-  border-top: 1px solid var(--border);
+  background: var(--tex-parchment) 0 0 / 320px repeat, var(--parch);
+  border-top: 2px solid var(--border);
+  box-shadow: 0 -8px 12px -10px rgb(59 42 23 / 0.5);
 }
 
 .speech {
@@ -1198,8 +1489,8 @@ kbd {
   padding: 10px 12px 0;
   margin-bottom: 12px;
   border-radius: var(--radius);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--surface-3);
+  border: 1.5px solid var(--border);
 }
 
 .speech--inline {
@@ -1221,6 +1512,7 @@ kbd {
 }
 
 .speech-text {
+  font-family: Georgia, 'Times New Roman', serif;
   font-style: italic;
 }
 
@@ -1382,9 +1674,6 @@ kbd {
   height: 38px;
   padding: 0 11px;
   border-radius: 999px;
-  background: var(--surface-2);
-  border: 1px solid var(--line);
-  box-shadow: var(--highlight), 0 2px 6px -3px rgb(30 26 43 / 0.3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1396,12 +1685,12 @@ kbd {
 
 .stat--p1 {
   border-color: var(--p1);
-  box-shadow: inset 4px 0 0 var(--p1);
+  box-shadow: inset 4px 0 0 var(--p1), inset 0 0 0 2px var(--rim-gold), 0 var(--drop) 0 var(--c-ink);
 }
 
 .stat--p2 {
   border-color: var(--p2);
-  box-shadow: inset 4px 0 0 var(--p2);
+  box-shadow: inset 4px 0 0 var(--p2), inset 0 0 0 2px var(--rim-gold), 0 var(--drop) 0 var(--c-ink);
 }
 
 .stat-label {
@@ -1450,8 +1739,6 @@ kbd {
   gap: 10px;
   padding: 6px 12px;
   border-radius: var(--radius);
-  background: var(--c-ink);
-  color: #f3eedf;
 }
 
 .boss-name {
@@ -1483,9 +1770,6 @@ kbd {
   gap: 10px;
   padding: 6px 8px 0 10px;
   border-radius: var(--radius);
-  background: var(--surface-2);
-  border: 2px solid var(--c-gold);
-  box-shadow: var(--shadow);
   animation: fade-in 0.25s ease;
 }
 
@@ -1505,9 +1789,9 @@ kbd {
   font-size: 0.92rem;
 }
 
-.coach .icon-btn {
+.coach .btn-close {
   align-self: start;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .game-layout {
@@ -1529,7 +1813,7 @@ kbd {
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 3px solid var(--c-ink);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-gold) 55%, transparent), var(--shadow-lg);
+  box-shadow: 0 0 0 2px var(--rim-gold), 0 5px 0 2px var(--c-ink), var(--shadow-lg);
 }
 
 .board {
@@ -1590,16 +1874,26 @@ kbd {
 }
 
 .btn-wave {
+  position: relative;
   min-width: 220px;
 }
 
-.btn-wave.is-pulsing {
-  animation: pulse 1.6s ease-in-out infinite;
+/* The wave can be called early: a gilt ring breathes around the button. */
+.btn-wave.is-pulsing::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: calc(var(--radius) + 5px);
+  box-shadow: 0 0 0 3px var(--c-gold);
+  opacity: 0;
+  pointer-events: none;
+  animation: ring-breathe 1.6s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes ring-breathe {
   50% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-gold) 45%, transparent);
+    opacity: 0.85;
+    transform: scale(1.02);
   }
 }
 
@@ -1631,8 +1925,7 @@ kbd {
   gap: 8px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid var(--p2);
-  background: var(--surface);
+  border-color: var(--p2);
   font-size: 0.85rem;
 }
 
@@ -1668,14 +1961,12 @@ kbd {
 .panel {
   padding: 12px;
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--highlight), var(--shadow);
 }
 
 .panel-title {
-  font-size: 1rem;
-  font-weight: 800;
+  font: 700 1rem/1.2 var(--font-display);
+  letter-spacing: 0.03em;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 0.35);
 }
 
 /* Shop */
@@ -1686,6 +1977,7 @@ kbd {
 }
 
 .shop-item {
+  --drop: 3px;
   position: relative;
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -1694,27 +1986,26 @@ kbd {
   column-gap: 6px;
   min-height: 54px;
   padding: 6px 8px 6px 6px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--c-ink);
   border-radius: 12px;
-  background: var(--surface-2);
-  box-shadow: var(--highlight), 0 2px 0 var(--surface-3);
+  box-shadow: var(--highlight), inset 0 0 18px rgb(150 100 40 / 0.3), 0 var(--drop) 0 var(--c-ink);
   text-align: left;
-  transition: transform var(--t-fast) var(--ease-out), border-color var(--t) ease, background-color var(--t) ease, box-shadow var(--t) var(--ease-out), opacity var(--t) ease, filter var(--t) ease;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), opacity var(--t) ease, filter var(--t) ease;
 }
 
 .shop-item:hover:not(:disabled) {
-  border-color: var(--border);
+  filter: brightness(1.05);
 }
 
 .shop-item:active:not(:disabled) {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: var(--highlight);
+  --drop: 1px;
+  transform: translateY(2px);
 }
 
+/* The tower in hand: a gilt rim. */
 .shop-item.is-armed {
-  border-color: var(--action);
-  background: color-mix(in srgb, var(--action) 14%, var(--surface));
-  box-shadow: 0 0 0 2px var(--action), 0 6px 16px -8px var(--action);
+  border-color: var(--gilt-edge);
+  box-shadow: 0 0 0 3px var(--c-gold), inset 0 0 18px rgb(150 100 40 / 0.3), 0 calc(var(--drop) + 3px) 0 var(--c-ink);
 }
 
 .shop-item.is-poor {
@@ -1822,7 +2113,8 @@ kbd {
 .stats div {
   padding: 6px 4px;
   border-radius: var(--radius);
-  background: var(--surface-2);
+  background: var(--surface-3);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.18);
   text-align: center;
 }
 
@@ -1864,28 +2156,37 @@ kbd {
   gap: 6px;
   min-height: 52px;
   padding: 4px 6px;
-  border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--surface-2);
-  box-shadow: var(--highlight), 0 2px 0 var(--surface-3);
   text-align: left;
-  transition: transform var(--t-fast) var(--ease-out), border-color var(--t) ease, background-color var(--t) ease, opacity var(--t) ease, box-shadow var(--t) ease;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), opacity var(--t) ease;
 }
 
 .power-btn:active:not(.is-off) {
-  transform: scale(0.95);
+  --drop: 1px;
+  transform: translateY(2px);
 }
 
+/* Ready: the rim turns to full gold, and a ring flashes off it once. */
 .power-btn.is-ready:not(.is-off) {
-  border-color: var(--c-gold);
-  box-shadow: 0 0 0 1px var(--c-gold), 0 4px 14px -6px color-mix(in srgb, var(--c-gold) 80%, transparent);
-  animation: ready-glow 0.9s var(--ease-out);
+  box-shadow: inset 0 0 0 2px var(--c-gold), 0 0 14px -2px color-mix(in srgb, var(--c-gold) 70%, transparent), 0 var(--drop) 0 var(--c-ink);
 }
 
+/* Back at rest once it has flashed: unseen, and no wider than the button. */
+.power-btn.is-ready:not(.is-off)::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 3px var(--c-gold);
+  opacity: 0;
+  pointer-events: none;
+  animation: ring-out 0.9s var(--ease-out);
+}
+
+/* Running, or waiting for its target: a moss rim. */
 .power-btn.is-active,
 .power-btn.is-aiming {
-  border-color: var(--success);
-  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+  box-shadow: inset 0 0 0 2px var(--success), 0 var(--drop) 0 var(--c-ink);
 }
 
 .power-btn.is-off:not(.is-active) {
@@ -1905,7 +2206,7 @@ kbd {
 }
 
 .chrono-track {
-  stroke: var(--surface-3);
+  stroke: rgb(255 255 255 / 0.14);
 }
 
 .chrono-fill {
@@ -1949,8 +2250,15 @@ kbd {
 
 .power-key {
   position: absolute;
-  top: 3px;
-  right: 3px;
+  top: 5px;
+  right: 6px;
+}
+
+/* Where the key shows (keyboard and mouse), the name keeps clear of it. */
+@media (hover: hover) and (pointer: fine) {
+  .power-label {
+    padding-right: 16px;
+  }
 }
 
 .power-hint {
@@ -2253,9 +2561,6 @@ kbd {
   overflow: auto;
   padding: 16px 18px;
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  border: 2px solid var(--c-gold);
-  box-shadow: var(--shadow-lg);
 }
 
 .story-title {
@@ -2344,18 +2649,60 @@ kbd {
   accent-color: var(--action);
 }
 
+/* A setting that is on or off: a row ending with a switch. */
 .toggle {
   display: flex;
-  align-items: start;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-3);
   cursor: pointer;
 }
 
 .toggle input {
-  width: 22px;
-  height: 22px;
-  margin-top: 2px;
-  accent-color: var(--action);
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  order: 2;
+  width: 46px;
+  height: 26px;
+  margin: 0 0 0 auto;
+  border: 2px solid var(--c-ink);
+  border-radius: 13px;
+  background: rgb(59 42 23 / 0.35);
+  box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.2);
+  cursor: pointer;
+  transition: background-color var(--t) ease;
+}
+
+.toggle input::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--c-ink);
+  border-radius: 50%;
+  background: var(--cream);
+  transition: transform var(--t) var(--spring-soft);
+}
+
+.toggle input:checked {
+  background: var(--c-moss);
+}
+
+.toggle input:checked::before {
+  transform: translateX(20px);
+}
+
+.toggle:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .toggle span {
@@ -2516,8 +2863,8 @@ kbd {
   min-width: 0;
   padding: 8px;
   border-radius: var(--radius-lg);
-  background: var(--surface);
   border: 3px solid var(--p1);
+  box-shadow: inset 0 0 0 2px var(--rim-gold), var(--hard);
 }
 
 .duel-board--p2 {
@@ -2646,25 +2993,21 @@ kbd {
 .toast {
   padding: 10px 16px;
   border-radius: 12px;
-  background: var(--c-ink);
-  color: #f3eedf;
   font-weight: 700;
   font-size: 0.9rem;
   text-align: center;
-  box-shadow: var(--shadow-lg);
-  border-left: 4px solid var(--c-gold);
 }
 
 .toast--success {
-  border-left-color: #8db86a;
+  box-shadow: inset 0 0 0 2px #8db86a, 0 var(--drop) 0 var(--c-ink);
 }
 
 .toast--warn {
-  border-left-color: #e0665d;
+  box-shadow: inset 0 0 0 2px #e0665d, 0 var(--drop) 0 var(--c-ink);
 }
 
 .toast--power {
-  background: var(--c-woad);
+  text-shadow: 0 1px 0 rgb(30 26 43 / 0.5);
 }
 
 .toast-enter-active {
@@ -2790,8 +3133,6 @@ kbd {
   left: 50%;
   width: min(70%, 440px);
   transform: translateX(-50%);
-  background: color-mix(in srgb, var(--c-ink) 88%, transparent);
-  box-shadow: var(--shadow);
 }
 
 @media (min-width: 768px), (orientation: landscape) and (max-height: 540px) {
@@ -2806,23 +3147,6 @@ kbd {
 
   .game .board-frame .hud-controls {
     pointer-events: auto;
-  }
-
-  .game .board-frame .stat {
-    background: color-mix(in srgb, var(--surface) 92%, transparent);
-    border-color: var(--border-strong);
-    box-shadow: var(--shadow);
-  }
-
-  /* Cooperation: the names are hidden on the map, the players' colours stay. */
-  .game .board-frame .stat--p1 {
-    border-color: var(--p1);
-    box-shadow: inset 4px 0 0 var(--p1), var(--shadow);
-  }
-
-  .game .board-frame .stat--p2 {
-    border-color: var(--p2);
-    box-shadow: inset 4px 0 0 var(--p2), var(--shadow);
   }
 
   /* On the map the plaques show an icon and a number; the label stays for screen readers. */
@@ -2926,21 +3250,18 @@ kbd {
   width: var(--size, 56px);
   min-height: var(--size, 56px);
   padding: 3px 0 4px;
-  border: 2px solid var(--border-strong);
+  border: 2px solid var(--c-ink);
   border-radius: 14px;
-  background: var(--surface-2);
-  color: var(--text);
-  box-shadow: var(--shadow);
+  box-shadow: var(--highlight), inset 0 0 16px rgb(150 100 40 / 0.3), var(--hard-sm);
   transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)));
-  animation: radial-pop 0.18s ease-out both;
+  animation: radial-pop 0.22s var(--spring-soft) both;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: box-shadow 0.15s;
 }
 
 .radial-opt:hover,
 .radial-opt:focus-visible {
-  border-color: var(--c-gold);
-  box-shadow: var(--shadow), 0 0 0 3px color-mix(in srgb, var(--c-gold) 40%, transparent);
+  box-shadow: 0 0 0 3px var(--c-gold), inset 0 0 16px rgb(150 100 40 / 0.3), var(--hard-sm);
 }
 
 .radial-opt:focus-visible {
@@ -3003,8 +3324,6 @@ kbd {
   padding: 6px;
   overflow-x: auto;
   border-radius: 14px;
-  background: color-mix(in srgb, var(--c-ink) 85%, transparent);
-  box-shadow: var(--shadow);
 }
 
 .radial--tray .radial-opt {
@@ -3080,8 +3399,8 @@ kbd {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border: 2px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-color: var(--gilt-edge);
+  box-shadow: inset 0 0 0 2px var(--c-gold), inset 0 0 38px rgb(150 100 40 / 0.36), var(--hard);
 }
 
 .new-player-body {
@@ -3121,8 +3440,8 @@ kbd {
 }
 
 .lesson-card.is-next {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent), var(--shadow);
+  border-color: var(--gilt-edge);
+  box-shadow: 0 0 0 3px var(--c-gold), inset 0 0 38px rgb(150 100 40 / 0.36), 0 7px 0 var(--c-ink);
 }
 
 .lesson-head {
@@ -3401,11 +3720,15 @@ kbd {
     line-height: 1.25;
   }
 
-  .coach .icon-btn {
+  .coach .btn-close {
     width: 30px;
     height: 30px;
     margin-top: 0;
     align-self: center;
+  }
+
+  .coach .btn-close::after {
+    inset: -11px;
   }
 
   .game-layout {
@@ -3615,15 +3938,6 @@ kbd {
   }
 }
 
-@keyframes ready-glow {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-gold) 80%, transparent);
-  }
-  45% {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--c-gold) 0%, transparent);
-  }
-}
-
 @keyframes level-up {
   0% {
     transform: scale(0.6);
@@ -3645,31 +3959,81 @@ kbd {
   }
 }
 
-/* Screens */
-.screen-enter-active {
-  transition: opacity var(--t) ease, transform var(--t-slow) var(--ease-out);
+/* Small enough to stay inside the strip's padding: a phone's screen never grows. */
+@keyframes ring-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(1.16);
+  }
 }
 
-.screen-leave-active {
-  transition: opacity var(--t-fast) ease, transform var(--t-fast) var(--ease-in);
+/* Screens: a woad banner drops over the screen while the next one is put in
+   place, then lifts off it (ScreenWipe). It never takes a tap: the new screen
+   answers as soon as it is there. Fades only when motion is reduced. */
+.screen-wipe {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 85;
+  height: 112vh;
+  height: 112lvh;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(-104%);
 }
 
-.screen-enter-from {
-  opacity: 0;
-  transform: translateY(14px);
+.screen-wipe.is-on {
+  visibility: visible;
+  will-change: transform;
 }
 
-.screen-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
+/* The ink hem shows under the cloth along its swallow-tailed edge. */
+.screen-wipe-hem,
+.screen-wipe-cloth {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 75% 96%, 50% 90%, 25% 96%, 0 90%);
 }
 
-/* Boards measure themselves when they appear: they only fade. */
-.screen-enter-from.game,
-.screen-leave-to.game,
-.screen-enter-from.duel,
-.screen-leave-to.duel {
-  transform: none;
+.screen-wipe-hem {
+  background: var(--c-ink);
+}
+
+.screen-wipe-cloth {
+  bottom: 7px;
+  display: grid;
+  place-items: center;
+}
+
+/* Gilt stitching down both sides. */
+.screen-wipe-cloth::before {
+  content: '';
+  position: absolute;
+  inset: 0 12px 13%;
+  border-inline: 2px dashed rgb(255 214 120 / 0.7);
+}
+
+.screen-wipe-crest {
+  width: clamp(110px, 24vmin, 180px);
+  height: auto;
+  margin-top: -8vh;
+}
+
+.crest-gilt,
+.crest-field {
+  stroke: var(--c-ink);
+}
+
+.crest-gilt {
+  fill: var(--gilt);
+}
+
+.crest-field {
+  fill: var(--woad-lo);
 }
 
 /* Shop ⇄ tower panel */
@@ -3792,6 +4156,11 @@ kbd {
   top: 58px;
 }
 
+/* A power being aimed keeps the top of the map: messages come under its chip. */
+.in-game:has(.layout-phone .aim-chip) .toast-stack {
+  top: 112px;
+}
+
 .layout-phone.game {
   position: relative;
   gap: 0;
@@ -3863,9 +4232,9 @@ kbd {
   grid-area: powers;
   padding: 8px max(12px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   border: 0;
-  border-top: 1px solid color-mix(in srgb, var(--c-gold) 45%, transparent);
+  border-top: 2px solid var(--c-gold);
   border-radius: 0;
-  background: var(--c-ink);
+  background: var(--tex-iron) 0 0 / 280px repeat, linear-gradient(180deg, var(--iron-hi), var(--iron-lo));
   box-shadow: none;
 }
 
@@ -3885,17 +4254,6 @@ kbd {
   min-height: 52px;
   padding: 0;
   border-radius: 50%;
-}
-
-.layout-phone .power-btn {
-  border-color: rgb(255 255 255 / 0.16);
-  background: color-mix(in srgb, #fff 8%, var(--c-ink));
-  box-shadow: none;
-  color: #f6efe0;
-}
-
-.layout-phone .power-btn .chrono-track {
-  stroke: rgb(255 255 255 / 0.12);
 }
 
 .layout-phone .power-label,
@@ -3987,7 +4345,7 @@ kbd {
     border: 3px solid var(--c-ink);
     border-radius: var(--radius-lg);
     background: var(--c-ink);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-gold) 55%, transparent), var(--shadow-lg);
+    box-shadow: 0 0 0 2px var(--rim-gold), 0 5px 0 2px var(--c-ink), var(--shadow-lg);
   }
 
   .stage-overlays > * {
@@ -4053,6 +4411,19 @@ kbd {
   align-content: start;
 }
 
+/* The column is narrow: the panels keep to its width, and the upgrade takes a row of its own. */
+.layout-landscape .sidebar > * {
+  min-width: 0;
+}
+
+.layout-landscape .tower-panel--compact .tower-actions {
+  flex-wrap: wrap;
+}
+
+.layout-landscape .tower-panel--compact .tower-actions > :first-child {
+  flex-basis: 100%;
+}
+
 .layout-landscape .power-bar {
   padding: 8px;
 }
@@ -4070,10 +4441,7 @@ kbd {
   display: grid;
   gap: 8px;
   padding: 10px;
-  border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--surface);
-  box-shadow: var(--shadow-lg);
 }
 
 .build-tray-row {
@@ -4083,6 +4451,10 @@ kbd {
 
 /* Five towers or more: one row the finger swipes, the next card peeking in. */
 .build-tray.is-swipe .build-tray-row {
+  /* Room inside the scroller for the rims and the hard shadows. */
+  margin: -5px -4px -10px;
+  padding: 5px 4px 10px;
+  scroll-padding-inline: 4px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
@@ -4095,6 +4467,7 @@ kbd {
 }
 
 .build-card {
+  --drop: 3px;
   flex: 1 1 0;
   min-width: 0;
   min-height: 92px;
@@ -4103,13 +4476,11 @@ kbd {
   align-content: center;
   gap: 2px;
   padding: 6px 2px;
-  border: 2px solid var(--line);
+  border: 2px solid var(--c-ink);
   border-radius: 14px;
-  background: var(--surface-2);
-  box-shadow: var(--highlight), 0 2px 0 var(--surface-3);
-  color: var(--text);
+  box-shadow: var(--highlight), inset 0 0 18px rgb(150 100 40 / 0.3), 0 var(--drop) 0 var(--c-ink);
   scroll-snap-align: start;
-  transition: transform var(--t-fast) var(--ease-out), border-color var(--t) ease, background-color var(--t) ease, box-shadow var(--t) ease;
+  transition: transform var(--t-press) var(--ease-out), box-shadow var(--t-press) var(--ease-out), opacity var(--t) ease;
 }
 
 .build-tray.is-swipe .build-card {
@@ -4117,13 +4488,16 @@ kbd {
 }
 
 .build-card:active {
-  transform: scale(0.94);
+  --drop: 1px;
+  transform: translateY(2px);
 }
 
+/* The tower picked: lifted off the tray, with a gilt rim. */
 .build-card.is-picked {
-  border-color: var(--c-gold);
-  background: color-mix(in srgb, var(--c-gold) 20%, var(--surface-2));
-  box-shadow: 0 0 0 1px var(--c-gold), 0 6px 18px -8px color-mix(in srgb, var(--c-gold) 85%, transparent);
+  --drop: 5px;
+  border-color: var(--gilt-edge);
+  box-shadow: 0 0 0 3px var(--c-gold), inset 0 0 18px rgb(150 100 40 / 0.3), 0 calc(var(--drop) + 3px) 0 var(--c-ink);
+  transform: translateY(-3px);
 }
 
 .build-card.is-poor {
@@ -4160,10 +4534,12 @@ kbd {
 
 .build-card-confirm {
   padding: 0 8px;
+  border: 1.5px solid var(--gilt-edge);
   border-radius: 10px;
-  background: var(--c-gold);
-  color: var(--c-ink);
-  animation: bump 0.34s var(--ease-spring);
+  background: var(--gilt-bg);
+  color: #2b1a05;
+  box-shadow: var(--gilt-shadow);
+  animation: bump 0.34s var(--spring-bouncy);
 }
 
 .build-card-confirm .app-icon {
@@ -4259,10 +4635,10 @@ kbd {
 .tower-panel--compact {
   padding: 10px 12px 12px;
   border-radius: 18px;
-  box-shadow: var(--shadow-lg);
 }
 
 .tower-panel--compact .tower-panel-head {
+  grid-template-columns: auto minmax(0, 1fr) auto;
   margin-bottom: 6px;
 }
 
@@ -4296,11 +4672,11 @@ kbd {
   height: 16px;
 }
 
+/* Selling asks for a second tap: the plank turns to madder. */
 .btn-sell.is-confirm {
-  border-color: var(--danger);
-  background: var(--danger);
-  color: #fff;
-  animation: bump 0.34s var(--ease-spring);
+  background: linear-gradient(180deg, var(--madder-hi), var(--madder-lo));
+  color: var(--cream);
+  animation: bump 0.34s var(--spring-bouncy);
 }
 
 /* ---------- Next wave on touch screens: a chip by the flag, details on tap ---------- */
@@ -4311,10 +4687,7 @@ kbd {
   gap: 6px;
   height: 40px;
   padding: 0 12px 0 4px;
-  border: 1px solid color-mix(in srgb, var(--c-gold) 70%, transparent);
   border-radius: 20px;
-  background: rgb(30 26 43 / 0.9);
-  color: #f6efe0;
   font-size: 0.8125rem;
   font-weight: 800;
   line-height: 1;
@@ -4340,11 +4713,7 @@ kbd {
   display: grid;
   gap: 8px;
   padding: 12px;
-  border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--surface);
-  box-shadow: var(--shadow-lg);
-  color: var(--text);
   line-height: 1.35;
   pointer-events: auto;
   animation: rise-in var(--t) var(--ease-out);
@@ -4391,10 +4760,7 @@ kbd {
   gap: 8px;
   min-height: 44px;
   padding: 0 4px 0 14px;
-  border: 1px solid var(--c-gold);
   border-radius: 22px;
-  background: rgb(30 26 43 / 0.92);
-  color: #f6efe0;
   font-size: 0.875rem;
   pointer-events: auto;
   animation: fade-in var(--t) var(--ease-out);
@@ -4408,18 +4774,27 @@ kbd {
   white-space: nowrap;
 }
 
-.aim-chip .icon-btn {
-  color: inherit;
+/* Reduced motion: the system asks for it, or the Motion setting is off
+   (MotionService writes data-motion). Nothing moves: things simply appear,
+   and screens fade (App.vue). */
+:root[data-motion='reduced'] .spotlight {
+  animation: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .spotlight {
-    animation: none;
-  }
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
 
-  *,
-  *::before,
-  *::after {
+/* Before the app runs (no data-motion yet), the system's wish alone. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion]) *,
+  :root:not([data-motion]) *::before,
+  :root:not([data-motion]) *::after {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;

@@ -2,7 +2,7 @@
   <section class="panel shop" :aria-label="$t('shop.title')">
     <div class="sheet-head">
       <h2 class="panel-title">{{ $t('shop.title') }}</h2>
-      <button type="button" class="icon-btn icon-btn--sm" :aria-label="$t('tower.deselect')" @click="$emit('close')"><AppIcon name="close" /></button>
+      <button type="button" class="btn-close btn-close--sm" :aria-label="$t('tower.deselect')" @click="$emit('close')"><AppIcon name="close" /></button>
     </div>
     <div class="shop-grid">
       <button
