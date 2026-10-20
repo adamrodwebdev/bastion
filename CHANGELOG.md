@@ -16,6 +16,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - **Bouton son** dans l'en-tête, sur tous les écrans : coupe la musique et les bruitages, et s'en souvient.
 - Réglage **Vibrations** (écran Réglages, partie « Son », sur les téléphones qui le permettent) : une courte vibration quand on construit, améliore ou vend une tour, lance une vague, utilise un pouvoir ou perd une vie.
 - Le coût d'une construction ou d'une amélioration s'élève au-dessus de la tour (« −60 »), comme le gain d'une vente.
+- Réglage **Animations** (écran Réglages, partie « Affichage ») : bannières entre les écrans, panneaux et effets de combat animés ; désactivé, il ne reste que de courts fondus. Quand l'appareil demande moins d'animations, le réglage reste coupé et le dit.
 - **Refonte graphique complète**, toujours dessinée par le code (aucune image à télécharger) :
   - terrain peint pour chacun des 10 chapitres : herbe texturée, routes pavées, eau animée, arbres et rochers propres au décor ;
   - les 10 tours sont de vrais bâtiments, en bois au niveau 1, en pierre ensuite, avec des ornements dorés pour l'élite ; leurs parties bougent (l'archer vise, le canon recule, la catapulte lance, le cristal de givre flotte, les braseros brûlent, les drapeaux flottent) ;
@@ -47,13 +48,20 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - Les langues sont chargées à la demande : seule celle du joueur est téléchargée.
 - Images de présentation (`marketing/`, `public/og-image.png`) refaites avec les nouveaux graphismes.
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).
-- **Interface modernisée** : surfaces plus douces, boutons qui s'enfoncent quand on les touche, en-tête translucide.
-- **Animations et transitions** : passage en fondu d'un écran à l'autre, entrée du menu d'accueil, niveaux d'un chapitre qui arrivent les uns après les autres, chiffres du jeu (vies, or, vague) qui réagissent quand ils changent, tour qui bondit quand on l'améliore, pouvoir qui brille quand il est de nouveau prêt, étoiles tamponnées en fin de niveau. Tout est coupé si l'appareil demande moins d'animations.
+- **Interface en matières héraldiques**, peintes par le code au lancement (aucune image à télécharger), identique sur téléphone, tablette et grand écran :
+  - parchemin pour lire : cartes, briefing en rouleau entre deux baguettes de bois, histoire, bulles de Maître Gontran, fenêtres ;
+  - bois pour construire : boutique, tiroir de construction, panneau de la tour, onglets des chapitres, boutons secondaires ;
+  - fer doré pour le cadre : en-tête, boutons ronds, plaques du HUD, bande des pouvoirs, messages ;
+  - toile teinte pour l'action principale (garance) et le choix fait (guède), dorure pour ce qui est nouveau ou va être payé ;
+  - bords à l'encre et ombres franches : ce qu'on touche s'enfonce dans son ombre ;
+  - le jour est un ciel de crépuscule, la nuit assombrit les matières.
+- **Croix rouges** : toutes les croix qui ferment ou annulent (briefing, tiroir, panneau de la tour, détail de la vague, visée d'un pouvoir, bulles de Gontran, duel) sont des médaillons garance à croix crème, avec une cible de 48 px pour le doigt.
+- **Animations et transitions** : une bannière de guède tombe sur l'écran pendant que le suivant se met en place, puis se relève (elle ne bloque jamais un appui) ; le briefing se déroule ; entrée du menu d'accueil, niveaux d'un chapitre qui arrivent les uns après les autres, chiffres du jeu (vies, or, vague) qui réagissent quand ils changent, tour qui bondit quand on l'améliore, pouvoir dont l'anneau doré s'allume quand il est de nouveau prêt, étoiles tamponnées en fin de niveau. Si l'appareil demande moins d'animations, ou si le réglage Animations est coupé, rien ne bouge et les écrans passent en court fondu.
 - **Jeu sur téléphone, tenu droit ou à l'horizontale : tout au doigt, sur un seul écran qui ne défile jamais.** La carte prend toute la hauteur que laissent le bandeau du HUD et la bande des pouvoirs, et ne change plus de taille quand la barre d'adresse du navigateur apparaît. L'en-tête du site est masqué pendant la partie ; le bouton son passe dans le HUD.
   - **Tiroir de construction** à la place du menu radial : toucher une case libre ouvre les tours du niveau, posées sur la carte du côté opposé à la case (dans la colonne de droite à l'horizontale). Un premier appui sur une tour montre sa portée et son aperçu sur la case, un second la construit. À partir de cinq tours, la rangée se fait glisser au doigt ; une tour trop chère tremble.
   - **Panneau de la tour compact**, posé sur la carte sans cacher la tour : améliorer, changer de cible d'un appui, vendre en deux appuis (le second confirme).
   - **Vagues au drapeau** : plus de bouton de vague ; une pastille à côté du drapeau montre la prochaine vague, et la toucher en donne le détail. Quitter passe dans le menu pause.
-  - **Pouvoirs en simple icône**, dans une bande sous la carte ; un pouvoir indisponible dit pourquoi, et viser un pouvoir affiche une bulle avec un bouton Annuler.
+  - **Pouvoirs en simple icône**, dans une bande sous la carte ; un pouvoir indisponible dit pourquoi, et viser un pouvoir affiche une bulle avec un bouton Annuler (les messages passent dessous).
   - Maître Gontran parle du drapeau et du tiroir, et ses bulles ne déplacent jamais la carte.
 
 ### Corrigé
