@@ -71,12 +71,15 @@ Si l'adresse du site change un jour, mettez-la aussi à jour dans `index.html`, 
 
 Ces sites accueillent des jeux web et les rémunèrent avec de la publicité.
 
-1. Lancez `npm run build:crazygames` (ou `npm run build:poki`).
-2. Compressez le **contenu** du dossier `dist-crazygames/` (ou `dist-poki/`) en un fichier `.zip`.
-3. Envoyez ce fichier depuis l'espace développeur du site.
-4. Ajoutez les images de présentation du dossier `marketing/` (formats 1920×1080, 800×1200 et 800×800).
+**CrazyGames** :
 
-Ces versions affichent une publicité entre deux niveaux (pas trop souvent) et proposent des publicités **facultatives** : revivre après une défaite, ou doubler les couronnes gagnées. Notre propre site, lui, n'a aucune publicité.
+1. Lancez `npm run package:crazygames` : il construit la version CrazyGames, contrôle les exigences mesurables du portail (taille, chemins, SDK dans le `<head>`, aucun autre portail ni lien sortant, pas de bouton plein écran) et crée `release/bastion-tower-defense-crazygames-<version>.zip`.
+2. Envoyez cette archive depuis le Developer Portal de CrazyGames, avec les trois couvertures et les deux vidéos d'aperçu du kit [marketing/crazygames/](marketing/crazygames/README.md), qui donne aussi les textes de la fiche.
+3. Le jeu entre d'abord en *Basic Launch*, où CrazyGames refuse toute publicité : la version ne propose donc aucune vidéo. Une fois le jeu invité au *Full Launch*, refaites l'archive avec `VITE_CRAZYGAMES_ADS=on npm run package:crazygames`.
+
+**Poki** : lancez `npm run build:poki`, compressez le **contenu** du dossier `dist-poki/` en un fichier `.zip`, puis envoyez-le depuis l'espace développeur de Poki.
+
+Avec leurs publicités actives, ces versions affichent une publicité entre deux niveaux (pas trop souvent) et proposent des publicités **facultatives** : revivre après une défaite, ou doubler les couronnes gagnées. Notre propre site, lui, n'a aucune publicité.
 
 ## Publier sur Playgama
 
@@ -138,13 +141,16 @@ Cliquez d'abord sur le plateau de jeu, puis :
 | Touche | Action |
 |---|---|
 | Flèches | Déplacer la sélection |
-| `1` à `0` | Construire une tour |
+| `1` à `0` | Construire une tour (sur un clavier AZERTY, sans Maj) |
 | `Entrée` | Sélectionner la case |
 | `U` | Améliorer la tour |
 | `S` | Vendre la tour |
 | `Q`, `W`, `E`, `R`, `T` | Pouvoirs |
 | `Espace` | Lancer la vague |
-| `P` ou `Échap` | Pause |
+| `P` | Pause |
+| `Retour arrière` ou clic droit | Annuler la visée d'un pouvoir ou la sélection |
+
+`Échap` n'est jamais utilisé : il appartient au navigateur et aux portails (il fait sortir du plein écran).
 
 ### Coopération
 
