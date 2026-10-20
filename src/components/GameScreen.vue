@@ -251,6 +251,11 @@ export default {
       return this.engine.game.towers.find((t) => t.id === this.selectedTowerId) || null;
     },
     towerInfo() {
+      // Read the refresh counter here too: `selectedTower` keeps returning the
+      // same (non-reactive) tower object, so on its own it would never tell
+      // this panel that the gold, the level or the price have changed.
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
       const t = this.selectedTower;
       if (!t) return null;
       const s = t.stats;
