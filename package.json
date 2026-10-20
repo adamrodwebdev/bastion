@@ -19,6 +19,7 @@
     "build:poki": "vite build --mode poki",
     "build:playgama": "vite build --mode playgama",
     "package:playgama": "node scripts/package-playgama.mjs",
+    "package:crazygames": "node scripts/package-crazygames.mjs",
     "preview": "vite preview",
     "test": "node scripts/simulate.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
