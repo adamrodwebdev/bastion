@@ -65,7 +65,6 @@ for (const k of ['firstWin', 'stars', 'challenges', 'allChallenges', 'replay', '
 for (const d of ['easy', 'normal', 'hard']) used.add(`difficulty.${d}`).add(`difficulty.${d}Desc`);
 for (const k of ['select', 'build', 'second', 'wave', 'upgrade', 'early', 'targeting', 'newTower', 'newPower']) used.add(`tutorial.${k}`);
 for (const k of ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'p2']) used.add(`settings.keyList.${k}.keys`).add(`settings.keyList.${k}.what`);
-for (let i = 1; i <= 7; i++) used.add(`howTo.steps.${i}`);
 for (const l of LESSONS) {
   ['title', 'desc', 'learned'].forEach((k) => used.add(`training.lessons.${l.id}.${k}`));
   for (const s of l.steps) used.add(`training.steps.${l.id}.${s.key}`);

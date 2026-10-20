@@ -1,62 +1,75 @@
 <template>
-  <section class="campaign" aria-labelledby="campaign-title">
-    <ScreenHeader :title="$store.track === 'coop' ? $t('campaign.coopTitle') : $t('campaign.title')">
-      <span class="chip"><AppIcon name="star" /> {{ totalStars }} / 300</span>
-    </ScreenHeader>
+  <section class="campaign" :class="'theme-' + chapter.theme" aria-labelledby="campaign-title">
+    <header class="cmap-top">
+      <button type="button" class="icon-btn cmap-back" :aria-label="$t('app.back')" :title="$t('app.back')" @click="$actions.go('home')">
+        <AppIcon name="back" />
+      </button>
+      <div :key="'banner-' + chapter.id" class="cmap-banner cloth">
+        <span class="cmap-eyebrow">
+          <template v-if="track === 'coop'">{{ $t('campaign.coopTitle') }} · </template>{{ $t('campaign.chapter', { n: chapter.id }) }}
+        </span>
+        <h1 id="campaign-title" class="cmap-title">{{ $t('chapters.c' + chapter.id + '.name') }}</h1>
+      </div>
+      <span class="cmap-stars mat-iron" :title="$t('campaign.chapterStars', { stars: chapterStars, max: 30 })">
+        <AppIcon name="star" /><span class="sr-only">{{ $t('campaign.chapterStars', { stars: chapterStars, max: 30 }) }}</span>
+        <span aria-hidden="true">{{ chapterStars }}/30</span>
+      </span>
+    </header>
+    <p class="cmap-desc">{{ $t('chapters.c' + chapter.id + '.desc') }}</p>
 
-    <nav class="chapter-tabs" :aria-label="$t('campaign.chapters')">
-      <button
-        v-for="c in chapters"
-        :key="c.id"
-        type="button"
-        class="chapter-tab"
-        :class="['theme-' + c.theme, { 'is-active': $store.chapter === c.id, 'is-locked': !c.unlocked }]"
-        :aria-current="$store.chapter === c.id ? 'page' : undefined"
-        :disabled="!c.unlocked"
-        @click="$store.chapter = c.id"
-      >
-        <span class="chapter-num">{{ c.id }}</span>
-        <span class="chapter-name">{{ $t('chapters.c' + c.id + '.name') }}</span>
-        <span class="chapter-stars">{{ c.stars }}/30</span>
+    <div ref="stage" class="cmap-stage" @pointerdown="swipeStart" @pointerup="swipeEnd" @pointercancel="swipe = null">
+      <canvas ref="land" class="cmap-land" :class="{ 'is-ready': landReady }" aria-hidden="true"></canvas>
+      <div class="cmap-wash" aria-hidden="true"></div>
+      <svg v-if="size.w" class="cmap-route" :viewBox="`0 0 ${size.w} ${size.h}`" aria-hidden="true">
+        <path class="route-all" :d="route.all" />
+        <path class="route-done" :d="route.done" />
+        <path v-if="route.step" :key="'step-' + chapter.id" class="route-step" :d="route.step" pathLength="1" />
+      </svg>
+      <ol :key="'nodes-' + chapter.id" class="cmap-nodes" role="list">
+        <li v-for="(n, i) in nodes" :key="n.number" :style="{ left: n.x + 'px', top: n.y + 'px', '--i': i }">
+          <button
+            type="button"
+            class="node"
+            :class="{ 'is-done': n.done, 'is-next': n.next, 'is-locked': !n.unlocked, 'is-boss': n.boss }"
+            :disabled="!n.unlocked"
+            :aria-label="n.label"
+            @click="open(n)"
+          >
+            <AppIcon v-if="!n.unlocked" name="lock" />
+            <span v-else class="node-num">{{ n.number }}</span>
+            <AppIcon v-if="n.boss" name="skull" class="node-skull" />
+          </button>
+          <span v-if="n.done" class="node-stars" aria-hidden="true">{{ '★'.repeat(n.stars) + '☆'.repeat(3 - n.stars) }}</span>
+        </li>
+      </ol>
+      <!-- The kingdom's pennant over the level to play. -->
+      <span v-if="current" :key="'flag-' + chapter.id" class="cmap-pennant" :style="{ left: current.x + 'px', top: current.y + 'px' }" aria-hidden="true">
+        <span class="pennant-pole"></span>
+        <span class="pennant-cloth cloth"></span>
+      </span>
+    </div>
+
+    <nav class="cmap-bottom" :aria-label="$t('campaign.chapters')">
+      <button type="button" class="btn btn-secondary cmap-arrow" :disabled="!canGo(-1)" :aria-label="$t('campaign.prevChapter')" @click="go(-1)">
+        <AppIcon name="back" />
+      </button>
+      <span class="cmap-dots">
+        <button
+          v-for="c in chapters"
+          :key="c.id"
+          type="button"
+          class="cmap-dot"
+          :class="{ 'is-on': c.id === chapter.id }"
+          :disabled="!c.unlocked"
+          :aria-current="c.id === chapter.id ? 'page' : undefined"
+          :aria-label="$t('campaign.chapterName', { n: c.id, name: $t('chapters.c' + c.id + '.name') })"
+          @click="$store.chapter = c.id"
+        ></button>
+      </span>
+      <button type="button" class="btn btn-secondary cmap-arrow" :disabled="!canGo(1)" :aria-label="$t('campaign.nextChapter')" @click="go(1)">
+        <AppIcon name="back" class="flip" />
       </button>
     </nav>
-
-    <header :key="'head-' + chapter.id" class="chapter-head" :class="'theme-' + chapter.theme">
-      <div>
-        <p class="eyebrow">{{ $t('campaign.chapter', { n: chapter.id }) }}</p>
-        <h2 class="chapter-title">{{ $t('chapters.c' + chapter.id + '.name') }}</h2>
-        <p class="chapter-desc">{{ $t('chapters.c' + chapter.id + '.desc') }}</p>
-      </div>
-      <DifficultyPicker compact />
-    </header>
-
-    <ol :key="$store.chapter" class="level-grid" role="list">
-      <li v-for="(l, i) in levels" :key="l.number" :style="{ '--i': i }">
-        <button
-          type="button"
-          class="level-card"
-          :class="['theme-' + chapter.theme, { 'is-locked': !l.unlocked, 'is-boss': l.boss, 'is-next': l.next }]"
-          :disabled="!l.unlocked"
-          :aria-label="l.label"
-          @click="$actions.openBriefing(l.number)"
-        >
-          <svg class="level-preview" :viewBox="'0 0 16 9'" aria-hidden="true">
-            <rect width="16" height="9" class="lp-ground" />
-            <polyline v-for="(p, i) in l.paths" :key="'e' + i" :points="p" class="lp-road-edge" />
-            <polyline v-for="(p, i) in l.paths" :key="'r' + i" :points="p" class="lp-road" />
-          </svg>
-          <span class="level-number">{{ l.number }}</span>
-          <AppIcon v-if="!l.unlocked" name="lock" class="level-lock" />
-          <AppIcon v-else-if="l.boss" name="skull" class="level-boss" />
-          <span class="level-foot">
-            <StarRow :value="l.stars" />
-            <span class="level-ach" :aria-label="$t('campaign.challengesDone', { count: l.ach })">
-              <span v-for="i in 3" :key="i" :class="i <= l.ach ? 'pip-on' : 'pip-off'" aria-hidden="true"></span>
-            </span>
-          </span>
-        </button>
-      </li>
-    </ol>
 
     <BriefingPanel v-if="$store.briefing" :number="$store.briefing" />
   </section>
@@ -64,20 +77,26 @@
 
 <script>
 /**
- * @file Campaign map: ten chapters of ten levels, with stars and challenges.
+ * @file Campaign map: one chapter at a time, its ten levels on a road across the
+ * chapter's land (painted by the board's painter, aged into an old map), the
+ * kingdom's pennant over the level to play, and the chapters on either side.
  */
 import AppIcon from './AppIcon.vue';
-import ScreenHeader from './ScreenHeader.vue';
-import StarRow from './StarRow.vue';
-import DifficultyPicker from './DifficultyPicker.vue';
 import BriefingPanel from './BriefingPanel.vue';
 import { services } from '../services/index.js';
 import { LevelCatalog, CHAPTERS } from '../core/index.js';
 import { countAchievements } from '../core/progression/Achievements.js';
+import { levelSpots, roadSegments, pathData } from '../core/rendering/mapRoute.js';
+
+/** A swipe across the map turns the page: at least this far, mostly sideways. */
+const SWIPE_PX = 50;
 
 export default {
   name: 'CampaignScreen',
-  components: { AppIcon, ScreenHeader, StarRow, DifficultyPicker, BriefingPanel },
+  components: { AppIcon, BriefingPanel },
+  data() {
+    return { size: { w: 0, h: 0 }, landReady: false, swipe: null };
+  },
   computed: {
     saves() {
       // eslint-disable-next-line no-unused-expressions
@@ -91,39 +110,119 @@ export default {
       return this.saves.campaign(this.track).completed;
     },
     chapters() {
-      return CHAPTERS.map((c) => {
-        const first = (c.id - 1) * 10 + 1;
-        let stars = 0;
-        for (let n = first; n < first + 10; n++) stars += this.saves.starsFor(n, null, this.track);
-        return { id: c.id, theme: c.theme, unlocked: first <= this.completed + 1, stars };
-      });
+      return CHAPTERS.map((c) => ({ id: c.id, unlocked: (c.id - 1) * 10 + 1 <= this.completed + 1 }));
     },
     chapter() {
       return CHAPTERS[this.$store.chapter - 1];
-    },
-    totalStars() {
-      let s = 0;
-      for (let n = 1; n <= LevelCatalog.count; n++) s += this.saves.starsFor(n, null, this.track);
-      return s;
     },
     levels() {
       return LevelCatalog.chapter(this.chapter.id).map((level) => {
         const unlocked = this.saves.isLevelUnlocked(level.number, this.track);
         const stars = this.saves.starsFor(level.number, null, this.track);
         const ach = countAchievements(this.saves.achievementsFor(level.number, this.track));
-        return {
-          number: level.number,
-          unlocked,
-          stars,
-          ach,
-          boss: Boolean(level.boss),
-          next: level.number === this.completed + 1,
-          paths: level.paths.map((wp) => wp.map(([c, r]) => `${c + 0.5},${r + 0.5}`).join(' ')),
-          label: unlocked
-            ? this.$t('campaign.levelLabel', { n: level.number, stars, ach })
-            : this.$t('campaign.levelLocked', { n: level.number }),
-        };
+        const boss = Boolean(level.boss);
+        const params = { n: level.number, stars, ach, boss: this.$t('chapters.c' + this.chapter.id + '.boss') };
+        const key = unlocked ? (boss ? 'campaign.levelBoss' : 'campaign.levelLabel') : boss ? 'campaign.levelBossLocked' : 'campaign.levelLocked';
+        return { number: level.number, unlocked, stars, done: stars > 0, boss, next: level.number === this.completed + 1, label: this.$t(key, params) };
       });
+    },
+    chapterStars() {
+      return this.levels.reduce((sum, l) => sum + l.stars, 0);
+    },
+    spots() {
+      return this.size.w ? levelSpots(this.chapter.id, this.size.w, this.size.h) : [];
+    },
+    nodes() {
+      return this.levels.map((l, i) => ({ ...l, ...(this.spots[i] || { x: 0, y: 0 }) }));
+    },
+    current() {
+      return this.nodes.find((n) => n.next) || null;
+    },
+    /** The road: all of it faint, the part travelled in ink, the last stretch in gold. */
+    route() {
+      if (!this.spots.length) return { all: '', done: '', step: '' };
+      const segments = roadSegments(this.spots);
+      const reached = this.current ? this.nodes.indexOf(this.current) : this.nodes.filter((n) => n.done).length - 1;
+      return {
+        all: pathData(segments),
+        done: pathData(segments.slice(0, Math.max(0, reached))),
+        step: this.current && reached > 0 ? pathData(segments.slice(reached - 1, reached)) : '',
+      };
+    },
+  },
+  watch: {
+    'chapter.id'() {
+      this.paintLand();
+    },
+    '$store.theme'() {
+      this.paintLand();
+    },
+  },
+  mounted() {
+    const measure = () => {
+      const stage = this.$refs.stage;
+      if (!stage) return;
+      const w = Math.round(stage.clientWidth);
+      const h = Math.round(stage.clientHeight);
+      if (w === this.size.w && h === this.size.h) return;
+      this.size = { w, h };
+      this.paintLand();
+    };
+    measure();
+    if (typeof ResizeObserver === 'function') {
+      this.observer = new ResizeObserver(() => {
+        cancelAnimationFrame(this.raf);
+        this.raf = requestAnimationFrame(measure);
+      });
+      this.observer.observe(this.$refs.stage);
+    }
+  },
+  beforeUnmount() {
+    this.observer?.disconnect();
+    cancelAnimationFrame(this.raf);
+  },
+  methods: {
+    canGo(step) {
+      const next = this.chapters[this.chapter.id - 1 + step];
+      return Boolean(next && next.unlocked);
+    },
+    go(step) {
+      if (this.canGo(step)) this.$store.chapter = this.chapter.id + step;
+    },
+    open(node) {
+      if (this.swiped) return;
+      this.$actions.openBriefing(node.number);
+    },
+    swipeStart(e) {
+      this.swiped = false;
+      this.swipe = { x: e.clientX, y: e.clientY };
+    },
+    swipeEnd(e) {
+      if (!this.swipe) return;
+      const dx = e.clientX - this.swipe.x;
+      const dy = e.clientY - this.swipe.y;
+      this.swipe = null;
+      if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) < Math.abs(dy) * 2) return;
+      this.swiped = true;
+      this.go(dx < 0 ? 1 : -1);
+    },
+    /** The chapter's land, painted once per chapter, theme and size (loaded with the board's painter). */
+    async paintLand() {
+      const canvas = this.$refs.land;
+      const { w, h } = this.size;
+      if (!canvas || !w || !h) return;
+      const night = this.$store.theme === 'dark';
+      const key = `${this.chapter.id}:${night}:${w}x${h}`;
+      if (key === this.painted) return;
+      this.painted = key;
+      this.landReady = false;
+      const { paintChapterLand } = await import('../core/rendering/ChapterMap.js');
+      if (key !== this.painted || !this.$refs.land) return;
+      // Three of the chapter's levels together give the land its woods and waters.
+      const first = (this.chapter.id - 1) * 10 + 1;
+      const levels = [first, first + 4, first + 8].map((n) => LevelCatalog.byNumber(n));
+      paintChapterLand(canvas, levels, { width: w, height: h, night });
+      this.landReady = true;
     },
   },
 };

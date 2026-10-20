@@ -1,82 +1,84 @@
 <template>
   <section class="home" aria-labelledby="home-title">
-    <div class="hero">
-      <canvas ref="hero" class="hero-art hero-canvas" aria-hidden="true"></canvas>
+    <div class="home-main">
       <!-- Portals asking for a 2 to 4-word title shown in the game (Playgama): "Bastion Tower Defense". -->
       <h1 id="home-title" class="hero-title">Bastion<span v-if="longTitle" class="hero-title-sub"> Tower Defense</span></h1>
-      <p class="hero-tagline">{{ $t('app.tagline') }}</p>
+      <p class="hero-tagline mat-parch">{{ $t('app.tagline') }}</p>
+
+      <div class="home-menu">
+        <button v-if="saved" type="button" class="btn btn-primary btn-lg btn-hero home-continue" @click="$actions.resumeGame()">
+          <AppIcon name="play" class="btn-hero-icon" />
+          <span class="btn-hero-text">
+            <span class="btn-hero-title">{{ $t('home.continue') }}</span>
+            <small>{{ $t('home.continueInfo', saved) }}</small>
+          </span>
+          <AppIcon name="back" class="btn-hero-chevron" />
+        </button>
+        <button type="button" class="btn btn-lg btn-hero" :class="saved ? 'btn-secondary' : 'btn-primary'" @click="$actions.openCampaign('solo')">
+          <CrestEmblem class="btn-hero-icon" />
+          <span class="btn-hero-text">
+            <span class="btn-hero-title">{{ $t('home.campaign') }}</span>
+            <small>{{ $t('home.campaignInfo', { n: nextLevel, stars: stars, max: maxStars }) }}</small>
+          </span>
+          <AppIcon name="back" class="btn-hero-chevron" />
+        </button>
+        <div class="home-pair">
+          <button type="button" class="btn btn-secondary home-wood" @click="$actions.go('multiplayer')">
+            <AppIcon name="users" /> {{ $t('home.twoPlayers') }}
+          </button>
+          <button type="button" class="btn btn-secondary home-wood" @click="$actions.go('learn')">
+            <AppIcon name="target" /> {{ $t('learn.title') }}
+          </button>
+        </div>
+        <div class="home-grid">
+          <button type="button" class="tile" @click="$actions.go('workshop')">
+            <AppIcon name="hammer" />
+            <span class="tile-title">{{ $t('workshop.title') }}</span>
+            <span class="tile-meta"><AppIcon name="crown" /> {{ crowns }}</span>
+          </button>
+          <button type="button" class="tile" @click="$actions.go('achievements')">
+            <AppIcon name="trophy" />
+            <span class="tile-title">{{ $t('achievements.title') }}</span>
+            <span class="tile-meta">{{ achievements }} / 300</span>
+          </button>
+          <button type="button" class="tile" @click="$actions.go('chronicle')">
+            <AppIcon name="book" />
+            <span class="tile-title">{{ $t('story.chronicle') }}</span>
+            <span class="tile-meta">{{ $t('home.episodes', { count: episodes }) }}</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="home-menu">
+    <div class="home-side">
+      <!-- The kingdom's panorama, in a gilt frame. -->
+      <div class="hero-frame" aria-hidden="true">
+        <div class="hero-window">
+          <canvas ref="hero" class="hero-canvas"></canvas>
+        </div>
+      </div>
       <div v-if="newPlayer" class="new-player card">
-        <PixelPortrait id="gontran" height="3.6rem" decorative />
+        <PixelPortrait id="gontran" height="4.2rem" decorative />
         <div class="new-player-body">
           <p class="new-player-title">{{ $t('home.newPlayer') }}</p>
           <p class="new-player-text">{{ $t('home.newPlayerText') }}</p>
         </div>
-        <button type="button" class="btn btn-primary" @click="$actions.startTraining(firstLesson)">
-          <AppIcon name="play" /> {{ $t('home.newPlayerStart') }}
-        </button>
-      </div>
-      <button v-if="saved" type="button" class="btn btn-primary btn-lg home-continue" @click="$actions.resumeGame()">
-        <AppIcon name="play" />
-        <span class="btn-stack">
-          <span>{{ $t('home.continue') }}</span>
-          <small>{{ $t('home.continueInfo', saved) }}</small>
-        </span>
-      </button>
-      <button type="button" class="btn btn-lg" :class="saved ? 'btn-secondary' : 'btn-primary'" @click="$actions.openCampaign('solo')">
-        <AppIcon name="map" />
-        <span class="btn-stack">
-          <span>{{ $t('home.campaign') }}</span>
-          <small>{{ $t('home.campaignInfo', { n: nextLevel, stars: stars, max: maxStars }) }}</small>
-        </span>
-      </button>
-      <button type="button" class="btn btn-secondary btn-lg" @click="$actions.go('multiplayer')">
-        <AppIcon name="users" />
-        <span class="btn-stack">
-          <span>{{ $t('home.twoPlayers') }}</span>
-          <small>{{ $t('home.twoPlayersInfo') }}</small>
-        </span>
-      </button>
-      <div class="home-grid">
-        <button type="button" class="tile" @click="$actions.go('workshop')">
-          <AppIcon name="hammer" />
-          <span class="tile-title">{{ $t('workshop.title') }}</span>
-          <span class="tile-meta"><AppIcon name="crown" /> {{ crowns }}</span>
-        </button>
-        <button type="button" class="tile" @click="$actions.go('achievements')">
-          <AppIcon name="trophy" />
-          <span class="tile-title">{{ $t('achievements.title') }}</span>
-          <span class="tile-meta">{{ achievements }} / 300</span>
-        </button>
-        <button type="button" class="tile" @click="$actions.go('learn')">
-          <AppIcon name="target" />
-          <span class="tile-title">{{ $t('learn.title') }}</span>
-          <span class="tile-meta">{{ $t('home.lessons', { n: trainingDone, total: lessonCount }) }}</span>
-        </button>
-        <button type="button" class="tile" @click="$actions.go('chronicle')">
-          <AppIcon name="book" />
-          <span class="tile-title">{{ $t('story.chronicle') }}</span>
-          <span class="tile-meta">{{ $t('home.episodes', { count: episodes }) }}</span>
+        <button type="button" class="btn btn-secondary" @click="$actions.startTraining(firstLesson)">
+          {{ $t('home.newPlayerStart') }}
         </button>
       </div>
     </div>
-
-    <details class="card howto">
-      <summary>{{ $t('howTo.title') }}</summary>
-      <ol class="howto-list">
-        <li v-for="n in 7" :key="n">{{ $t('howTo.steps.' + n) }}</li>
-      </ol>
-    </details>
   </section>
 </template>
 
 <script>
 /**
- * @file Home screen: continue, campaign, two players, workshop, challenges, chronicle.
+ * @file Home screen, a title screen: the kingdom's panorama and the gilt title, the
+ * campaign (or the game to continue), two players, learning, workshop, challenges
+ * and chronicle; Gontran's first lesson for newcomers.
  */
 import AppIcon from './AppIcon.vue';
+import CrestEmblem from './CrestEmblem.vue';
 import PixelPortrait from './PixelPortrait.vue';
 import { LESSONS } from '../core/tutorial/Training.js';
 import { services } from '../services/index.js';
@@ -84,7 +86,7 @@ import { LevelCatalog } from '../core/config/LevelCatalog.js';
 
 export default {
   name: 'HomeScreen',
-  components: { AppIcon, PixelPortrait },
+  components: { AppIcon, CrestEmblem, PixelPortrait },
   computed: {
     /** The full name under the logo, on the portals listing the game as "Bastion Tower Defense". */
     longTitle() {
@@ -120,15 +122,9 @@ export default {
     episodes() {
       return this.saves.progress.episodes.length;
     },
-    trainingDone() {
-      return this.saves.training.length;
-    },
-    lessonCount() {
-      return LESSONS.length;
-    },
     /** Never played: the training is offered first. */
     newPlayer() {
-      return this.trainingDone === 0 && this.saves.campaign('solo').completed === 0 && !this.saved;
+      return this.saves.training.length === 0 && this.saves.campaign('solo').completed === 0 && !this.saved;
     },
     firstLesson() {
       return LESSONS[0].id;

@@ -1,7 +1,7 @@
 <template>
   <a class="skip-link" href="#main">{{ $t('app.skip') }}</a>
 
-  <header class="app-header" :class="{ 'app-header--compact': inPlay }">
+  <header class="app-header" :class="{ 'app-header--compact': inPlay, 'app-header--bare': $store.view === 'home' }">
     <button type="button" class="brand" :aria-label="$t('app.home')" @click="$actions.go('home')">
       <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true">
         <path d="M5 28V11l3-2v-4h4v3h3V5h2v3h3V5h4v4l3 2v17z" fill="currentColor" />
@@ -136,6 +136,13 @@ export default {
       immediate: true,
       handler(v) {
         document.documentElement.classList.toggle('in-game', v);
+      },
+    },
+    // The screen on show, for the rules that change the page around it (sky, header).
+    '$store.view': {
+      immediate: true,
+      handler(view) {
+        document.documentElement.dataset.view = view;
       },
     },
   },
