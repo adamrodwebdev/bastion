@@ -3809,7 +3809,10 @@ kbd {
   grid-template-rows: auto var(--stage-h);
   justify-items: center;
   align-items: center;
-  margin: 0 calc(-1 * max(8px, env(safe-area-inset-left)));
+  justify-self: start;
+  width: 100vw;
+  max-width: none;
+  margin: 0 0 0 calc(-1 * max(8px, env(safe-area-inset-left)));
   border: 0;
   border-radius: 0;
   background: linear-gradient(var(--c-ink), var(--c-ink)) top / 100% 52px no-repeat, var(--stage-ground, var(--c-ink));
