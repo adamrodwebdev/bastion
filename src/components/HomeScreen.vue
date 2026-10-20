@@ -2,7 +2,11 @@
   <section class="home" aria-labelledby="home-title">
     <div class="home-main">
       <!-- Portals asking for a 2 to 4-word title shown in the game (Playgama): "Bastion Tower Defense". -->
-      <h1 id="home-title" class="hero-title">Bastion<span v-if="longTitle" class="hero-title-sub"> Tower Defense</span></h1>
+      <h1 id="home-title" class="hero-title">
+        <span class="hero-title-word hero-title-ink" aria-hidden="true">Bastion</span>
+        <span class="hero-title-word hero-title-gilt">Bastion</span>
+        <span v-if="longTitle" class="hero-title-sub">Tower Defense</span>
+      </h1>
       <p class="hero-tagline mat-parch">{{ $t('app.tagline') }}</p>
 
       <div class="home-menu">

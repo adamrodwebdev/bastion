@@ -289,6 +289,8 @@ button:disabled {
   --highlight: inset 0 1px 0 rgb(255 255 255 / 0.45);
   --shadow: 0 2px 0 rgb(59 42 23 / 0.3);
   --edge: var(--c-woad-strong);
+  --scroll-groove: rgb(59 42 23 / 0.16);
+  --scroll-groove-edge: rgb(59 42 23 / 0.38);
   color-scheme: light;
   background: var(--tex-parchment) 0 0 / 320px repeat, var(--parch);
   color: var(--text);
@@ -330,6 +332,8 @@ button:disabled {
   --focus: #f2c45c;
   --highlight: inset 0 1px 0 rgb(255 220 170 / 0.22);
   --shadow: 0 3px 0 rgb(0 0 0 / 0.35);
+  --scroll-groove: rgb(0 0 0 / 0.3);
+  --scroll-groove-edge: rgb(255 220 170 / 0.2);
   color-scheme: dark;
   background: var(--tex-wood) 0 0 / 360px auto repeat, var(--wood);
   color: var(--text);
@@ -481,6 +485,71 @@ button:disabled {
 .btn-close--sm .app-icon {
   width: 17px;
   height: 17px;
+}
+
+/* ------------------------------------------------------------------ scrollbars
+   Screens with a mouse or a trackpad: a gilt rod in a groove cut in the surface it
+   lies on (the frame's iron, parchment or wood), like the gilded iron of the frame.
+   Touch screens keep their thin native bar, which only shows while scrolling. */
+:root {
+  --scroll-groove: rgb(8 6 14 / 0.5);
+  --scroll-groove-edge: rgb(212 165 55 / 0.3);
+}
+
+@media (pointer: fine) {
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    border-radius: 999px;
+    background: var(--scroll-groove);
+    box-shadow: inset 0 0 0 1px var(--scroll-groove-edge), inset 0 2px 3px rgb(0 0 0 / 0.35);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--gilt-lo), var(--gilt-hi) 40%, var(--gilt) 65%, var(--gilt-lo)) padding-box;
+    box-shadow: inset 0 0 0 1px rgb(30 26 43 / 0.85);
+  }
+
+  ::-webkit-scrollbar-thumb:horizontal {
+    background-image: linear-gradient(180deg, var(--gilt-hi), var(--gilt) 48%, var(--gilt-lo));
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-image: linear-gradient(90deg, var(--gilt), var(--gilt-shine) 40%, var(--gilt-mid) 65%, var(--gilt));
+  }
+
+  ::-webkit-scrollbar-thumb:horizontal:hover {
+    background-image: linear-gradient(180deg, var(--gilt-shine), var(--gilt-mid) 48%, var(--gilt));
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    background-image: linear-gradient(90deg, var(--gilt-deep), var(--gilt) 45%, var(--gilt-deep));
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* Browsers without those (Firefox): the same colours on their own bar. */
+@supports not selector(::-webkit-scrollbar) {
+  @media (pointer: fine) {
+    * {
+      scrollbar-color: var(--gilt) var(--scroll-groove);
+    }
+
+    .chapter-tabs,
+    :root[data-target='playgama'] .app-main {
+      scrollbar-width: thin;
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ shell */
@@ -905,23 +974,76 @@ kbd {
   }
 }
 
+/* Stars drawn in gilt with an ink edge, so they stand out on parchment as on iron. */
 .star-row {
+  position: relative;
   display: inline-flex;
+  align-items: flex-end;
   gap: 1px;
   font-size: 0.95rem;
   line-height: 1;
 }
 
+.star {
+  width: 1em;
+  height: 1em;
+  overflow: visible;
+}
+
+.star path {
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.star-on path {
+  stroke: var(--c-ink);
+  stroke-width: 2;
+}
+
+.star-off path {
+  fill: rgb(30 26 43 / 0.22);
+  stroke: rgb(30 26 43 / 0.5);
+  stroke-width: 1.6;
+}
+
+.star-gilt stop:nth-child(1) {
+  stop-color: var(--gilt-hi);
+}
+
+.star-gilt stop:nth-child(2) {
+  stop-color: var(--gilt);
+}
+
+.star-gilt stop:nth-child(3) {
+  stop-color: var(--gilt-lo);
+}
+
+/* The gradient's definition: present for the stars to use, never seen. */
+.star-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* The end of a level: big stars, the middle one raised, each with a hard shadow and a glow. */
 .star-row--lg {
-  font-size: 2.4rem;
+  gap: 0.1em;
+  font-size: 3rem;
 }
 
-.star-on {
-  color: var(--c-gold);
+.star-row--lg .star:nth-child(2) {
+  width: 1.25em;
+  height: 1.25em;
+  margin-bottom: 0.12em;
 }
 
-.star-off {
-  color: var(--border);
+.star-row--lg .star-on {
+  filter: drop-shadow(0 3px 0 var(--c-ink)) drop-shadow(0 0 10px rgb(255 214 102 / 0.75));
+}
+
+.star-row--lg .star-off path {
+  stroke-width: 1.4;
 }
 
 .pixel-portrait {
@@ -1121,6 +1243,8 @@ kbd {
   margin-block: auto;
 }
 
+/* The entrances (the title stamps in from 1.7 times its size) never reach past the
+   window's edges: a phone would zoom out for a moment. */
 .home {
   display: flex;
   flex-direction: column;
@@ -1128,6 +1252,8 @@ kbd {
   width: 100%;
   max-width: 34rem;
   margin: 0 auto;
+  overflow-x: clip;
+  overflow-clip-margin: 16px;
 }
 
 /* One column on phones: the panorama first, Gontran last. */
@@ -1191,28 +1317,51 @@ kbd {
   animation: drift 14s ease-in-out infinite;
 }
 
-/* The title, gilt and inked, with a gleam that crosses it now and then. */
+/* The title, gilt and inked, with a soft sheen gliding over it. Two copies
+   of the word share one cell: the ink one behind draws the outline and its hard
+   shadow, the gilt one covers it. A stroke on gilt text itself would draw the
+   inner outlines of the letters over the gold. */
 .hero-title {
+  display: grid;
+  justify-items: center;
   margin-top: -2px;
   font: 700 clamp(3.2rem, 15vw, 4rem) / 1 var(--font-display);
   letter-spacing: 0.06em;
-  text-align: center;
   text-transform: uppercase;
-  background: linear-gradient(100deg, var(--gilt-deep) 0%, var(--gilt-mid) 28%, var(--gilt-shine) 42%, var(--gilt-mid) 56%, var(--gilt-deep) 100%) 100% 0 / 260% 100%;
+  white-space: nowrap;
+  animation: stamp-in 360ms var(--spring-soft) 180ms backwards;
+}
+
+.hero-title-word {
+  grid-area: 1 / 1;
+}
+
+.hero-title-ink {
+  color: var(--c-ink);
+  -webkit-text-stroke: 0.1em var(--c-ink);
+  filter: drop-shadow(0 0.05em 0 var(--c-ink));
+}
+
+/* Positioned, so it paints over the ink copy (its filter lifts that one into its own layer).
+   Gold lit from above, and a soft warm sheen (never white) on a tile of its own: the tile
+   is clear at both ends, so sliding it by exactly one tile at a steady pace loops with no seam. */
+.hero-title-gilt {
+  position: relative;
+  background:
+    linear-gradient(100deg, transparent 26%, rgb(255 234 168 / 0.75) 50%, transparent 74%) 0 0 / 10em 100% repeat-x,
+    linear-gradient(180deg, var(--gilt-hi) 0%, var(--gilt-mid) 34%, var(--gilt) 58%, var(--gilt-deep) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 2px var(--c-ink);
-  paint-order: stroke fill;
-  filter: drop-shadow(0 4px 0 var(--c-ink));
-  animation: stamp-in 360ms var(--spring-soft) 180ms backwards, gleam 6.5s ease-in-out infinite;
+  animation: gleam 12s linear infinite;
 }
 
 .hero-title-sub {
-  display: block;
-  margin-top: 0.25em;
+  margin-top: 0.3em;
+  color: var(--gilt-mid);
   font-size: 0.34em;
   letter-spacing: 0.32em;
+  text-shadow: 0 2px 0 var(--c-ink);
 }
 
 /* The tagline on a parchment ribbon with notched ends. */
@@ -1371,24 +1520,30 @@ kbd {
 @media (min-width: 1024px) {
   .home {
     display: grid;
-    grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 9fr) minmax(0, 10fr);
     align-items: start;
     gap: 40px 48px;
     max-width: 1180px;
     padding-top: 12px;
   }
 
+  /* Each column holds to its width, whatever lies in it. */
   .home-main,
   .home-side {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 18px;
   }
 
+  /* The title is sized by its column, so it never reaches the panorama. */
+  .home-main {
+    container-type: inline-size;
+  }
+
   .hero-title {
-    font-size: clamp(5rem, 7.5vw, 6.5rem);
-    text-align: left;
-    -webkit-text-stroke-width: 3px;
-    filter: drop-shadow(0 6px 0 var(--c-ink));
+    justify-items: start;
+    font-size: 5rem;
+    font-size: min(6.5rem, 17cqi);
   }
 
   .hero-tagline {
@@ -1478,7 +1633,6 @@ kbd {
   overflow-x: auto;
   padding-bottom: 6px;
   margin-bottom: 14px;
-  scrollbar-width: thin;
 }
 
 .chapter-tab {
@@ -2420,18 +2574,38 @@ kbd {
   font: 700 1.3rem/1.2 var(--font-display);
 }
 
+/* The wave bar keeps one size in every state, so calling a wave never moves the page:
+   the button stays in the middle with the width of its longest label (all of them
+   share one cell, the others hidden), and what comes next lies to its right. */
 .wave-bar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
 }
 
 .btn-wave {
   position: relative;
+  grid-column: 2;
   min-width: 220px;
+  min-height: 3.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-wave-labels {
+  display: grid;
+}
+
+.btn-wave-labels > * {
+  grid-area: 1 / 1;
+  align-self: center;
+  justify-self: center;
+  visibility: hidden;
+}
+
+.btn-wave-labels > .is-on {
+  visibility: visible;
 }
 
 /* The wave can be called early: a gilt ring breathes around the button. */
@@ -2453,36 +2627,57 @@ kbd {
   }
 }
 
+/* Its label above one row of chips: the sprite and the count (the name on hover and for screen readers). */
 .next-wave {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
+  grid-column: 3;
+  justify-self: start;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .next-wave-label {
+  overflow: hidden;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .next-wave-list {
   display: flex;
-  flex-wrap: wrap;
   gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+
+.next-wave-list .chip {
+  flex: none;
 }
 
 .p2-card {
   display: flex;
   align-items: center;
   gap: 8px;
+  max-width: 100%;
   padding: 6px 12px;
   border-radius: 999px;
   border-color: var(--p2);
   font-size: 0.85rem;
+}
+
+/* One line, whatever the tower: the card never changes the height under the map. */
+.p2-card-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .player-dot {
@@ -2508,6 +2703,23 @@ kbd {
   display: grid;
   gap: 8px;
   min-width: 0;
+}
+
+/* Larger screens: the side column stops at the bottom of the window too, so the page
+   never scrolls in battle (a long shop scrolls on its own). The padding, taken back by
+   the margins, leaves room for the focus rings and the hard shadows; its scrollbar runs
+   in the page's margin, beside the panels, so the shop never narrows. */
+.layout-wide .sidebar {
+  max-height: calc(var(--side-h) + 16px);
+  margin: -6px -16px -10px -6px;
+  padding: 6px 6px 10px;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.layout-wide .sidebar::-webkit-scrollbar {
+  width: 10px;
 }
 
 .player-switch {
@@ -2852,25 +3064,20 @@ kbd {
   animation-delay: 0.55s;
 }
 
-.end-card .star-row--lg span {
-  display: inline-block;
-  animation: stamp 0.5s var(--ease-spring) both;
+.end-card .star-row--lg .star {
+  animation: stamp 0.5s var(--ease-spring) backwards;
 }
 
-.end-card .star-row--lg span:nth-child(1) {
+.end-card .star-row--lg .star:nth-child(1) {
   animation-delay: 0.3s;
 }
 
-.end-card .star-row--lg span:nth-child(2) {
+.end-card .star-row--lg .star:nth-child(2) {
   animation-delay: 0.48s;
 }
 
-.end-card .star-row--lg span:nth-child(3) {
+.end-card .star-row--lg .star:nth-child(3) {
   animation-delay: 0.66s;
-}
-
-.end-card .star-on {
-  text-shadow: 0 2px 0 var(--c-gold-ink), 0 0 18px color-mix(in srgb, var(--c-gold) 60%, transparent);
 }
 
 @keyframes pop {
@@ -3683,6 +3890,22 @@ kbd {
   z-index: 2;
 }
 
+/* Larger screens: Gontran floats over the bottom of the map, or under the plaques when
+   the tile in play lies low, so a bubble that comes or goes never moves the board. */
+.layout-wide .coach {
+  position: absolute;
+  z-index: 1;
+  left: 8px;
+  bottom: 8px;
+  width: min(30rem, calc(100% - 16px));
+  line-height: 1.35;
+}
+
+.layout-wide .coach--top {
+  top: 54px;
+  bottom: auto;
+}
+
 .game .board-ui .boss-bar {
   position: absolute;
   top: 8px;
@@ -3913,8 +4136,6 @@ kbd {
   padding-inline: max(16px, calc((100% - 1320px) / 2));
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
 }
 
 :root[data-target='playgama'] .app-footer {
@@ -4648,14 +4869,12 @@ kbd {
 }
 
 @keyframes gleam {
-  0%,
-  58% {
-    background-position: 100% 0;
+  from {
+    background-position: 0 0, 0 0;
   }
 
-  88%,
-  100% {
-    background-position: 0 0;
+  to {
+    background-position: 10em 0, 0 0;
   }
 }
 

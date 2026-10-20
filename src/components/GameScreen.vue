@@ -2,12 +2,12 @@
   <section
     class="game"
     :class="['layout-' + layout, { 'is-paused': paused, 'is-coop': coop, 'is-touch': touchLayout, 'overlay-top': overlaySide === 'top', 'overlay-bottom': overlaySide === 'bottom' }]"
-    :style="stageH ? { '--stage-h': stageH + 'px', '--stage-ground': ground } : null"
+    :style="stageStyle"
     aria-labelledby="game-title"
   >
     <h1 id="game-title" class="sr-only">Bastion — {{ training ? $t('training.lessons.' + training + '.title') : $t('briefing.level', { n: levelNumber }) }}</h1>
 
-    <CoachBubble v-if="coachText && !end" :text="coachText" :next="coachNext" @dismiss="dismissCoach" @next="ackCoach" />
+    <CoachBubble v-if="coachText && !end && touchLayout" :text="coachText" :next="coachNext" @dismiss="dismissCoach" @next="ackCoach" />
     <div v-if="spot && coachText && !end" class="spotlight" :style="spot" aria-hidden="true"></div>
 
     <div class="game-layout">
@@ -163,6 +163,10 @@
             </div>
           </div>
 
+          <!-- Larger screens: Gontran floats on the map too, on the half away from the tile in play,
+               so a bubble that comes or goes never moves the board -->
+          <CoachBubble v-if="coachText && !end && !touchLayout" :class="'coach--' + coachSide" :text="coachText" :next="coachNext" @dismiss="dismissCoach" @next="ackCoach" />
+
           <!-- Phones held upright: the build tray and the tower panel lie on the map, on the side away from the tile -->
           <div v-if="layout === 'phone' && !end" class="stage-overlays">
             <Transition :name="'sheet-' + (overlaySide || 'bottom')">
@@ -205,22 +209,31 @@
           <EndPanel v-if="end" :result="end" @next="nextLevel" @retry="restart" @levels="toLevels" @revive="revive" @double="doubleCrowns" />
         </div>
 
+        <!-- One size in every state: the button centred under the map, what comes next beside it -->
         <div v-if="!touchLayout" class="wave-bar">
           <button type="button" class="btn btn-primary btn-wave" :class="{ 'is-pulsing': hud.canStart && hud.state === 'prepare' }" :disabled="!hud.canStart" data-tutorial="wave" @click="startWave">
-            <span v-if="hud.state === 'prepare'">{{ $t('hud.startFirst') }}</span>
-            <span v-else-if="hud.canStart" class="btn-stack">
-              <span>{{ $t('hud.callNext', { s: hud.countdown }) }}</span>
-              <small v-if="hud.bonus">{{ $t('hud.earlyBonus', { n: hud.bonus }) }}</small>
+            <!-- All the labels share one cell: the button keeps the width of the longest one -->
+            <span class="btn-wave-labels">
+              <span :class="{ 'is-on': waveLabel === 'first' }">{{ $t('hud.startFirst') }}</span>
+              <span class="btn-stack" :class="{ 'is-on': waveLabel === 'next' }">
+                <span>{{ $t('hud.callNext', { s: countdownText }) }}</span>
+                <small v-if="hud.bonus">{{ $t('hud.earlyBonus', { n: hud.bonus }) }}</small>
+              </span>
+              <span :class="{ 'is-on': waveLabel === 'running' }">{{ $t('hud.waveRunning') }}</span>
+              <span :class="{ 'is-on': waveLabel === 'last' }">{{ $t('hud.lastWave') }}</span>
             </span>
-            <span v-else>{{ hud.done ? $t('hud.lastWave') : $t('hud.waveRunning') }}</span>
             <kbd aria-hidden="true">␣</kbd>
           </button>
           <div v-if="nextWave.length && hud.canStart" class="next-wave" data-tutorial="next-wave">
             <span class="next-wave-label">{{ $t('hud.nextWave') }}</span>
             <ul class="next-wave-list" role="list">
-              <li v-for="g in nextWave" :key="g.type" class="chip">
-                <SpriteIcon kind="enemy" :type="g.type" :px="20" />
-                {{ g.count }} × {{ $t('enemies.' + g.type + '.name') }}
+              <li v-for="g in waveGroups.shown" :key="g.type" class="chip" :title="$t('enemies.' + g.type + '.name')">
+                <SpriteIcon kind="enemy" :type="g.type" :px="20" />×{{ g.count }}
+                <span class="sr-only">{{ $t('enemies.' + g.type + '.name') }}</span>
+              </li>
+              <li v-if="waveGroups.more.length" class="chip" :title="waveGroups.moreText">
+                +{{ waveGroups.more.length }}
+                <span class="sr-only">{{ waveGroups.moreText }}</span>
               </li>
             </ul>
           </div>
@@ -228,7 +241,7 @@
 
         <p v-if="coop && p2Card" class="p2-card">
           <span class="player-dot player-dot--2" aria-hidden="true"></span>
-          {{ p2Card }}
+          <span class="p2-card-text">{{ p2Card }}</span>
         </p>
       </div>
 
@@ -337,6 +350,8 @@ export default {
       spotTarget: null,
       layout: 'wide',
       stageH: 0,
+      /** Larger screens: the height the board and the side column share (the page never scrolls). */
+      sideH: 0,
       ground: '',
       // Touch build tray: the tower shown by a first tap (a second tap builds it).
       trayPick: null,
@@ -476,6 +491,34 @@ export default {
       this.tick;
       if (!this.engine.game) return [];
       return this.engine.game.waves.preview().map((g) => ({ ...g, color: EnemyFactory.get(g.type).stats.color }));
+    },
+    /** Larger screens: the next wave on the bar, four chips at most (the rest gather in a "+n" chip). */
+    waveGroups() {
+      const all = this.nextWave;
+      const shown = all.length > 4 ? all.slice(0, 3) : all;
+      const more = all.slice(shown.length);
+      return { shown, more, moreText: more.map((g) => `${g.count} × ${this.$t('enemies.' + g.type + '.name')}`).join(', ') };
+    },
+    /** What the wave button says. */
+    waveLabel() {
+      const h = this.hud;
+      if (h.state === 'prepare') return 'first';
+      if (h.canStart) return 'next';
+      return h.done ? 'last' : 'running';
+    },
+    /** The countdown on two figures (a figure space before a single digit): the label keeps its width. */
+    countdownText() {
+      return String(this.hud.countdown).padStart(2, ' ');
+    },
+    /** Sizes given to the screen's parts: the map's stage on phones, the side column on larger screens. */
+    stageStyle() {
+      if (this.stageH) return { '--stage-h': this.stageH + 'px', '--stage-ground': this.ground };
+      return this.sideH ? { '--side-h': this.sideH + 'px' } : null;
+    },
+    /** Larger screens: Gontran's bubble lies on the half of the map away from the tile in play. */
+    coachSide() {
+      const cell = this.selectedCell || this.coachCell;
+      return cell && this.board.h ? this.sideAwayFrom(cell) : 'bottom';
     },
     /**
      * Radial build menu around the selected free tile, with the towers of this level.
@@ -849,6 +892,7 @@ export default {
       let maxWidth;
       let maxHeight;
       if (phone || landscapePhone) {
+        this.sideH = 0;
         if (!this.stageH) {
           // First pass: give the map's stage a height, so the rest of the screen can be measured around it.
           this.stageH = Math.round(vp.h * 0.6);
@@ -863,9 +907,11 @@ export default {
         maxHeight = this.stageH;
       } else {
         this.stageH = 0;
-        const top = wrap.getBoundingClientRect().top + window.scrollY;
+        // The board and the side column fill the window's height, never more: the page never scrolls.
+        this.sideH = portrait ? 0 : Math.floor(this.battleRoom(vp));
         maxWidth = wrap.clientWidth;
-        maxHeight = portrait ? vp.h * 0.52 : Math.max(200, vp.h - top - 70);
+        // The map gets what its frame and the wave bar under it leave.
+        maxHeight = portrait ? vp.h * 0.52 : Math.max(200, this.sideH - (wrap.offsetHeight - this.$refs.canvas.offsetHeight));
       }
       const key = `${layout}:${Math.round(maxWidth)}x${Math.round(maxHeight)}`;
       if (key === this.engine.size) return;
@@ -894,6 +940,20 @@ export default {
       const top = section.getBoundingClientRect().top + (main ? main.scrollTop : 0) + window.scrollY;
       const below = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
       return top + section.offsetHeight + below - this.stageH;
+    },
+
+    /**
+     * Larger screens: the height between the top of the battle (under the header) and
+     * the page's bottom margin. The board with its wave bar and the side column share
+     * it, so the page never scrolls. Gontran floats on the map and the wave bar keeps
+     * one size, so it does not change while playing.
+     */
+    battleRoom(vp) {
+      const wrap = this.$refs.boardWrap;
+      const main = wrap.closest('.app-main');
+      const top = wrap.getBoundingClientRect().top + (main ? main.scrollTop : 0) + window.scrollY;
+      const below = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      return vp.h - top - below;
     },
 
     /** The half of the map away from a tile: trays and panels go there so they never hide it. */
@@ -1024,11 +1084,12 @@ export default {
         return;
       }
       const r = el.getBoundingClientRect();
-      // Larger screens: the shop or the powers can sit below the fold, bring them in once.
+      // Larger screens: a long shop scrolls in its column, bring the item in once.
       // (Phones never scroll: everything is already on screen.)
       if (target !== this.spotTarget) {
         this.spotTarget = target;
-        if (!this.touchLayout && (r.top < 0 || r.bottom > window.innerHeight)) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        const view = el.closest('.sidebar')?.getBoundingClientRect() ?? { top: 0, bottom: window.innerHeight };
+        if (!this.touchLayout && (r.top < view.top || r.bottom > view.bottom)) el.scrollIntoView({ block: 'center', behavior: services.motion.reduced ? 'auto' : 'smooth' });
       }
       const pad = 6;
       this.spot = { left: `${r.left - pad}px`, top: `${r.top - pad}px`, width: `${r.width + pad * 2}px`, height: `${r.height + pad * 2}px` };
