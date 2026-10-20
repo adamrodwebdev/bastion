@@ -44,8 +44,15 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - Les écrans autres que l'accueil sont chargés à la demande : la première page reste rapide sur téléphone.
 - Les langues sont chargées à la demande : seule celle du joueur est téléchargée.
 - Images de présentation (`marketing/`, `public/og-image.png`) refaites avec les nouveaux graphismes.
-
 - Nouveau thème musical des menus, aux sonorités futuristes : nappe de synthétiseur qui « respire » au rythme de la grosse caisse, arpèges avec écho, mélodie glissée, basse et batterie électroniques. Le morceau se construit en boucle de 16 mesures (introduction, partie rythmée, pause avec montée).
+- **Interface modernisée** : surfaces plus douces, boutons qui s'enfoncent quand on les touche, en-tête translucide.
+- **Animations et transitions** : passage en fondu d'un écran à l'autre, entrée du menu d'accueil, niveaux d'un chapitre qui arrivent les uns après les autres, chiffres du jeu (vies, or, vague) qui réagissent quand ils changent, tour qui bondit quand on l'améliore, pouvoir qui brille quand il est de nouveau prêt, étoiles tamponnées en fin de niveau. Tout est coupé si l'appareil demande moins d'animations.
+- **Jeu sur téléphone et tablette tenus droits** : la carte occupe 80 % de la hauteur de l'écran et ne change plus de taille quand la barre d'adresse du navigateur apparaît ou disparaît. On construit avec le menu radial (la boutique, qui le répétait, n'est plus affichée sur ces écrans) ; le panneau de la tour glisse depuis le bas, ou depuis le haut quand la tour est en bas de l'écran, pour ne jamais la cacher. Sous la carte : les pouvoirs, le bouton de vague, la prochaine vague et Quitter, sans défilement. L'en-tête du site est masqué pendant la partie ; le bouton son passe dans le bandeau du HUD.
+- Sur téléphone à l'horizontale, le plateau prend aussi 80 % de la hauteur et les commandes passent à sa droite.
+
+### Corrigé
+
+- Le bouton **Améliorer** suit maintenant l'or réel : il se grise quand l'or manque et se réactive dès qu'il suffit. Après un achat, le niveau, le prix suivant et la valeur de revente se mettent à jour (ils restaient bloqués sur ceux du premier affichage). Même correction dans le mode Duel.
 
 ### Mise en ligne
 
