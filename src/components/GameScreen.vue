@@ -59,6 +59,7 @@
               ref="canvas"
               class="board"
               :class="{ 'is-aiming': !!aiming }"
+              :style="{ cursor: boardCursor }"
               tabindex="0"
               role="application"
               :aria-label="$t('hud.board')"
@@ -381,6 +382,18 @@ export default {
   computed: {
     level() {
       return LevelCatalog.byNumber(this.levelNumber);
+    },
+    /**
+     * The mouse cursor over the board: the hand only over a tile where a click acts (a tower,
+     * a free tile), the arrow elsewhere; while aiming, the crosshair of the stylesheet.
+     */
+    boardCursor() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const game = this.engine.game;
+      const cell = this.hover;
+      if (this.aiming || this.end || this.paused || !game || !cell) return null;
+      return game.map.actsAt(cell.col, cell.row) ? 'pointer' : null;
     },
     selectedTower() {
       // eslint-disable-next-line no-unused-expressions

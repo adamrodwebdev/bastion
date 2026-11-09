@@ -97,6 +97,14 @@ export class GameMap {
     return this.occupied.get(GameMap.key(c, r)) || null;
   }
 
+  /**
+   * Does a tap on this tile act: a tower to open, or a free tile to build on? The board shows
+   * the hand there, and the arrow over roads, rocks, water and outside the map.
+   */
+  actsAt(c, r) {
+    return this.isBuildable(c, r) || this.towerAt(c, r) !== null;
+  }
+
   place(tower) {
     this.occupied.set(GameMap.key(tower.col, tower.row), tower);
   }

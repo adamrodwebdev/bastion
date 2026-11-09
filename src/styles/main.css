@@ -197,11 +197,43 @@ select {
   color: inherit;
 }
 
-button {
+/* The cursor tells what can be clicked (the user's rule of 9 November 2026): the arrow on all
+   the content, the hand on the clickable elements only, the I-beam in text fields, "not
+   allowed" on disabled controls. The board sets its own (see GameScreen: the hand over a tile
+   where a tap acts, the crosshair while aiming). Set here once: no other rule sets the hand. */
+html {
+  cursor: default;
+}
+
+a[href],
+area[href],
+button:not(:disabled),
+select:not(:disabled),
+summary,
+label[for],
+[role='button'],
+[role='link'],
+[role='tab'],
+[role='menuitem'],
+[role='option'],
+[role='switch'],
+input:is([type='checkbox'], [type='radio'], [type='submit'], [type='button'], [type='reset'], [type='file'], [type='color'], [type='range']):not(:disabled) {
   cursor: pointer;
 }
 
-button:disabled {
+/* Its own rule: a browser without :has() drops only this one, not the list above. */
+label:has(> input:not(:disabled)) {
+  cursor: pointer;
+}
+
+input:is(:not([type]), [type='text'], [type='email'], [type='search'], [type='password'], [type='number'], [type='tel'], [type='url']):not(:disabled),
+textarea:not(:disabled),
+[contenteditable='true'] {
+  cursor: text;
+}
+
+:disabled,
+[aria-disabled='true'] {
   cursor: not-allowed;
 }
 
@@ -1096,7 +1128,6 @@ kbd {
   color: var(--muted);
   font-weight: 700;
   font-size: 0.9rem;
-  cursor: pointer;
   transition: color var(--t) ease, box-shadow var(--t) var(--ease-out), transform var(--t-press) var(--ease-out);
 }
 
@@ -1979,10 +2010,9 @@ kbd {
   transform: translateY(2px);
 }
 
-/* Not reached yet: grey stone with a lock. */
+/* Not reached yet: grey stone with a lock (a disabled button: "not allowed" from the base styles). */
 .node.is-locked {
   --size: calc(40px * var(--k, 1));
-  cursor: not-allowed;
   opacity: 0.9;
 }
 
@@ -2154,10 +2184,6 @@ kbd {
 .cmap-dot.is-on::before {
   width: 20px;
   background: var(--gilt-mid);
-}
-
-.cmap-dot:disabled {
-  cursor: not-allowed;
 }
 
 .cmap-dot:disabled::before {
@@ -2602,10 +2628,11 @@ kbd {
   box-shadow: 0 0 0 2px var(--rim-gold), 0 5px 0 2px var(--c-ink), var(--shadow-lg);
 }
 
+/* The board shows the arrow; the hand only over a tile where a tap acts (set by the board's
+   component), and the crosshair while a power is aimed. */
 .board {
   display: block;
   touch-action: manipulation;
-  cursor: pointer;
   outline: none;
 }
 
@@ -3499,7 +3526,6 @@ kbd {
   border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-3);
-  cursor: pointer;
 }
 
 .toggle input {
@@ -3515,7 +3541,6 @@ kbd {
   border-radius: 13px;
   background: rgb(59 42 23 / 0.35);
   box-shadow: inset 0 2px 0 rgb(0 0 0 / 0.2);
-  cursor: pointer;
   transition: background-color var(--t) ease;
 }
 
@@ -3644,7 +3669,6 @@ kbd {
   background: var(--surface-2);
   font-size: 0.78rem;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .arena input {
@@ -3809,7 +3833,6 @@ kbd {
 .duel-help summary {
   padding: 10px 0;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .duel-help p {
@@ -4031,7 +4054,6 @@ kbd {
   border-radius: 50%;
   background: none;
   transform: translate(-50%, -50%);
-  cursor: pointer;
   animation: flag-beckon 1.4s ease-in-out infinite;
 }
 
@@ -4111,7 +4133,6 @@ kbd {
   box-shadow: var(--highlight), inset 0 0 16px rgb(150 100 40 / 0.3), var(--hard-sm);
   transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, 0px)));
   animation: radial-pop 0.22s var(--spring-soft) both;
-  cursor: pointer;
   transition: box-shadow 0.15s;
 }
 

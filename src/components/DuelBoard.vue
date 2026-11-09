@@ -12,6 +12,7 @@
       <canvas
         ref="canvas"
         class="board"
+        :style="{ cursor: boardCursor }"
         :aria-label="$t('duel.board', { name })"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
@@ -97,6 +98,14 @@ export default {
   computed: {
     game() {
       return this.match.games[this.player - 1];
+    },
+    /** The mouse cursor over this board: the hand only over a tile where a click acts, the arrow elsewhere. */
+    boardCursor() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const cell = this.hover;
+      if (!cell || this.out || this.match.over) return null;
+      return this.game.map.actsAt(cell.col, cell.row) ? 'pointer' : null;
     },
     hud() {
       // eslint-disable-next-line no-unused-expressions
