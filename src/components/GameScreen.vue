@@ -59,6 +59,7 @@
               ref="canvas"
               class="board"
               :class="{ 'is-aiming': !!aiming }"
+              :style="{ cursor: boardCursor }"
               tabindex="0"
               role="application"
               :aria-label="$t('hud.board')"
@@ -317,6 +318,8 @@ import EndPanel from './EndPanel.vue';
 import CoachBubble from './CoachBubble.vue';
 import BuildTray from './BuildTray.vue';
 import LevelGoals from './LevelGoals.vue';
+import { arrowStep, keyName, keyPlace } from './keyboard.js';
+import { cssPixels } from './fields.js';
 
 const SPEEDS = [1, 2, 3];
 const TOWER_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
@@ -327,7 +330,7 @@ const POWER_KEYS = ['q', 'w', 'e', 'r', 't'];
  * on French AZERTY keyboards the digits need Shift, yet the unshifted keys still build.
  */
 function towerKeyIndex(evt) {
-  const digit = /^(?:Digit|Numpad)(\d)$/.exec(evt.code || '')?.[1] ?? evt.key;
+  const digit = /^(?:Digit|Numpad)(\d)$/.exec(keyPlace(evt))?.[1] ?? keyName(evt);
   return TOWER_KEYS.indexOf(digit);
 }
 
@@ -379,6 +382,18 @@ export default {
   computed: {
     level() {
       return LevelCatalog.byNumber(this.levelNumber);
+    },
+    /**
+     * The mouse cursor over the board: the hand only over a tile where a click acts (a tower,
+     * a free tile), the arrow elsewhere; while aiming, the crosshair of the stylesheet.
+     */
+    boardCursor() {
+      // eslint-disable-next-line no-unused-expressions
+      this.tick;
+      const game = this.engine.game;
+      const cell = this.hover;
+      if (this.aiming || this.end || this.paused || !game || !cell) return null;
+      return game.map.actsAt(cell.col, cell.row) ? 'pointer' : null;
     },
     selectedTower() {
       // eslint-disable-next-line no-unused-expressions
@@ -933,8 +948,8 @@ export default {
       r.resize(maxWidth, maxHeight, portrait);
       const map = this.engine.game.map;
       this.board = {
-        w: parseFloat(r.canvas.style.width),
-        h: parseFloat(r.canvas.style.height),
+        w: r.cssWidth,
+        h: r.cssHeight,
         tile: r.cssTile,
         rotated: r.rotated,
         cols: map.cols,
@@ -951,7 +966,7 @@ export default {
       const section = this.$el;
       const main = section.closest('.app-main');
       const top = section.getBoundingClientRect().top + (main ? main.scrollTop : 0) + window.scrollY;
-      const below = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      const below = main ? cssPixels(getComputedStyle(main).paddingBottom) : 0;
       return top + section.offsetHeight + below - this.stageH;
     },
 
@@ -965,7 +980,7 @@ export default {
       const wrap = this.$refs.boardWrap;
       const main = wrap.closest('.app-main');
       const top = wrap.getBoundingClientRect().top + (main ? main.scrollTop : 0) + window.scrollY;
-      const below = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0;
+      const below = main ? cssPixels(getComputedStyle(main).paddingBottom) : 0;
       return vp.h - top - below;
     },
 
@@ -1178,7 +1193,8 @@ export default {
       const game = this.engine.game;
       if (!game || this.end) return;
       const cell = this.selectedCell || { col: Math.floor(game.map.cols / 2), row: Math.floor(game.map.rows / 2) };
-      const dir = this.arrow(evt.key);
+      const name = keyName(evt);
+      const dir = this.arrow(name);
       if (dir) {
         evt.preventDefault();
         const col = Math.min(game.map.cols - 1, Math.max(0, cell.col + dir[0]));
@@ -1190,13 +1206,13 @@ export default {
         this.sync();
         return;
       }
-      const key = evt.key.toLowerCase();
+      const key = name.toLowerCase();
       const ti = towerKeyIndex(evt);
       if (ti >= 0 && this.shopItems[ti]) {
         evt.preventDefault();
         this.selectedCell = cell;
         this.pickTower(this.shopItems[ti].type);
-      } else if (evt.key === 'Enter') {
+      } else if (name === 'Enter') {
         evt.preventDefault();
         if (this.aiming) this.castAimed({ x: cell.col + 0.5, y: cell.row + 0.5 }, 1);
         else this.handleCell(cell, 1);
@@ -1211,10 +1227,11 @@ export default {
     onGlobalKey(evt) {
       const game = this.engine.game;
       if (!game || this.$store.story || evt.target?.tagName === 'INPUT' || evt.target?.tagName === 'SELECT') return;
-      const key = evt.key.toLowerCase();
+      const name = keyName(evt);
+      const key = name.toLowerCase();
       // Escape belongs to the browser and the portals (it leaves fullscreen): never used here.
       // Backspace cancels an aim or a selection (in co-op it is player 2's sell key).
-      if (evt.key === 'Backspace' && !this.coop) {
+      if (name === 'Backspace' && !this.coop) {
         evt.preventDefault();
         this.cancelOnBoard();
         return;
@@ -1224,7 +1241,7 @@ export default {
         this.togglePause();
         return;
       }
-      if (evt.key === ' ' && (document.activeElement === this.$refs.canvas || document.activeElement === document.body || this.coop)) {
+      if (name === ' ' && (document.activeElement === this.$refs.canvas || document.activeElement === document.body || this.coop)) {
         evt.preventDefault();
         this.startWave();
         return;
@@ -1240,7 +1257,7 @@ export default {
       }
       if (!this.coop) return;
       // Player 2: keyboard cursor.
-      const dir = this.arrow(evt.key);
+      const dir = this.arrow(name);
       if (dir) {
         evt.preventDefault();
         this.p2 = {
@@ -1262,14 +1279,13 @@ export default {
       }
       const t = game.map.towerAt(this.p2.col, this.p2.row);
       if (t && t.owner === 2 && key === 'u') game.upgradeTower(t, 2);
-      else if (t && t.owner === 2 && (evt.key === 'Backspace' || evt.key === 'Delete')) game.sellTower(t, 2);
+      else if (t && t.owner === 2 && (name === 'Backspace' || name === 'Delete')) game.sellTower(t, 2);
       this.sync();
     },
 
     /** Grid direction of an arrow key, or null. */
     arrow(key) {
-      const map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-      const d = map[key];
+      const d = arrowStep(key);
       if (!d) return null;
       // Arrow keys follow what is on screen, even when the board is rotated.
       if (this.engine.renderer?.rotated) return [d[1], -d[0]];

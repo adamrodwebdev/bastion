@@ -67,12 +67,19 @@
       }
     </script>
 
-    <!-- Applies the saved theme before first paint (no flash). -->
+    <!-- Applies the saved theme before first paint (no flash). The settings are read through
+         the same door as the game: a size limit before parsing (SAVE_LIMITS.settings, in
+         src/core/limits.js), an own field only, a theme from its list, the system otherwise. -->
     <script>
       (function () {
+        var m = 'system';
         try {
-          var s = JSON.parse(localStorage.getItem('bastion-td:settings') || '{}');
-          var m = s.theme || 'system';
+          var raw = localStorage.getItem('bastion-td:settings');
+          var s = typeof raw === 'string' && raw.length <= 8192 ? JSON.parse(raw) : null;
+          var own = s !== null && typeof s === 'object' && Object.prototype.hasOwnProperty.call(s, 'theme');
+          if (own && (s.theme === 'light' || s.theme === 'dark')) m = s.theme;
+        } catch (e) {}
+        try {
           if (m === 'system') m = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           document.documentElement.setAttribute('data-theme', m);
         } catch (e) {}

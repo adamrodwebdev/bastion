@@ -8,24 +8,48 @@
  *   node scripts/simulate.mjs --save          also checks save / restore mid-level
  *
  * Exits with code 1 if the engine throws or if a level cannot be won in Normal
- * (or Easy) by the bot.
+ * (or Easy) by the bot, and with code 2 on an argument it does not know or
+ * cannot read (a level that is not a whole number from 1 to 100, an unknown
+ * difficulty): a mistyped run never passes without playing.
  */
 
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Game, LevelCatalog, Difficulty, PowerManager } from '../src/core/index.js';
+import { InvalidInput, parseNumber, readChoice } from '../src/core/input.js';
 import { Bot } from './Bot.mjs';
 
-const args = Object.fromEntries(
-  process.argv.slice(2).map((a) => {
-    const [k, v] = a.replace(/^--/, '').split('=');
-    return [k, v ?? true];
-  }),
-);
-const diff = Difficulty.get(args.diff || 'normal');
-const from = Number(args.from || 1);
-const to = Number(args.to || LevelCatalog.count);
-const checkSave = Boolean(args.save);
+/** The options of the command line, each with its reader: the arguments are outside values. */
+const LEVEL = { min: 1, max: LevelCatalog.count, integer: true };
+const OPTIONS = new Map([
+  ['diff', (value) => Difficulty.get(readChoice(value, Difficulty.all().map((d) => d.id), '--diff'))],
+  ['from', (value) => parseNumber(value, LEVEL, '--from')],
+  ['to', (value) => parseNumber(value, LEVEL, '--to')],
+  ['save', (value) => readChoice(value, [true], '--save')],
+]);
+
+/**
+ * Reads the command line: `--name=value` for the known names, `--save` alone.
+ * @param {readonly string[]} argv
+ * @returns {{diff: Difficulty, from: number, to: number, save: boolean}}
+ * @throws {InvalidInput} on an argument that is unknown, repeated or unreadable
+ */
+function readArguments(argv) {
+  const read = new Map();
+  for (const arg of argv) {
+    const [, name, value] = /^--([a-z]+)(?:=(.*))?$/s.exec(arg) ?? [];
+    if (!OPTIONS.has(name) || read.has(name)) throw new InvalidInput(arg, 'not-a-choice');
+    read.set(name, OPTIONS.get(name)(value ?? true));
+  }
+  const options = {
+    diff: read.get('diff') ?? Difficulty.NORMAL,
+    from: read.get('from') ?? 1,
+    to: read.get('to') ?? LevelCatalog.count,
+    save: read.has('save'),
+  };
+  if (options.from > options.to) throw new InvalidInput('--from', 'out-of-range');
+  return options;
+}
 
 /** Workshop bonuses a player is expected to have reached around a level. */
 export function expectedMods(number) {
@@ -44,7 +68,7 @@ export function expectedMods(number) {
   };
 }
 
-export function play(number, difficulty = diff, { save = false, mods = expectedMods(number) } = {}) {
+export function play(number, difficulty = Difficulty.NORMAL, { save = false, mods = expectedMods(number) } = {}) {
   const level = LevelCatalog.byNumber(number);
   let game = new Game({ level, difficulty, loadout: PowerManager.defaultLoadout(number - 1), mods });
   let bot = new Bot(game);
@@ -86,6 +110,16 @@ const entry = process.argv[1] ? resolve(process.argv[1]) : '';
 const self = fileURLToPath(import.meta.url);
 const isMain = process.platform === 'win32' ? entry.toLowerCase() === self.toLowerCase() : entry === self;
 if (isMain) {
+  let options;
+  try {
+    options = readArguments(process.argv.slice(2));
+  } catch (error) {
+    if (!(error instanceof InvalidInput)) throw error;
+    const usage = `node scripts/simulate.mjs [--diff=easy|normal|hard] [--from=1] [--to=${LevelCatalog.count}] [--save]`;
+    console.error(`${error.field}: ${error.problem}. Usage: ${usage}`);
+    process.exit(2);
+  }
+  const { diff, from, to, save: checkSave } = options;
   let errors = 0;
   let losses = 0;
   const row = [];

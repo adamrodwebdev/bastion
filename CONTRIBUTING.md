@@ -55,12 +55,13 @@ docs: explique comment ajouter une langue
    - faites un commit `chore(release): v1.1.0` ;
    - créez un tag : `git tag -a v1.1.0 -m "v1.1.0"` puis `git push --follow-tags` (ou créez la « Release » directement depuis la page GitHub du dépôt, qui crée le tag pour vous).
 
-**Attention aux sauvegardes.** Si vous changez la forme des données sauvegardées, augmentez `Game.SAVE_VERSION` dans `src/core/Game.js`. Les anciennes parties seront alors ignorées au lieu de faire planter le jeu. Ce type de changement compte comme une version **majeure**.
+**Attention aux sauvegardes.** Si vous changez la forme des données sauvegardées, augmentez `Game.SAVE_VERSION` dans `src/core/Game.js`. Les anciennes parties seront alors ignorées au lieu de faire planter le jeu. Ce type de changement compte comme une version **majeure**. Un champ ajouté à la partie en cours se lit aussi dans `src/core/GameSnapshot.js` (les tests le rappellent), et toute sauvegarde déjà écrite doit continuer à se charger : ajoutez son format aux tests de `tests/saves.test.mjs`.
 
 ## Avant d'ouvrir une pull request
 
 - [ ] `npm run build` fonctionne sans erreur.
 - [ ] `npm test` termine sans erreur, et les 100 niveaux restent gagnables en Facile et en Normal.
+- [ ] `npm run test:unit` passe (tests unitaires des données lues à la porte, deux à la fois au plus).
 - [ ] `npm run check:i18n` ne signale aucun texte manquant.
 - [ ] Le jeu a été testé sur un écran de téléphone (outils de développement du navigateur) et en mode sombre.
 - [ ] Si le changement touche le mode à deux joueurs, il a été testé en coopération **et** en duel.
@@ -72,7 +73,7 @@ docs: explique comment ajouter une langue
 **Vérification automatique (CI).** À chaque pull request et à chaque envoi sur `main`, GitHub Actions
 ([.github/workflows/ci.yml](.github/workflows/ci.yml)) installe le projet sous Node 20 (la version des
 builds Netlify) et Node 24, puis lance les builds (site, CrazyGames, Poki, et Playgama avec les contrôles de son paquet), `npm run check:i18n`,
-`npm test` et la campagne en Facile (`node scripts/simulate.mjs --diff=easy`). Le résultat s'affiche en bas
+`npm run test:unit`, `npm test` et la campagne en Facile (`node scripts/simulate.mjs --diff=easy`). Le résultat s'affiche en bas
 de la pull request. Les deux vérifications sont **obligatoires** : `main` est protégée, et une pull request
 ne peut pas y être fusionnée tant qu'elles ne sont pas au vert (les administrateurs du dépôt peuvent passer
 outre en cas d'urgence). Les tests sur téléphone, en mode sombre et à deux restent à faire à la main.
@@ -84,6 +85,8 @@ outre en cas d'urgence). Les tests sur téléphone, en mode sombre et à deux re
 - **Ajouter une tour, un ennemi ou un pouvoir** : créez une sous-classe (`Tower`, `Enemy` ou `Power`), enregistrez-la dans la fabrique correspondante, indiquez son niveau d'apparition dans `src/core/config/unlocks.js`, puis ajoutez ses textes dans les traductions. Lancez ensuite `npm test` : le robot dira si la campagne reste gagnable.
 - **Le hasard est contrôlé** : utilisez toujours `game.random()` (ou `SeededRandom`) et jamais `Math.random()` pour les règles du jeu (seuls les effets visuels peuvent s'en servir). Ainsi, un niveau se joue toujours de la même façon, ce qui permet de le tester.
 - **Publicités** : tout le code des portails est dans `src/services/ads/`. Le reste du jeu ne parle qu'à l'interface `AdService`, qui ne fait rien sur notre site.
+- **Ce qui vient de l'extérieur est lu à la porte** (règle du 9 novembre 2026) : sauvegardes et réglages, adresse (`?lang=`), navigateur, valeurs des SDK des portails, messages du worker, champs et touches. Chaque valeur passe un lecteur de `src/core/input.js` : un nombre est un vrai nombre fini dans sa plage (jamais `parseInt`, `parseFloat`, `Number(x)` ni `+x`), un texte une chaîne nettoyée dont la longueur maximale vient de la table `TEXT_LIMITS` (`src/core/limits.js`, la même valeur que le `maxlength` du champ), un nom un élément de sa liste, lu dans une `Map` ou parmi les champs propres d'un objet (jamais `objet[clé]` avec une clé venue de dehors). Ce qui ne convient pas est refusé, jamais converti ni coupé. Chaque lecteur a sa table d'entrées hostiles dans `tests/`.
+- **Le curseur dit ce qui se clique** : la flèche sur le contenu, la main sur les seuls éléments cliquables, la barre de texte dans les champs. Ces règles sont posées une seule fois au début de `src/styles/main.css` ; n'ajoutez pas de `cursor: pointer` ailleurs (un test le vérifie). Le plateau ne montre la main que sur une case où un clic agit.
 - **Mise en forme** : 2 espaces, guillemets simples, point-virgule, 120 caractères par ligne au maximum. Le fichier `.editorconfig` règle votre éditeur automatiquement.
 
 ## Version de démonstration

@@ -47,6 +47,7 @@ Autres commandes utiles :
 | `npm run build` | Crée la version finale du site dans le dossier `dist/`. |
 | `npm run preview` | Affiche la version finale en local, pour la vérifier avant de la mettre en ligne. |
 | `npm test` | Un robot joue les 100 niveaux pour vérifier qu'ils sont tous gagnables. |
+| `npm run test:unit` | Tests unitaires : ce qui vient de l'extérieur (sauvegardes, adresse, portails, touches, champs) est lu à la porte. |
 | `npm run check:i18n` | Vérifie qu'aucun texte ne manque dans aucune langue. |
 | `npm run build:crazygames` | Crée la version pour le site CrazyGames (avec ses publicités) dans `dist-crazygames/`. |
 | `npm run build:poki` | Crée la version pour le site Poki (avec ses publicités) dans `dist-poki/`. |
@@ -55,9 +56,12 @@ Autres commandes utiles :
 Le robot de `npm test` accepte quelques options, par exemple :
 
 ```bash
-node scripts/simulate.mjs --diff hard          # tous les niveaux en Difficile
-node scripts/simulate.mjs --from 40 --to 60    # seulement les niveaux 40 à 60
+node scripts/simulate.mjs --diff=hard          # tous les niveaux en Difficile
+node scripts/simulate.mjs --from=40 --to=60    # seulement les niveaux 40 à 60
+node scripts/simulate.mjs --save               # sauvegarde et reprise en cours de niveau
 ```
+
+Un argument mal écrit arrête le robot avec un message, avant qu'il ne joue.
 
 ## Mettre le site en ligne
 

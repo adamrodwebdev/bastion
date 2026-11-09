@@ -10,6 +10,7 @@
 
 - [ ] `npm run build` fonctionne
 - [ ] `npm test` passe
+- [ ] `npm run test:unit` passe
 - [ ] Testé sur téléphone et en mode sombre
 - [ ] Textes traduits en français et en anglais
 - [ ] CHANGELOG mis à jour

@@ -13,6 +13,8 @@ import { Effect } from './entities/Effect.js';
 import { LevelCatalog } from './config/LevelCatalog.js';
 import { Difficulty } from './config/Difficulty.js';
 import { DAMAGE } from './config/damage.js';
+import { orElse } from './input.js';
+import { isReadSnapshot, readGameSnapshot } from './GameSnapshot.js';
 
 /**
  * Bonuses coming from the workshop (see progression/UpgradeCatalog.js).
@@ -700,46 +702,74 @@ export class Game extends EventEmitter {
   }
 
   /**
-   * Rebuilds a running game from a snapshot produced by `serialize()`.
+   * Reads a snapshot from outside (a save) at the door: every field typed and in range.
+   * @param {unknown} data parsed JSON
+   * @returns {object|null} the snapshot, frozen, or null when it is missing, from another version or does not fit
+   */
+  static readSnapshot(data) {
+    if (isReadSnapshot(data)) return data;
+    return orElse(() => readGameSnapshot(data, { version: Game.SAVE_VERSION, waveGap: Game.WAVE_GAP }), null);
+  }
+
+  /**
+   * Rebuilds a running game from a snapshot produced by `serialize()`, read at the door first.
+   * @param {unknown} data
    * @returns {Game|null} null if the snapshot is missing, from another version or invalid
    */
   static restore(data) {
+    const snap = Game.readSnapshot(data);
+    if (!snap) return null;
     try {
-      if (!data || data.version !== Game.SAVE_VERSION) return null;
-      const level = LevelCatalog.byNumber(data.levelNumber);
-      if (!level) return null;
-      const game = new Game({
-        level,
-        difficulty: Difficulty.get(data.difficulty),
-        loadout: data.loadout,
-        mods: data.mods,
-        players: data.players.length,
-        hpMult: data.hpMult || 1,
-      });
-      data.players.forEach((p, i) => Object.assign(game.players[i], p));
-      game.lives = data.lives;
-      game.maxLives = data.maxLives;
-      game.score = data.score;
-      game.state = data.state === 'running' ? 'running' : 'prepare';
-      game.time = data.time || 0;
-      game.countdown = data.countdown ?? null;
-      game.waves.restore(data.waves);
-      game.powers.restore(data.powers);
-      game.stats = { ...Game.emptyStats(), ...data.stats };
-      for (const t of data.towers) {
-        const tower = TowerFactory.create(t.type, t.col, t.row, { owner: t.owner || 1, eliteUnlocked: game.eliteSet.has(t.type), priceFactor: game.mods.towerCost }).restore(t);
-        game.towers.push(tower);
-        game.map.place(tower);
-        tower.onPlaced(game);
-      }
-      for (const e of data.enemies) {
-        const paths = e.air ? game.map.airPaths : game.map.paths;
-        const path = paths[Math.min(paths.length - 1, e.pathIndex || 0)];
-        game.enemies.push(EnemyFactory.create(e.type, path, {}, { pathIndex: e.pathIndex || 0 }).restore(e));
-      }
-      return game;
+      return Game.#rebuild(snap);
     } catch {
       return null;
     }
+  }
+
+  /** @param {object} snap a snapshot read by `readSnapshot` */
+  static #rebuild(snap) {
+    const level = LevelCatalog.byNumber(snap.levelNumber);
+    const game = new Game({
+      level,
+      difficulty: Difficulty.get(snap.difficulty),
+      loadout: [...snap.loadout],
+      mods: { ...snap.mods, elite: [...snap.mods.elite] },
+      players: snap.players.length,
+      hpMult: snap.hpMult,
+    });
+    snap.players.forEach((p, i) => {
+      const player = game.players[i];
+      player.gold = p.gold;
+      player.earned = p.earned;
+      player.kills = p.kills;
+    });
+    game.lives = snap.lives;
+    game.maxLives = snap.maxLives;
+    game.score = snap.score;
+    game.state = snap.state;
+    game.time = snap.time;
+    game.countdown = snap.countdown;
+    game.waves.restore({ ...snap.waves, queue: snap.waves.queue.map((order) => ({ ...order })) });
+    game.powers.restore(snap.powers);
+    // Copies the game can change: the snapshot read at the door stays frozen.
+    const { stats } = snap;
+    game.stats = {
+      ...stats,
+      towerTypes: [...stats.towerTypes],
+      killsByCause: { ...stats.killsByCause },
+      killsByTower: { ...stats.killsByTower },
+    };
+    for (const t of snap.towers) {
+      const opts = { owner: t.owner, eliteUnlocked: game.eliteSet.has(t.type), priceFactor: game.mods.towerCost };
+      const tower = TowerFactory.create(t.type, t.col, t.row, opts).restore(t);
+      game.towers.push(tower);
+      game.map.place(tower);
+      tower.onPlaced(game);
+    }
+    for (const e of snap.enemies) {
+      const path = (e.air ? game.map.airPaths : game.map.paths)[e.pathIndex];
+      game.enemies.push(EnemyFactory.create(e.type, path, {}, { pathIndex: e.pathIndex }).restore(e));
+    }
+    return game;
   }
 }

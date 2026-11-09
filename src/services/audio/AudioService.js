@@ -31,9 +31,10 @@ export class AudioService {
   }
 
   // ------------------------------------------------------------- volumes
+  /** Volumes from 0 to 1, read at the door with the settings: anything but a finite number keeps the volume. */
   setVolumes({ sfx = this.sfxVolume, music = this.musicVolume } = {}) {
-    this.sfxVolume = clamp(Number(sfx) || 0, 0, 1);
-    this.musicVolume = clamp(Number(music) || 0, 0, 1);
+    this.sfxVolume = Number.isFinite(sfx) ? clamp(sfx, 0, 1) : this.sfxVolume;
+    this.musicVolume = Number.isFinite(music) ? clamp(music, 0, 1) : this.musicVolume;
     this.director.setEnabled(this.musicVolume > 0);
     this._applyGain();
   }

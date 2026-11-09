@@ -5,14 +5,44 @@
  */
 
 import { EventEmitter } from '../core/utils/EventEmitter.js';
-import { PowerManager, DEFAULT_SLOTS } from '../core/powers/PowerManager.js';
+import { PowerManager } from '../core/powers/PowerManager.js';
 import { LevelCatalog, LEVEL_COUNT } from '../core/config/LevelCatalog.js';
 import { UpgradeCatalog } from '../core/progression/UpgradeCatalog.js';
 import { crownsFor } from '../core/progression/GoldRules.js';
 import { countAchievements } from '../core/progression/Achievements.js';
+import { Game } from '../core/Game.js';
+import { InputRecord, orElse, parseNumber, readChoice, readNumber, readText } from '../core/input.js';
+import { LIST_LIMITS, SAVE_LIMITS, TEXT_LIMITS } from '../core/limits.js';
+import { LANGUAGE_NAMES } from '../locales/index.js';
+import { SaveSlot } from './SaveSlot.js';
 
 export const TRACKS = Object.freeze(['solo', 'coop']);
-const DIFFICULTIES = ['easy', 'normal', 'hard'];
+const DIFFICULTIES = Object.freeze(['easy', 'normal', 'hard']);
+const THEMES = Object.freeze(['system', 'light', 'dark']);
+const LOCALES = Object.freeze(Object.keys(LANGUAGE_NAMES));
+const POWER_IDS = Object.freeze(PowerManager.catalogue().map((p) => p.id));
+/** Settings that are on or off. */
+const SWITCHES = Object.freeze(['story', 'tutorials', 'gore', 'particles', 'muted', 'haptics', 'motion']);
+
+/** A whole number from 0 to `max`. */
+const count = (max) => Object.freeze({ min: 0, max, integer: true });
+const VOLUME = Object.freeze({ min: 0, max: 1 });
+/** A level's record: stars per difficulty, challenges passed (3 bits), best score, victories. */
+const STARS = count(3);
+const MASK = count(7);
+const BEST = count(1e9);
+const TIMES = count(1e6);
+const CROWNS = count(1e7);
+const LEVEL = Object.freeze({ min: 1, max: LEVEL_COUNT, integer: true });
+
+/** A name the game wrote into a save (an episode, a tutorial): letters, digits and dashes. */
+const SAVE_ID = Object.freeze({ maxLength: TEXT_LIMITS.saveId, required: true, pattern: /^[A-Za-z][A-Za-z0-9-]*$/ });
+/** A training lesson: t1 to t9. */
+const LESSON_ID = Object.freeze({ maxLength: TEXT_LIMITS.saveId, required: true, pattern: /^t\d$/ });
+/** A player's name: any text the field takes, or nothing (the default "Player 1" is then shown). */
+const PLAYER_NAME = Object.freeze({ maxLength: TEXT_LIMITS.playerName });
+/** A level's key in a campaign record: l1 to l100, written without leading zeros. */
+const LEVEL_KEY = /^l([1-9]\d{0,2})$/;
 
 const emptyCampaign = () => ({ completed: 0, levels: {} });
 
@@ -50,66 +80,133 @@ const DEFAULT_SETTINGS = () => ({
   motion: true,
 });
 
-const int = (v, min, max, fallback = min) => (Number.isInteger(v) && v >= min && v <= max ? v : fallback);
+/** A list read item by item. */
+const listOf = (maxItems, item) => ({ maxItems, item });
+const textItem = (rule) => (value, field) => readText(value, rule, field);
 
 /**
- * Persistence of the player's progress. Every value read from storage is
- * checked and clamped: a damaged or hand-edited save cannot crash the game.
+ * A campaign's record: how far it went, and the record of each level reached. A bad
+ * level record is left out; the others stay.
+ * @param {InputRecord} campaign
+ * @returns {{completed:number, levels:object}}
+ */
+function readCampaign(campaign) {
+  const completed = orElse(() => campaign.number('completed', count(LEVEL_COUNT)), 0);
+  const levels = {};
+  const records = orElse(() => campaign.record('levels'), null);
+  for (const id of records ? orElse(() => records.keys(LIST_LIMITS.levels), []) : []) {
+    const digits = LEVEL_KEY.exec(id)?.[1];
+    const n = digits ? orElse(() => parseNumber(digits, LEVEL, id), 0) : 0;
+    // A record for a level the campaign has not reached is not one.
+    if (n === 0 || n > completed + 1) continue;
+    const level = orElse(() => records.record(id), null);
+    if (!level) continue;
+    const stars = orElse(() => level.record('stars'), null);
+    levels[id] = {
+      stars: Object.fromEntries(DIFFICULTIES.map((d) => [d, stars ? orElse(() => stars.number(d, STARS), 0) : 0])),
+      ach: orElse(() => level.number('ach', MASK), 0),
+      best: orElse(() => level.number('best', BEST), 0),
+      wins: orElse(() => level.number('wins', TIMES), 0),
+    };
+  }
+  return { completed, levels };
+}
+
+/**
+ * Persistence of the player's progress. Every value read from storage passes the door
+ * field by field (see SaveSlot): a damaged, hand-edited or later save cannot crash the
+ * game, and one the game cannot read is kept until the player's own progress replaces it.
  */
 export class SaveManager extends EventEmitter {
+  #slots;
+  /** The game in progress, read at the door: the one found at start, then what the session saved. */
+  #game;
+
   /** @param {import('./StorageService.js').StorageService} storage */
   constructor(storage) {
     super();
     this.storage = storage;
-    this.progress = SaveManager.sanitize(storage.get('progress', null));
-    this.settings = { ...DEFAULT_SETTINGS(), ...SaveManager.sanitizeSettings(storage.get('settings', {})) };
+    this.#slots = {
+      progress: new SaveSlot(storage, 'progress', SAVE_LIMITS.progress),
+      settings: new SaveSlot(storage, 'settings', SAVE_LIMITS.settings),
+      currentGame: new SaveSlot(storage, 'currentGame', SAVE_LIMITS.currentGame),
+    };
+    const progress = SaveManager.readProgress(this.#slots.progress.saved);
+    // A progress of a version the game never wrote (a later one) is kept, like text that is not JSON.
+    if (!progress && this.#slots.progress.saved) this.#slots.progress.keep();
+    this.progress = progress ?? DEFAULT_PROGRESS();
+    const settings = this.#slots.settings.saved;
+    this.settings = settings ? SaveManager.readSettings(settings, DEFAULT_SETTINGS()) : DEFAULT_SETTINGS();
+    const game = this.#slots.currentGame.saved;
+    this.#game = game ? Game.readSnapshot(game) : null;
   }
 
-  /** Validates (and migrates from version 1) a stored progress object. */
-  static sanitize(raw) {
+  /**
+   * Reads a stored progress field by field (version 2), or migrates version 1. A bad field
+   * falls back to its default and the rest survives.
+   * @param {InputRecord|null} saved
+   * @returns {object|null} null when there is none, or when its version is not one the game wrote
+   */
+  static readProgress(saved) {
+    if (!saved) return null;
+    const version = orElse(() => saved.choice('version', [1, 2]), null);
+    if (version === null) return null;
     const p = DEFAULT_PROGRESS();
-    if (!raw || typeof raw !== 'object') return p;
-    if (raw.version !== 2) {
+    if (version === 1) {
       // Version 1 had 6 levels: keep how far the player went.
-      p.campaigns.solo.completed = int(raw.completed, 0, 6, 0);
+      p.campaigns.solo.completed = orElse(() => saved.number('completed', count(6)), 0);
       return p;
     }
+    const campaigns = orElse(() => saved.record('campaigns'), null);
     for (const track of TRACKS) {
-      const c = raw.campaigns?.[track];
-      if (!c) continue;
-      p.campaigns[track].completed = int(c.completed, 0, LEVEL_COUNT, 0);
-      for (const [id, rec] of Object.entries(c.levels || {})) {
-        const n = Number(id.slice(1));
-        if (!/^l\d+$/.test(id) || n < 1 || n > LEVEL_COUNT || n > p.campaigns[track].completed + 1) continue;
-        const stars = {};
-        for (const d of DIFFICULTIES) stars[d] = int(rec?.stars?.[d], 0, 3, 0);
-        p.campaigns[track].levels[id] = { stars, ach: int(rec?.ach, 0, 7, 0), best: int(rec?.best, 0, 1e9, 0), wins: int(rec?.wins, 0, 1e6, 0) };
-      }
+      const campaign = campaigns && orElse(() => campaigns.record(track), null);
+      if (campaign) p.campaigns[track] = readCampaign(campaign);
     }
-    p.crownsEarned = int(raw.crownsEarned, 0, 1e7, 0);
-    p.crownsSpent = int(raw.crownsSpent, 0, p.crownsEarned, 0);
+    p.crownsEarned = orElse(() => saved.number('crownsEarned', CROWNS), 0);
+    p.crownsSpent = orElse(() => saved.number('crownsSpent', count(p.crownsEarned)), 0);
     p.crowns = p.crownsEarned - p.crownsSpent;
-    for (const u of UpgradeCatalog.all()) {
-      const r = int(raw.ranks?.[u.id], 0, u.prices.length, 0);
-      if (r) p.ranks[u.id] = r;
+    const ranks = orElse(() => saved.record('ranks'), null);
+    for (const u of ranks ? UpgradeCatalog.all() : []) {
+      const rank = orElse(() => ranks.number(u.id, count(u.prices.length)), 0);
+      if (rank) p.ranks[u.id] = rank;
     }
-    p.loadout = Array.isArray(raw.loadout) ? raw.loadout.filter((x) => typeof x === 'string').slice(0, DEFAULT_SLOTS + 1) : [];
-    p.episodes = Array.isArray(raw.episodes) ? raw.episodes.filter((x) => typeof x === 'string').slice(0, 50) : [];
-    p.tutorials = Array.isArray(raw.tutorials) ? raw.tutorials.filter((x) => typeof x === 'string').slice(0, 100) : [];
-    p.training = Array.isArray(raw.training) ? raw.training.filter((x) => typeof x === 'string' && /^t\d$/.test(x)).slice(0, 10) : [];
-    p.duel = { played: int(raw.duel?.played, 0, 1e6, 0), wins: [int(raw.duel?.wins?.[0], 0, 1e6, 0), int(raw.duel?.wins?.[1], 0, 1e6, 0)] };
+    const power = (value, field) => readChoice(value, POWER_IDS, field);
+    p.loadout = [...orElse(() => saved.list('loadout', listOf(LIST_LIMITS.powers, power)), [])];
+    p.episodes = [...orElse(() => saved.list('episodes', listOf(LIST_LIMITS.episodes, textItem(SAVE_ID))), [])];
+    p.tutorials = [...orElse(() => saved.list('tutorials', listOf(LIST_LIMITS.tutorials, textItem(SAVE_ID))), [])];
+    p.training = [...orElse(() => saved.list('training', listOf(LIST_LIMITS.training, textItem(LESSON_ID))), [])];
+    const duel = orElse(() => saved.record('duel'), null);
+    if (duel) {
+      const wins = orElse(() => duel.list('wins', listOf(2, (value, field) => readNumber(value, TIMES, field))), []);
+      p.duel = { played: orElse(() => duel.number('played', TIMES), 0), wins: [wins[0] ?? 0, wins[1] ?? 0] };
+    }
     return p;
   }
 
-  static sanitizeSettings(raw) {
-    const s = {};
-    if (!raw || typeof raw !== 'object') return s;
-    if (typeof raw.locale === 'string' && /^[a-z]{2}$/.test(raw.locale)) s.locale = raw.locale;
-    if (['system', 'light', 'dark'].includes(raw.theme)) s.theme = raw.theme;
-    if (DIFFICULTIES.includes(raw.difficulty)) s.difficulty = raw.difficulty;
-    for (const k of ['music', 'sfx']) if (typeof raw[k] === 'number' && raw[k] >= 0 && raw[k] <= 1) s[k] = raw[k];
-    for (const k of ['story', 'tutorials', 'gore', 'particles', 'muted', 'haptics', 'motion']) if (typeof raw[k] === 'boolean') s[k] = raw[k];
-    if (Array.isArray(raw.names)) s.names = [0, 1].map((i) => String(raw.names[i] ?? '').slice(0, 16));
+  /**
+   * Reads settings field by field: from a save, or from a change the interface asks for. A
+   * field missing or refused keeps its value in `fallback`.
+   * @param {InputRecord} saved
+   * @param {object} fallback the settings in force (or the defaults)
+   * @returns {object}
+   */
+  static readSettings(saved, fallback) {
+    const s = { ...fallback, names: [...fallback.names] };
+    const read = (key, reader) => {
+      if (saved.has(key)) s[key] = orElse(reader, s[key]);
+    };
+    read('locale', () => (saved.isNull('locale') ? null : saved.choice('locale', LOCALES)));
+    read('theme', () => saved.choice('theme', THEMES));
+    read('difficulty', () => saved.choice('difficulty', DIFFICULTIES));
+    read('music', () => saved.number('music', VOLUME));
+    read('sfx', () => saved.number('sfx', VOLUME));
+    for (const key of SWITCHES) read(key, () => saved.boolean(key));
+    // Each name on its own: a bad one is left blank, the other stays.
+    read('names', () => {
+      const name = (value, field) => orElse(() => readText(value, PLAYER_NAME, field), '');
+      const list = saved.list('names', listOf(2, name));
+      return [list[0] ?? '', list[1] ?? ''];
+    });
     return s;
   }
 
@@ -279,10 +376,12 @@ export class SaveManager extends EventEmitter {
     return this.progress[kind].includes(id);
   }
 
+  /** What the game notes by itself (a story read, a tutorial seen): never over a progress it could not read. */
   markSeen(kind, id) {
     if (this.hasSeen(kind, id)) return;
     this.progress[kind].push(id);
-    this._persistProgress();
+    this.#slots.progress.note(this.progress);
+    this.emit('progress', this.progress);
   }
 
   recordDuel(winner) {
@@ -291,33 +390,60 @@ export class SaveManager extends EventEmitter {
     this._persistProgress();
   }
 
+  /** The player's own progress: written, over a progress that could not be read too. */
   _persistProgress() {
-    this.storage.set('progress', this.progress);
+    this.#slots.progress.write(this.progress);
     this.emit('progress', this.progress);
   }
 
   // ------------------------------------------------------------ settings
+  /**
+   * The player changes settings: each field is read at the door (a field refused keeps its
+   * value), then the settings are written, over settings that could not be read too.
+   * @param {object} patch
+   */
   updateSettings(patch) {
-    Object.assign(this.settings, SaveManager.sanitizeSettings({ ...this.settings, ...patch }));
-    this.storage.set('settings', this.settings);
+    this.#changeSettings(patch, true);
+  }
+
+  /**
+   * The game notes a setting by itself (the portal's language): never over settings it could not read.
+   * @param {object} patch
+   */
+  noteSettings(patch) {
+    this.#changeSettings(patch, false);
+  }
+
+  #changeSettings(patch, chosen) {
+    const read = orElse(() => SaveManager.readSettings(InputRecord.from(patch, 'settings'), this.settings), null);
+    if (read) Object.assign(this.settings, read);
+    if (chosen) this.#slots.settings.write(this.settings);
+    else this.#slots.settings.note(this.settings);
     this.emit('settings', this.settings);
   }
 
   // ------------------------------------------------------------ game in progress
   /**
+   * Saves the game in progress, if the game can read it back.
    * @param {object} snapshot output of Game#serialize() (+ track)
-   * @returns {boolean} false if the browser refused to store it
+   * @returns {boolean} false if it was not saved (it would not read back, or is too long)
    */
   saveGame(snapshot) {
-    return this.storage.set('currentGame', snapshot);
+    const copy = JSON.parse(JSON.stringify(snapshot));
+    const read = Game.readSnapshot(copy);
+    if (!read || !this.#slots.currentGame.write(copy)) return false;
+    this.#game = read;
+    return true;
   }
 
+  /** @returns {object|null} the game in progress, read at the door (frozen), or null */
   loadGame() {
-    return this.storage.get('currentGame', null);
+    return this.#game;
   }
 
   clearGame() {
-    this.storage.remove('currentGame');
+    this.#slots.currentGame.clear();
+    this.#game = null;
   }
 
   // ------------------------------------------------------------ reset

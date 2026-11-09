@@ -7,11 +7,11 @@
         <h2 class="section-title">{{ $t('settings.sound') }}</h2>
         <label class="field">
           <span>{{ $t('settings.music') }} · {{ Math.round(s.music * 100) }} %</span>
-          <input id="set-music" type="range" min="0" max="1" step="0.05" :value="s.music" @input="set('music', Number($event.target.value))" />
+          <input id="set-music" type="range" min="0" max="100" step="5" :value="Math.round(s.music * 100)" @input="setVolume('music', $event)" />
         </label>
         <label class="field">
           <span>{{ $t('settings.sfx') }} · {{ Math.round(s.sfx * 100) }} %</span>
-          <input id="set-sfx" type="range" min="0" max="1" step="0.05" :value="s.sfx" @input="set('sfx', Number($event.target.value))" @change="test" />
+          <input id="set-sfx" type="range" min="0" max="100" step="5" :value="Math.round(s.sfx * 100)" @input="setVolume('sfx', $event)" @change="test" />
         </label>
         <label v-if="canVibrate" class="toggle">
           <input id="set-haptics" type="checkbox" :checked="s.haptics" @change="set('haptics', $event.target.checked)" />
@@ -52,7 +52,7 @@
         <h2 class="section-title">{{ $t('settings.players') }}</h2>
         <label v-for="i in [0, 1]" :key="i" class="field">
           <span>{{ $t('coop.player', { n: i + 1 }) }}</span>
-          <input :id="'set-name-' + i" type="text" maxlength="16" autocomplete="off" :value="s.names[i]" :placeholder="$t('coop.player', { n: i + 1 })" @change="setName(i, $event.target.value)" />
+          <input :id="'set-name-' + i" type="text" :maxlength="nameLength" autocomplete="off" :value="s.names[i]" :placeholder="$t('coop.player', { n: i + 1 })" @change="setName(i, $event)" />
         </label>
       </section>
 
@@ -86,6 +86,7 @@
 import ScreenHeader from './ScreenHeader.vue';
 import DifficultyPicker from './DifficultyPicker.vue';
 import { services } from '../services/index.js';
+import { PERCENT, PLAYER_NAME, sliderValue, textValue } from './fields.js';
 
 export default {
   name: 'SettingsScreen',
@@ -96,6 +97,8 @@ export default {
       canVibrate: services.haptics.supported,
       // The system asks for less motion: the setting cannot turn it back on.
       systemCalm: services.motion.systemReduced,
+      // The same limit as the settings' reader (TEXT_LIMITS): the field only helps the player.
+      nameLength: PLAYER_NAME.maxLength,
       keys: ['build', 'move', 'select', 'upgrade', 'wave', 'powers', 'pause', 'cancel', 'p2'],
     };
   },
@@ -103,17 +106,29 @@ export default {
     s() {
       // eslint-disable-next-line no-unused-expressions
       this.$store.progressTick;
-      return services.saves.settings;
+      // A copy: the same object again would not refresh the screen (Vue 3.4+ only re-renders a
+      // changed computed value), and the volume shown beside a slider stayed where it started.
+      return { ...services.saves.settings };
     },
   },
   methods: {
     set(key, value) {
       services.saves.updateSettings({ [key]: value });
     },
-    setName(i, value) {
-      const names = [...this.s.names];
-      names[i] = value.trim().slice(0, 16);
-      services.saves.updateSettings({ names });
+    /** A volume slider, in whole percentages: a value that is not one changes nothing. */
+    setVolume(key, event) {
+      const percent = sliderValue(event, PERCENT);
+      if (percent !== null) services.saves.updateSettings({ [key]: percent / 100 });
+    },
+    /** A player's name, cleaned; one that is too long (an edited page) leaves the saved name. */
+    setName(i, event) {
+      const name = textValue(event, PLAYER_NAME);
+      if (name !== null) {
+        const names = [...this.s.names];
+        names[i] = name;
+        services.saves.updateSettings({ names });
+      }
+      event.target.value = this.s.names[i];
     },
     test() {
       services.audio.unlock();

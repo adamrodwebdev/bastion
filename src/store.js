@@ -78,6 +78,23 @@ export const actions = {
     services.saves.updateSettings({ difficulty: id });
   },
 
+  /**
+   * The player picks a language: a value from outside (the list could be edited), switched
+   * only when it is one the game has, and kept in the settings.
+   * @param {unknown} code
+   */
+  async setLocale(code) {
+    if (!services.i18n.supports(code)) return;
+    await services.i18n.setLocale(code);
+    services.saves.updateSettings({ locale: code });
+  },
+
+  /** The player switches between the light and dark themes (header button), kept in the settings. */
+  toggleTheme() {
+    services.theme.toggle();
+    services.saves.updateSettings({ theme: services.theme.mode });
+  },
+
   /** Opens the campaign map (solo or cooperation) on the furthest chapter. */
   openCampaign(track = 'solo') {
     store.track = track;
@@ -154,9 +171,10 @@ export const actions = {
   },
 
   resumeGame() {
+    // The game in progress as the door read it: typed, frozen, its track checked against its players.
     const snap = services.saves.loadGame();
     if (!snap) return;
-    store.game = { levelNumber: snap.levelNumber, resume: true, key: store.game.key + 1, track: snap.track || 'solo', loadout: snap.loadout || [] };
+    store.game = { levelNumber: snap.levelNumber, resume: true, key: store.game.key + 1, track: snap.track, loadout: [...snap.loadout] };
     actions.go('game');
   },
 

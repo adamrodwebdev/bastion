@@ -4,6 +4,7 @@
 
 import { AdService } from './AdService.js'
 import { AdPolicy } from './AdPolicy.js'
+import { readLanguageTag } from '../I18nService.js'
 
 /**
  * Keys of the game's saves (as StorageService namespaces them): loaded together
@@ -47,12 +48,19 @@ const quietly = (call) => {
  * localStorage-like backend over `bridge.storage` (for StorageService): every key
  * is loaded in one call at start and kept in memory, so the game reads its saves
  * synchronously; writes go to Bridge in the background, only when a value changes.
+ *
+ * What Bridge gives is read at the door: text is a save, nothing (null) is no save, and
+ * anything else, or no answer at all, is a save that could not be read. `getItem` then
+ * throws, as a blocked localStorage does, so the game keeps it instead of starting it
+ * over (see SaveSlot): only the player's own progress replaces it.
  */
 export class BridgeStorage {
   /** @param {object} bridge Playgama Bridge, initialized */
   constructor(bridge) {
     this.bridge = bridge
     this.cache = new Map()
+    /** Keys whose saved value could not be loaded. */
+    this.unreadable = new Set()
   }
 
   /**
@@ -62,28 +70,35 @@ export class BridgeStorage {
   async load(keys) {
     try {
       const values = await this.bridge.storage.get([...keys], false)
+      if (!Array.isArray(values)) throw new TypeError('Bridge storage gave no list')
       keys.forEach((key, i) => {
-        if (typeof values?.[i] === 'string') this.cache.set(key, values[i])
+        const value = values[i]
+        if (typeof value === 'string') this.cache.set(key, value)
+        else if (value !== null && value !== undefined) this.unreadable.add(key)
       })
     } catch {
-      // No saved data (a new player) or no storage: start from scratch.
+      // No answer: what the portal holds is unknown, not empty.
+      for (const key of keys) this.unreadable.add(key)
     }
   }
 
   /** @returns {string | null} */
   getItem(key) {
+    if (this.unreadable.has(key)) throw new Error('This save could not be loaded from the portal')
     return this.cache.has(key) ? this.cache.get(key) : null
   }
 
   setItem(key, value) {
     const text = String(value)
-    if (this.cache.get(key) === text) return
+    if (this.cache.get(key) === text && !this.unreadable.has(key)) return
+    this.unreadable.delete(key)
     this.cache.set(key, text)
     quietly(() => this.bridge.storage.set([key], [text]))
   }
 
   removeItem(key) {
-    if (!this.cache.has(key)) return
+    if (!this.cache.has(key) && !this.unreadable.has(key)) return
+    this.unreadable.delete(key)
     this.cache.delete(key)
     quietly(() => this.bridge.storage.delete([key]))
   }
@@ -140,11 +155,10 @@ export class PlaygamaAdService extends AdService {
     return this.#storage
   }
 
-  /** Language given by the portal (ISO 639-1), or null. */
+  /** Language given by the portal (ISO 639-1), read at the door as a language tag, or null. */
   get locale() {
     try {
-      const code = this.#bridge?.platform.language
-      return typeof code === 'string' && /^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*$/.test(code) ? code : null
+      return readLanguageTag(this.#bridge?.platform.language)
     } catch {
       return null
     }
