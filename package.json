@@ -22,6 +22,7 @@
     "package:crazygames": "node scripts/package-crazygames.mjs",
     "preview": "vite preview",
     "test": "node scripts/simulate.mjs",
+    "test:unit": "node --test --test-concurrency=2 tests/*.test.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
     "build:standalone": "node scripts/build-standalone.mjs"
   },

@@ -1,7 +1,8 @@
 # Checks every pull request and every push to main: the builds (site and portals,
-# with the Playgama package and its checks), the translations, and the campaign
-# bot (all 100 levels must stay winnable in Normal and Easy). Same steps as the
-# checklist in CONTRIBUTING.md.
+# with the Playgama package and its checks), the translations, the unit tests (what
+# comes from outside is read at the door: saves, address, portals, keys, fields), and
+# the campaign bot (all 100 levels must stay winnable in Normal and Easy). Same steps
+# as the checklist in CONTRIBUTING.md.
 name: CI
 
 on:
@@ -55,6 +56,9 @@ jobs:
 
       - name: Traductions
         run: npm run check:i18n
+
+      - name: Tests unitaires (données lues à la porte)
+        run: npm run test:unit
 
       - name: Campagne en Normal (robot)
         run: npm test
