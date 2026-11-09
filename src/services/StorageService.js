@@ -1,17 +1,20 @@
 /**
- * @file Safe localStorage wrapper with an in-memory fallback.
+ * @file Safe localStorage wrapper with an in-memory fallback, read and written as text.
  */
 
+/** What a storage gives for a value it holds but could not read back: it is not "nothing saved". */
+export const UNREADABLE = Symbol('unreadable');
+
 /**
- * Safe wrapper around localStorage: JSON (de)serialisation, key namespacing,
- * and graceful fallback to memory when storage is unavailable
- * (private mode, quota exceeded, disabled cookies…).
+ * Safe wrapper around localStorage (or a portal's storage with the same interface): key
+ * namespacing, text in and out, and graceful fallback to memory when storage is unavailable
+ * (private mode, quota exceeded, disabled cookies…). The text is read at the door by SaveSlot.
  */
 export class StorageService {
   constructor(namespace = 'app', backend = StorageService.detectBackend()) {
     this.namespace = namespace;
     this.backend = backend;
-    this.persistent = backend !== null;
+    /** Texts the storage refused to keep (or every text, without one): read back from here first. */
     this._memory = new Map();
   }
 
@@ -32,34 +35,40 @@ export class StorageService {
   }
 
   /**
+   * The text stored under a key: a string, null when nothing is stored, or UNREADABLE when the
+   * storage holds something it could not give back as text (it threw, or gave another type).
    * @param {string} key
-   * @param {*} [fallback] returned when the key is missing or unreadable
-   * @returns {*}
+   * @returns {string|null|typeof UNREADABLE}
    */
-  get(key, fallback = null) {
+  readText(key) {
+    if (this._memory.has(key)) return this._memory.get(key);
+    if (!this.backend) return null;
     try {
-      const raw = this.backend ? this.backend.getItem(this._key(key)) : this._memory.get(key);
-      return raw == null ? fallback : JSON.parse(raw);
+      const raw = this.backend.getItem(this._key(key));
+      if (raw === null || raw === undefined) return null;
+      return typeof raw === 'string' ? raw : UNREADABLE;
     } catch {
-      return fallback;
+      return UNREADABLE;
     }
   }
 
   /**
    * @param {string} key
-   * @param {*} value any JSON-serialisable value
+   * @param {string} text
    * @returns {boolean} false if it could only be kept in memory
    */
-  set(key, value) {
-    const raw = JSON.stringify(value);
-    try {
-      if (this.backend) this.backend.setItem(this._key(key), raw);
-      else this._memory.set(key, raw);
-      return true;
-    } catch {
-      this._memory.set(key, raw);
-      return false;
+  writeText(key, text) {
+    if (this.backend) {
+      try {
+        this.backend.setItem(this._key(key), text);
+        this._memory.delete(key);
+        return true;
+      } catch {
+        // Quota, private mode: kept in memory below, and read back from there.
+      }
     }
+    this._memory.set(key, text);
+    return false;
   }
 
   remove(key) {

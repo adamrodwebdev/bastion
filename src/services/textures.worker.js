@@ -7,7 +7,9 @@ import { TEXTURES, paintWhole } from '../core/rendering/Textures.js';
 
 const makeCanvas = (width, height) => new OffscreenCanvas(width, height);
 
-self.addEventListener('message', async () => {
+// The page's message is read at the door too: only the one order this worker knows.
+self.addEventListener('message', async ({ data }) => {
+  if (data !== 'paint') return;
   for (const [name, spec] of Object.entries(TEXTURES)) {
     let blob = null;
     try {

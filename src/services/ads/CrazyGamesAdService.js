@@ -5,6 +5,7 @@
 import { AdService } from './AdService.js'
 import { AdPolicy } from './AdPolicy.js'
 import { loadScript, SDK_URLS } from './loadScript.js'
+import { readLanguageTag } from '../I18nService.js'
 
 /**
  * Ads stay off until CrazyGames moves the game to Full Launch: in Basic Launch the
@@ -58,10 +59,10 @@ export class CrazyGamesAdService extends AdService {
     }
   }
 
+  /** The player's language as the SDK gives it, read at the door as a language tag, or null. */
   get locale() {
     try {
-      const locale = this.#sdk?.user?.systemInfo?.locale
-      return typeof locale === 'string' && /^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*$/.test(locale) ? locale : null
+      return readLanguageTag(this.#sdk?.user?.systemInfo?.locale)
     } catch {
       return null
     }

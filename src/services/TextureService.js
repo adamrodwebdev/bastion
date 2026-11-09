@@ -5,6 +5,27 @@
 /** How long a silent worker is given before the textures are painted on the page's thread. */
 const WORKER_PATIENCE_MS = 5000;
 
+/**
+ * The textures the worker may send back, by name (the keys of TEXTURES in
+ * core/rendering/Textures.js, kept equal by a test): each name becomes a CSS custom property.
+ */
+export const TEXTURE_NAMES = Object.freeze(['parchment', 'wood', 'iron', 'weave']);
+
+/**
+ * A message from the textures' worker, read at the door like any message: the end, or one
+ * texture of a known name with its image (or none, when the worker could not paint it).
+ * @param {unknown} data `MessageEvent.data`
+ * @returns {{done: true} | {name: string, blob: Blob|null} | null} null for anything else, which is ignored
+ */
+export function readTextureMessage(data) {
+  if (typeof data !== 'object' || data === null) return null;
+  const owns = (key) => Object.prototype.hasOwnProperty.call(data, key);
+  if (owns('done')) return data.done === true ? { done: true } : null;
+  if (!owns('name') || !TEXTURE_NAMES.includes(data.name)) return null;
+  if (data.blob === null) return { name: data.name, blob: null };
+  return typeof Blob === 'function' && data.blob instanceof Blob ? { name: data.name, blob: data.blob } : null;
+}
+
 /** Runs fn when the browser is idle, or soon where it has no idle callback. */
 function whenIdle(fn) {
   if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 2000 });
@@ -79,8 +100,10 @@ export class TextureService {
       };
       const timer = setTimeout(() => end(null), WORKER_PATIENCE_MS);
       worker.addEventListener('message', ({ data }) => {
-        if (data.done) end(blobs.size ? blobs : null);
-        else if (data.blob) blobs.set(data.name, data.blob);
+        const message = readTextureMessage(data);
+        if (!message) return;
+        if (message.done) end(blobs.size ? blobs : null);
+        else if (message.blob) blobs.set(message.name, message.blob);
       });
       worker.addEventListener('error', () => end(null));
       worker.postMessage('paint');

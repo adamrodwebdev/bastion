@@ -3,6 +3,27 @@
  */
 
 import { EventEmitter } from '../core/utils/EventEmitter.js';
+import { orElse, readText } from '../core/input.js';
+import { TEXT_LIMITS } from '../core/limits.js';
+
+/**
+ * A language tag as the address, browsers and portals give it (`fr`, `pt-BR`, `en_US`):
+ * letters, then subtags of letters and digits.
+ */
+const LANGUAGE_TAG = Object.freeze({
+  maxLength: TEXT_LIMITS.languageTag,
+  required: true,
+  pattern: /^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*$/,
+});
+
+/**
+ * A language tag from outside (the address, the browser, a portal's SDK), or null when it is not one.
+ * @param {unknown} value
+ * @returns {string|null}
+ */
+export function readLanguageTag(value) {
+  return orElse(() => readText(value, LANGUAGE_TAG, 'language'), null);
+}
 
 /**
  * Lightweight translation service.
@@ -12,7 +33,9 @@ import { EventEmitter } from '../core/utils/EventEmitter.js';
  *  - language detection: ?lang= query → saved setting → browser language
  * Also keeps <html lang>, <title> and meta description in sync (SEO / a11y).
  *
- * Dictionaries are loaded on demand (see src/locales/index.js).
+ * Dictionaries are loaded on demand (see src/locales/index.js). Language codes from
+ * outside are matched against the loaders in a Map: a plain object would also answer
+ * to `constructor` or `__proto__`, and show every text as its key.
  */
 export class I18nService extends EventEmitter {
   /**
@@ -22,16 +45,37 @@ export class I18nService extends EventEmitter {
    */
   constructor(loaders, names, fallback = 'en') {
     super();
-    this.loaders = loaders;
-    this.names = names;
+    /** @type {Map<string, () => Promise<{default: object}>>} */
+    this.loaders = new Map(Object.entries(loaders));
+    this.names = new Map(Object.entries(names));
     /** Dictionaries already loaded. */
-    this.dictionaries = {};
+    this.dictionaries = new Map();
     this.fallback = fallback;
     this.locale = fallback;
   }
 
   get available() {
-    return Object.keys(this.loaders).map((code) => ({ code, label: this.names[code] || code }));
+    return [...this.loaders.keys()].map((code) => ({ code, label: this.names.get(code) || code }));
+  }
+
+  /**
+   * Is this one of the languages the game has?
+   * @param {unknown} code
+   */
+  supports(code) {
+    return typeof code === 'string' && this.loaders.has(code);
+  }
+
+  /**
+   * The language the game has for a tag from outside (`fr-CA` → `fr`), or null.
+   * @param {unknown} value
+   * @returns {string|null}
+   */
+  match(value) {
+    const tag = readLanguageTag(value);
+    if (!tag) return null;
+    const code = tag.toLowerCase().split(/[-_]/)[0];
+    return this.supports(code) ? code : null;
   }
 
   /** Picks the best language among the supported ones. */
@@ -45,26 +89,26 @@ export class I18nService extends EventEmitter {
     }
     if (saved) candidates.push(saved);
     const nav = globalThis.navigator;
-    if (nav) candidates.push(...(nav.languages || [nav.language]));
+    if (nav) candidates.push(...(Array.isArray(nav.languages) ? nav.languages : [nav.language]));
     for (const c of candidates) {
-      const code = String(c || '').toLowerCase().split('-')[0];
-      if (this.loaders[code]) return code;
+      const code = this.match(c);
+      if (code) return code;
     }
     return this.fallback;
   }
 
   /** Loads a dictionary (cached). */
   async load(code) {
-    if (!this.dictionaries[code]) this.dictionaries[code] = (await this.loaders[code]()).default;
-    return this.dictionaries[code];
+    if (!this.dictionaries.has(code)) this.dictionaries.set(code, (await this.loaders.get(code)()).default);
+    return this.dictionaries.get(code);
   }
 
   /**
    * Switches language once its dictionary is loaded.
-   * @param {string} code 'fr' | 'en' | 'id' — ignored if the language is not available
+   * @param {unknown} code 'fr' | 'en' | 'id' — ignored if the language is not available
    */
   async setLocale(code) {
-    if (!this.loaders[code]) return;
+    if (!this.supports(code)) return;
     await this.load(code);
     this.locale = code;
     this._syncDocument();
@@ -73,7 +117,7 @@ export class I18nService extends EventEmitter {
 
   _syncDocument() {
     if (typeof document === 'undefined') return;
-    const meta = this.dictionaries[this.locale]?._meta;
+    const meta = this.dictionaries.get(this.locale)?._meta;
     if (!meta) return;
     document.documentElement.lang = this.locale;
     document.title = meta.title;
@@ -94,12 +138,13 @@ export class I18nService extends EventEmitter {
    * @returns {string}
    */
   t(key, params = {}) {
-    let str = this._lookup(this.dictionaries[this.locale], key);
-    if (str === undefined && this.dictionaries[this.fallback]) str = this._lookup(this.dictionaries[this.fallback], key);
+    let str = this._lookup(this.dictionaries.get(this.locale), key);
+    const fallback = this.dictionaries.get(this.fallback);
+    if (str === undefined && fallback) str = this._lookup(fallback, key);
     if (typeof str !== 'string') return key;
     if (str.includes('|') && params.count !== undefined) {
       const [one, many] = str.split('|');
-      str = Number(params.count) === 1 ? one : many;
+      str = params.count === 1 ? one : many;
     }
     return str.replace(/\{(\w+)\}/g, (m, name) => (params[name] !== undefined ? String(params[name]) : m));
   }

@@ -151,10 +151,10 @@ export default {
   },
   methods: {
     setLocale(code) {
-      services.i18n.setLocale(code);
+      this.$actions.setLocale(code);
     },
     toggleTheme() {
-      services.theme.toggle();
+      this.$actions.toggleTheme();
     },
     /** The old screen goes: the banner drops over it (it fades out with reduced motion). */
     onLeave(el, done) {

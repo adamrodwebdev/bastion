@@ -4,7 +4,7 @@
 
 import { StorageService } from './StorageService.js';
 import { SaveManager } from './SaveManager.js';
-import { I18nService } from './I18nService.js';
+import { I18nService, readLanguageTag } from './I18nService.js';
 import { ThemeService } from './ThemeService.js';
 import { AudioService } from './audio/AudioService.js';
 import { Haptics } from './Haptics.js';
@@ -60,18 +60,17 @@ class ServiceContainer {
   async bootstrap() {
     const settings = this.saves.settings;
     // Playgama: the interface follows the portal's language at every launch,
-    // English when the game does not have it.
-    const portal = this.ads.localeAuthoritative && this.ads.locale ? this.ads.locale.slice(0, 2).toLowerCase() : null;
-    const locale = portal ? (this.i18n.loaders[portal] ? portal : 'en') : this.i18n.detect(settings.locale);
+    // English when the game does not have it. The tag is read at the door.
+    const portal = this.ads.localeAuthoritative ? readLanguageTag(this.ads.locale) : null;
+    const locale = portal ? (this.i18n.match(portal) ?? 'en') : this.i18n.detect(settings.locale);
     await this.i18n.setLocale(locale);
     this.theme.setMode(settings.theme);
     this.audio.setVolumes({ sfx: settings.sfx, music: settings.music });
     this.audio.setUserMuted(settings.muted);
     this.haptics.setEnabled(settings.haptics);
     this.motion.setEnabled(settings.motion);
-    // Persist user choices.
-    this.i18n.on('change', (locale) => this.saves.updateSettings({ locale }));
-    this.theme.on('change', () => this.saves.updateSettings({ theme: this.theme.mode }));
+    // The player's choices of language and theme are saved where they are made (store.js):
+    // a language or a scheme the game follows by itself is never written over unreadable settings.
     this.saves.on('settings', (s) => {
       this.audio.setVolumes({ sfx: s.sfx, music: s.music });
       this.audio.setUserMuted(s.muted);
@@ -110,9 +109,15 @@ class ServiceContainer {
     ads.on('portalPause', (paused) => this.audio.setPortalPaused(paused));
     this.audio.setPortalMuted(ads.portalMuted);
     this.audio.setPortalPaused(ads.portalPaused);
-    if (ads.locale && !ads.localeAuthoritative && !this.saves.settings.locale) {
-      const code = ads.locale.slice(0, 2).toLowerCase();
-      this.i18n.setLocale(this.i18n.loaders[code] ? code : 'en');
+    // CrazyGames: the portal's language, English when the game does not have it, unless the
+    // player chose one. Noted as the player's language, never over settings the game could not read.
+    const tag = readLanguageTag(ads.locale);
+    if (tag && !ads.localeAuthoritative && !this.saves.settings.locale) {
+      const code = this.i18n.match(tag) ?? 'en';
+      this.i18n
+        .setLocale(code)
+        .then(() => this.saves.noteSettings({ locale: code }))
+        .catch(() => {});
     }
     ads.loadingFinished();
     return ads;
