@@ -77,14 +77,36 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et les n
 - Les légendes des touches (raccourcis de la boutique, barre d'espace) passent à 12 px, lisibles dans un cadre de portail.
 - Le pied de page de notre site ne s'affiche plus sur les portails (CrazyGames, Poki, Playgama).
 - **Barres de défilement aux couleurs du jeu** (souris et pavé tactile) : une tige dorée dans une rainure de la matière où elle se trouve (fer du cadre, parchemin, bois). Les téléphones gardent leur fine barre d'origine.
+- **Le curseur dit ce qui se clique** : la flèche sur tout le contenu (titres, textes, plaques du HUD, bulles de Gontran), la main sur les seuls boutons, liens, listes et commandes, la barre de texte dans les champs, « interdit » sur une commande désactivée. Sur le plateau, la main n'apparaît que sur une case où un clic agit (une case libre où construire, une tour) et la flèche reste sur les routes, les rochers et l'eau ; le viseur reste quand on vise un pouvoir. Ces règles sont posées une seule fois au début de `main.css`.
+- Les curseurs de volume vont de 0 à 100 % par pas de 5 %, et le pourcentage affiché à côté suit le curseur.
 
 ### Corrigé
+
+- `?lang=constructor` ou `?lang=__proto__` dans l'adresse (et la même valeur glissée dans la liste des langues) affichait toutes les clés de traduction (« settings.title »…) à la place des textes.
+- Un nom de joueur enregistré comme un objet (une sauvegarde abîmée ou modifiée) empêchait le jeu de démarrer : l'écran-titre restait figé.
+- Une partie en cours abîmée ou modifiée pouvait geler le plateau (un niveau de tour vide arrêtait la boucle de jeu à chaque image), envoyer un ennemi droit à la porte (une distance écrite en texte), créer trois joueurs, des vies sans fin, deux tours sur une case ou une tour sur la route ; une partie sans ses vagues laissait l'accueil vide. Elle est maintenant relue en entier, champ par champ, et refusée si un seul ne convient pas : le niveau recommence, la campagne n'est pas touchée.
+- Une progression d'une autre version, ou coupée en cours d'écriture, était remplacée par une progression vide dès qu'une histoire était lue ou un tutoriel vu ; sur Playgama, une sauvegarde que le portail n'avait pas pu charger aussi. Des réglages illisibles étaient remplacés dès que le portail donnait sa langue ou que le système passait en mode sombre.
+- Les noms de joueurs gardaient les caractères invisibles et les inversions du sens d'écriture, et un nom trop long était coupé au lieu d'être refusé.
+- Une touche au nom de `constructor` ou `toString` (un événement clavier fabriqué) envoyait le curseur du clavier sur une case inexistante, ou faisait planter le duel.
+- Le robot de test acceptait `--from=abc` ou `--from=3 --to=2` sans jouer aucun niveau (et passait), lisait `--from=1e1` comme 10 et `--diff=hrad` comme Normal, et les exemples du README (`--from 40 --to 60`) ne jouaient que le niveau 1 : un argument mal écrit l'arrête maintenant avant qu'il ne joue (code 2).
+- Quand le navigateur refusait d'enregistrer la partie en cours (stockage plein), « Reprendre » relançait une partie plus ancienne.
+- L'interrupteur désactivé des animations montrait la main.
 
 - Sur CrazyGames, la seconde chance et le doublement des couronnes proposaient une vidéo pendant le *Basic Launch*, où le portail refuse les publicités (le bouton ne faisait rien) : elles restent coupées jusqu'au *Full Launch*.
 - Sur un clavier AZERTY, les touches 1 à 0 ne construisaient rien (il fallait Maj).
 - Sur grand écran, l'annonce d'une vague faisait bouger la fenêtre : le bouton de vague se décalait de côté, la barre grandissait et une barre de défilement apparaissait puis disparaissait, ce qui pouvait redimensionner la carte.
 
 - Le bouton **Améliorer** suit maintenant l'or réel : il se grise quand l'or manque et se réactive dès qu'il suffit. Après un achat, le niveau, le prix suivant et la valeur de revente se mettent à jour (ils restaient bloqués sur ceux du premier affichage). Même correction dans le mode Duel.
+
+### Sécurité
+
+- **Ce qui vient de l'extérieur est lu à la porte** (règle du 9 novembre 2026) : sauvegardes et réglages, adresse (`?lang=`), langues du navigateur, valeurs des SDK de CrazyGames et de Playgama, messages du worker des textures, champs des réglages, touches du clavier, arguments du robot. Un nombre est un vrai nombre fini dans sa plage, un texte une chaîne nettoyée (caractères invisibles et inversions retirés) dont la longueur est bornée, un nom un élément de sa liste ; rien n'est converti, coupé ni deviné. Les lecteurs sont dans `src/core/input.js`, les limites dans une seule table (`src/core/limits.js`), la même que le `maxlength` du champ des noms.
+- **Sauvegardes** : leur taille est vérifiée avant la lecture (progression 65 536 caractères, réglages 8 192, partie en cours 262 144, pour 18 286, 228 et 13 810 au plus plein), chaque champ est lu à part (un champ abîmé reprend sa valeur par défaut, les autres restent), et la partie en cours est relue en entier. Une sauvegarde illisible est gardée : seul un progrès du joueur (un niveau gagné, un achat, un réglage choisi) la remplace, jamais ce que le jeu note seul. Le jeu n'écrit jamais une partie qu'il ne pourrait pas relire.
+- **Tests unitaires** (`npm run test:unit`, aussi en CI) : 412 tests sous `node:test`, dont les 113 des lecteurs partagés et une table d'entrées hostiles par porte (sauvegardes falsifiées et anciennes, adresse, portails, touches, champs, script du thème, robot).
+
+### Compatibilité
+
+- Toutes les sauvegardes déjà écrites se chargent : progression des versions 1 et 2, réglages de la 1.0 à aujourd'hui, partie en cours de la version 2. Une partie en cours de la version 1 reste ignorée, comme avant.
 
 ### Mise en ligne
 
