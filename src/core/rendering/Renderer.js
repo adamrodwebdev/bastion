@@ -41,6 +41,9 @@ export class Renderer {
     this.scale = 1; // device pixels per tile
     this.rotated = false;
     this.cssTile = 1; // CSS pixels per tile
+    // Size of the board on the page, in CSS pixels (the interface laid on it reads these, not the style).
+    this.cssWidth = 0;
+    this.cssHeight = 0;
     this._bg = null;
     this.showAirLanes = level.enemyTypes ? level.enemyTypes.some((t) => t === 'crow' || t === 'wyvern') : false;
     this.landscape = LANDSCAPES[level.theme] || LANDSCAPES.meadow;
@@ -86,6 +89,8 @@ export class Renderer {
     this.scale = tile * dpr;
     const w = tile * (this.rotated ? this.rows : this.cols);
     const h = tile * (this.rotated ? this.cols : this.rows);
+    this.cssWidth = w;
+    this.cssHeight = h;
     this.canvas.style.width = `${w}px`;
     this.canvas.style.height = `${h}px`;
     this.canvas.width = Math.round(w * dpr);

@@ -53,6 +53,7 @@ import { DuelMatch, SENDABLE } from '../core/modes/DuelMatch.js';
 import { services } from '../services/index.js';
 import AppIcon from './AppIcon.vue';
 import DuelBoard from './DuelBoard.vue';
+import { arrowStep, keyName, keyPlace } from './keyboard.js';
 
 const SEND_TYPES = Object.keys(SENDABLE);
 
@@ -152,7 +153,7 @@ export default {
     },
     onKey(e) {
       if (this.result || e.target?.tagName === 'INPUT') return;
-      const k = e.key;
+      const k = keyName(e);
       const low = k.toLowerCase();
       // P pauses; Escape belongs to the browser and the portals (it leaves fullscreen).
       if (low === 'p') {
@@ -164,27 +165,29 @@ export default {
       const b2 = this.$refs.b2;
       // Keys are read by their place on the keyboard (W A S D is Z Q S D on AZERTY,
       // where the digits also need Shift), falling back on the character typed.
-      const code = e.code || '';
+      const code = keyPlace(e);
       const at = (place, letter) => code === place || (!code && low === letter);
       const digit = /^Digit(\d)$/.exec(code)?.[1] ?? (/^\d$/.test(k) ? k : null);
       const moves1 = [['KeyW', 'w', [0, -1]], ['KeyA', 'a', [-1, 0]], ['KeyS', 's', [0, 1]], ['KeyD', 'd', [1, 0]]].find(([place, letter]) => at(place, letter));
-      const moves2 = { ArrowUp: [0, -1], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowRight: [1, 0] };
+      const moves2 = arrowStep(k);
       const sends1 = [['KeyZ', 'z'], ['KeyX', 'x'], ['KeyC', 'c']].findIndex(([place, letter]) => at(place, letter));
       const sends2 = [['KeyB', 'b'], ['KeyN', 'n'], ['KeyM', 'm']].findIndex(([place, letter]) => at(place, letter));
+      // Digits are found in their row (1 builds the first tower), never converted from text.
+      const pad = /^Numpad(\d)$/.exec(code)?.[1] ?? '';
       if (moves1) b1.move(...moves1[2]);
-      else if (moves2[k]) {
+      else if (moves2) {
         e.preventDefault();
-        b2.move(...moves2[k]);
-      } else if (digit && '12345'.includes(digit)) b1.buildAtCursor(Number(digit) - 1);
-      else if (digit && '67890'.includes(digit)) b2.buildAtCursor(digit === '0' ? 4 : Number(digit) - 6);
-      else if (/^Numpad[1-5]$/.test(code)) b2.buildAtCursor(Number(code.slice(-1)) - 1);
+        b2.move(...moves2);
+      } else if (digit && '12345'.includes(digit)) b1.buildAtCursor('12345'.indexOf(digit));
+      else if (digit && '67890'.includes(digit)) b2.buildAtCursor('67890'.indexOf(digit));
+      else if (pad && '12345'.includes(pad)) b2.buildAtCursor('12345'.indexOf(pad));
       else if (at('KeyR', 'r')) b1.upgrade();
       else if (at('KeyF', 'f')) b1.sell();
       else if (at('KeyL', 'l') || code === 'NumpadAdd') b2.upgrade();
       else if (at('KeyK', 'k') || code === 'NumpadSubtract') b2.sell();
       else if (sends1 >= 0) this.send(1, SEND_TYPES[sends1]);
       else if (sends2 >= 0) this.send(2, SEND_TYPES[sends2]);
-      else if (/^Numpad[7-9]$/.test(code)) this.send(2, SEND_TYPES[Number(code.slice(-1)) - 7]);
+      else if (pad && '789'.includes(pad)) this.send(2, SEND_TYPES['789'.indexOf(pad)]);
     },
     async again() {
       await this.$actions.betweenLevels();
